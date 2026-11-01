@@ -428,8 +428,8 @@ DROP TABLE stage_equipment;
 INSERT INTO Users (DepartmentID, SectionID, Email, PasswordHash, Name, Role) VALUES
   (@dept, NULL, 'admin@reservebot.test', '$2b$10$T5LTYtgAG0B2un3psfft5.N9WH/IFzYohnea0NSAJMVMAXvJzxvY2', 'BSCpE Office Admin', 'admin'),
   (@dept, NULL, 'staff@reservebot.test', '$2b$10$T5LTYtgAG0B2un3psfft5.N9WH/IFzYohnea0NSAJMVMAXvJzxvY2', 'Lab Assistant', 'lab_staff'),
-  (@dept, (SELECT SectionID FROM Section WHERE Name = 'BSCPE 4-2'),
-          'rep1@reservebot.test', '$2b$10$T5LTYtgAG0B2un3psfft5.N9WH/IFzYohnea0NSAJMVMAXvJzxvY2', 'Juan Dela Cruz', 'rep'),
+  (@dept, (SELECT SectionID FROM Section WHERE Name = 'BSCPE 4-5'),
+          'rep1@reservebot.test', '$2b$10$T5LTYtgAG0B2un3psfft5.N9WH/IFzYohnea0NSAJMVMAXvJzxvY2', 'Bea Prieto', 'rep'),
   (@dept, (SELECT SectionID FROM Section WHERE Name = 'BSCPE 3-1'),
           'rep2@reservebot.test', '$2b$10$T5LTYtgAG0B2un3psfft5.N9WH/IFzYohnea0NSAJMVMAXvJzxvY2', 'Maria Santos', 'rep');
 
@@ -442,14 +442,14 @@ SET @rep2     := (SELECT UserID FROM Users WHERE Email = 'rep2@reservebot.test')
 SET @next_tue := CURDATE() + INTERVAL (7 - MOD(WEEKDAY(CURDATE()) + 6, 7)) DAY;
 SET @next_mon := CURDATE() + INTERVAL (7 - WEEKDAY(CURDATE())) DAY;
 
--- (a) rep1 (BSCPE 4-2) books next Tuesday's CMPE 453 Database Implementation class
+-- (a) rep1 (BSCPE 4-5) books next Tuesday's CMPE 451 Introduction to Cybersecurity class
 INSERT INTO Reservation (UserID, RoomID, ScheduleID, StartTime, EndTime, Status, ReviewedBy)
 SELECT @rep1, cs.RoomID, cs.ScheduleID,
        TIMESTAMP(@next_tue, cs.StartTime), TIMESTAMP(@next_tue, cs.EndTime), 'Confirmed', @admin
 FROM ClassSchedule cs
 JOIN Section s ON s.SectionID = cs.SectionID
 JOIN Course c  ON c.CourseID = cs.CourseID
-WHERE s.Name = 'BSCPE 4-2' AND c.Code = 'CMPE 453' AND cs.DayOfWeek = 'Tue';
+WHERE s.Name = 'BSCPE 4-5' AND c.Code = 'CMPE 451' AND cs.DayOfWeek = 'Tue';
 SET @res1 := LAST_INSERT_ID();
 
 INSERT INTO ReservationEquipment (ReservationID, EquipmentID, QtyRequested)

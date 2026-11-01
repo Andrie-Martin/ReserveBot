@@ -11,17 +11,17 @@
 -- ============================================================
 USE reservebot;
 
--- Example values (next Tuesday 3:00-4:00 PM in CEA312, which is the
--- BSCPE 4-2 CMPE 453 class that rep1 has a sample reservation for)
+-- Example values (next Tuesday 12:00-1:00 PM in CEA300, during the
+-- BSCPE 4-5 CMPE 451 class that rep1 has a sample reservation for)
 SET @dept_slug := 'bscpe';
 SET @next_tue  := CURDATE() + INTERVAL (7 - MOD(WEEKDAY(CURDATE()) + 6, 7)) DAY;
-SET @room      := 'CEA312';
-SET @start     := TIMESTAMP(@next_tue, '15:00');
-SET @end       := TIMESTAMP(@next_tue, '16:00');
+SET @room      := 'CEA300';
+SET @start     := TIMESTAMP(@next_tue, '12:00');
+SET @end       := TIMESTAMP(@next_tue, '13:00');
 
 -- ------------------------------------------------------------
 -- 1. Why is this room busy? (no rows = free)
---    Expected: rep1's reservation and the CMPE 453 class, both 2:30-4:30 PM
+--    Expected: rep1's reservation and the CMPE 451 class, both 11:30 AM-1:30 PM
 --    When a rep books a session of THEIR OWN scheduled class, also add
 --    AND cs.ScheduleID <> <that class's ScheduleID>  to the second half.
 -- ------------------------------------------------------------
@@ -94,11 +94,11 @@ ORDER BY cs.StartTime;
 -- ------------------------------------------------------------
 -- 4. Equipment still available in the window
 --    Subtracts every overlapping booking, so it never over-promises.
---    Next Tuesday 3:00-4:00 PM -> Projector, Projector Power Cord and
+--    Next Tuesday 12:00-1:00 PM -> Projector, Projector Power Cord and
 --    HDMI Cable show 9 of 10 because of rep1's sample reservation.
 -- ------------------------------------------------------------
-SET @start := TIMESTAMP(@next_tue, '15:00');
-SET @end   := TIMESTAMP(@next_tue, '16:00');
+SET @start := TIMESTAMP(@next_tue, '12:00');
+SET @end   := TIMESTAMP(@next_tue, '13:00');
 
 SELECT ec.Name AS Category, e.Name AS Item, e.TotalQty,
        e.TotalQty - COALESCE((
