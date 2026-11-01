@@ -96,3 +96,176 @@ th { color: var(--muted); font-weight: 600; }
 
 ul { padding-left: 20px; }
 li { margin: 4px 0; }
+
+/* ---------- Shared bits ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+main.wide { max-width: 1240px; }
+.small { font-size: 13px; }
+.notice { padding: 10px 12px; border: 1px solid #DDD6FE; border-radius: 8px; background: var(--brand-soft); color: #4C1D95; font-size: 14px; }
+.btn-ghost { display: inline-block; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); font-size: 14px; text-decoration: none; }
+.btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+.btn-ghost.off { color: #C4C4CC; pointer-events: none; }
+button.btn-small { width: auto; padding: 7px 14px; font-size: 14px; }
+a.quiet { color: var(--muted); font-size: 14px; }
+a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ready { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+
+/* ---------- Top bar navigation ---------- */
+.topnav { display: flex; gap: 18px; margin: 0 auto 0 28px; font-size: 14px; }
+.topnav a { padding: 4px 0; border-bottom: 2px solid transparent; color: var(--muted); text-decoration: none; }
+.topnav a:hover { color: var(--text); }
+.topnav a.active { border-bottom-color: var(--brand); color: var(--brand); font-weight: 600; }
+@media (max-width: 560px) {
+  .topbar { flex-wrap: wrap; padding: 10px 16px; }
+  .topnav { order: 3; width: 100%; margin: 2px 0 0; }
+  .who { gap: 10px; font-size: 13px; }
+}
+
+/* ---------- Free rooms (Phase 4): month calendar ---------- */
+.cal-intro { margin-bottom: 20px; }
+.cal-intro .muted { margin: 0; }
+.cal-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; }
+.cal-title { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+.cal-nav { display: flex; align-items: center; gap: 6px; }
+.cal-arrow { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); font-size: 20px; line-height: 1; text-decoration: none; }
+.cal-arrow:hover { border-color: var(--brand); color: var(--brand); }
+.cal-arrow.off { color: #D4D4D8; }
+
+.cal-wrap { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+.calendar { table-layout: fixed; border-collapse: collapse; }
+.calendar th { position: relative; padding: 10px 4px; border: 0; background: var(--brand); color: #fff; font-size: 13px; font-weight: 600; text-align: center; }
+.calendar th .short { display: none; }
+.calendar td { position: relative; height: 122px; padding: 0; border: 1px solid var(--line); vertical-align: top; }
+.calendar tr > td:first-child { border-left: 0; }
+.calendar tr > td:last-child { border-right: 0; }
+.calendar tbody tr:last-child td { border-bottom: 0; }
+
+/* Each day you can pick is one big link: ::after stretches it over the whole cell */
+.calendar .cell { display: flex; flex-direction: column; gap: 4px; padding: 6px 7px 8px; color: inherit; text-decoration: none; }
+.calendar a.cell::after { content: ""; position: absolute; inset: 0; }
+.calendar a.cell > :not(.sr-only) { position: relative; z-index: 1; }
+.calendar a.cell:focus-visible { outline: none; }
+.calendar a.cell:focus-visible::after { box-shadow: inset 0 0 0 3px var(--brand); }
+.calendar td.pick:hover { background: var(--brand-soft); }
+.calendar td.selected { background: #FAF8FF; }
+.calendar td.selected a.cell::after, .calendar td.selected:not(.pick) .cell { box-shadow: inset 0 0 0 2px var(--brand); }
+.calendar td.selected:not(.pick) .cell { position: absolute; inset: 0; }
+
+.daynum { align-self: flex-start; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; font-size: 13.5px; font-weight: 700; line-height: 26px; text-align: center; white-space: nowrap; }
+.calendar td.today .daynum { background: var(--brand); color: #fff; }
+.calendar td.st-past, .calendar td.st-later, .calendar td.st-closed { background: #F9FAFB; }
+.calendar td.st-past .daynum, .calendar td.st-later .daynum, .calendar td.st-closed .daynum, .calendar td.out .daynum { color: #9CA3AF; }
+.calendar td.today.st-closed .daynum { color: #fff; }
+.calendar td.st-past .evt, .calendar td.st-later .evt { opacity: 0.55; }
+.daynote { color: var(--muted); font-size: 12px; }
+
+/* Things on a day: time on top, room below (like a wall calendar) */
+.evts { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.evt { position: relative; display: block; min-width: 0; padding: 3px 6px 3px 7px; border-left: 3px solid #7C3AED; border-radius: 5px; background: #F3EEFF; color: #3B0764; font-size: 11.5px; line-height: 1.35; }
+.evt .t, .evt .w { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.evt .w { opacity: 0.85; }
+.ico { display: inline-block; width: 11px; height: 11px; margin-right: 4px; vertical-align: -1px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.evt.k-booking { border-left-color: #F59E0B; background: #FEF3C7; color: #78350F; }
+.evt.pending { outline: 1px dashed #D97706; outline-offset: -1px; background-image: repeating-linear-gradient(135deg, transparent 0 5px, rgba(245, 158, 11, 0.13) 5px 10px); }
+.ok { color: #15803D; font-weight: 800; }
+.evt.booked .w { padding-right: 12px; }
+.evt .ok { position: absolute; right: 5px; bottom: 3px; font-size: 11px; }
+.more { padding-left: 3px; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.dots { display: none; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+.legend li { display: flex; align-items: center; gap: 6px; margin: 0; }
+.legend .ok { margin: 0 2px; }
+.sw { display: inline-block; width: 16px; height: 12px; border-radius: 3px; }
+.sw-class { background: #F3EEFF; box-shadow: inset 3px 0 0 #7C3AED; }
+.sw-booking { background: #FEF3C7; box-shadow: inset 3px 0 0 #F59E0B; }
+.sw-pending { background: #FFFBEB; outline: 1px dashed #D97706; outline-offset: -1px; }
+.sw-off { border: 1px solid var(--line); background: #F3F4F6; }
+
+/* ---------- Free rooms (Phase 4): the chosen day ---------- */
+.day-card { margin-top: 20px; scroll-margin-top: 12px; }
+.day-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 20px; margin-bottom: 18px; }
+.eyebrow { margin: 0; color: var(--brand); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.day-head h2 { margin: 2px 0 0; font-size: 22px; letter-spacing: -0.01em; }
+.todaytag { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 0; vertical-align: 3px; }
+.daynav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.dayplan { margin: 0 0 18px; }
+.dayplan h3, .list-title { margin: 0 0 8px; font-size: 15px; }
+.agenda { margin: 0; padding: 0; list-style: none; }
+.agenda li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0 0 6px; padding: 8px 12px; border-left: 3px solid #7C3AED; border-radius: 8px; background: #F8F5FF; font-size: 14px; }
+.agenda li.k-booking { border-left-color: #F59E0B; background: #FFFBEB; }
+.agenda li.pending { outline: 1px dashed #D97706; outline-offset: -1px; }
+.agenda .when { min-width: 136px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.agenda .where { color: var(--muted); }
+.empty { margin: 0; color: var(--muted); font-size: 14px; }
+.st { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #DCFCE7; color: #166534; font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap; }
+.st-pending { background: #FEF3C7; color: #92400E; }
+
+.finder { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: var(--brand-soft); font-size: 14px; }
+.finder select { padding: 6px 8px; border: 1px solid #D1D5DB; border-radius: 8px; background: #fff; font: inherit; }
+.finder-label { font-weight: 600; }
+.results { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #BBF7D0; border-radius: 10px; background: #F0FDF4; color: #14532D; font-size: 14.5px; }
+.results.none-free { border-color: #FDE68A; background: #FFFBEB; color: #78350F; }
+.results p { margin: 0; }
+.results p + p { margin-top: 4px; }
+
+.roomlist { margin: 8px 0 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.room-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 18px; margin: 0; padding: 12px 16px; border-top: 1px solid var(--line); }
+.room-row:first-child { border-top: 0; }
+.room-name strong { display: block; font-size: 15px; }
+.room-name span { color: var(--muted); font-size: 12.5px; }
+.room-body { min-width: 0; }
+.room-free { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.free-chip { padding: 3px 10px; border: 1px solid #BBF7D0; border-radius: 999px; background: #DCFCE7; color: #166534; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.none { color: var(--muted); font-size: 13.5px; }
+.room-row.is-match { background: #F0FDF4; box-shadow: inset 4px 0 0 #16A34A; }
+.matchline { margin: 0 0 6px; color: #166534; font-size: 13.5px; font-weight: 700; }
+.clashline { margin: 0 0 6px; color: #9A3412; font-size: 13.5px; }
+.room-busy { margin-top: 6px; font-size: 13.5px; }
+.room-busy summary { width: fit-content; color: var(--muted); cursor: pointer; }
+.room-busy summary:hover { color: var(--brand); }
+.room-busy ul { margin: 6px 0 2px; padding: 0; list-style: none; }
+.room-busy li { display: flex; gap: 12px; margin: 0; padding: 6px 0; border-top: 1px dashed var(--line); }
+.room-busy .when { flex: 0 0 130px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.room-busy .st { margin-left: 4px; }
+.room-busy li.mine .what { color: var(--brand-dark); font-weight: 600; }
+.extra { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; }
+
+/* Tablets: narrower days, so each thing gets three short lines (time, what, room) */
+@media (min-width: 641px) and (max-width: 1000px) {
+  .calendar .cell { padding: 5px 4px 6px; }
+  .evt { padding: 3px 5px; font-size: 11px; }
+  .evt .ico { display: none; }
+  .evt .x { display: block; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+}
+
+/* Phones: the calendar shows dots, the day's list below has the details */
+@media (max-width: 640px) {
+  main.wide { margin-top: 16px; padding: 0 10px; }
+  .cal-card, .day-card { padding: 16px; }
+  .cal-title, .day-head h2 { font-size: 19px; }
+  .cal-arrow { width: 34px; height: 34px; }
+  .calendar th { padding: 8px 0; font-size: 12px; }
+  .calendar th .long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .calendar th .short { display: inline; }
+  .calendar td { height: 56px; }
+  .calendar .cell { align-items: center; gap: 4px; padding: 5px 1px; }
+  .daynum { align-self: center; min-width: 26px; padding: 0 3px; font-size: 13px; }
+  .mon, .evts, .daynote { display: none; }
+  .dots { display: flex; gap: 3px; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: #7C3AED; }
+  .dots i.k-booking { background: #F59E0B; }
+  .dots i.pending { background: #fff; box-shadow: inset 0 0 0 1.5px #D97706; }
+  .legend { gap: 6px 14px; font-size: 12.5px; }
+  .daynav { width: 100%; }
+  .daynav .btn-ghost { flex: 1; text-align: center; }
+  .agenda .when { min-width: 0; width: 100%; }
+  .finder-label { flex: 1 0 100%; }
+  .finder select { flex: 1; min-width: 0; }
+  .finder .btn-small { flex: 1 0 100%; }
+  .room-row { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .room-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+  .room-busy li { flex-direction: column; gap: 0; }
+  .room-busy .when { flex: none; }
+}

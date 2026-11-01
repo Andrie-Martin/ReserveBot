@@ -24,6 +24,7 @@ class StaffController extends Controller
             'intro' => "This is where you will run the day's room schedule.",
             'stat' => ['value' => $today, 'label' => $today === 1 ? 'reservation today' : 'reservations today'],
             'classes' => null,
+            'ready' => [['label' => 'See which rooms are free', 'url' => route('rooms')]],
             'comingNext' => [
                 "Today's schedule for every room",
                 'Verify a reservation and issue the key and equipment',

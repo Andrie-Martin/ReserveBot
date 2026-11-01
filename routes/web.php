@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\RepController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 Route::middleware('auth')->group(function () {
     // Everyone lands on their own home page
     Route::get('/', fn () => redirect(auth()->user()->homeUrl()))->name('home');
+
+    // Phase 4: which rooms are free (every role)
+    Route::get('/rooms', [AvailabilityController::class, 'index'])->name('rooms');
 
     // Block reps
     Route::prefix('rep')->name('rep.')->middleware('role:rep')->group(function () {

@@ -27,8 +27,8 @@ class RepController extends Controller
             'intro' => 'This is where you will book rooms and equipment for your block.',
             'stat' => null,
             'classes' => $classes,
+            'ready' => [['label' => 'See which rooms are free', 'url' => route('rooms')]],
             'comingNext' => [
-                'Check which rooms are free',
                 'Book a session of one of your classes, or a free slot for a make-up class',
                 'Request equipment like projectors and HDMI cables',
                 'See and cancel your reservations',

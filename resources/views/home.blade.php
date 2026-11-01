@@ -38,6 +38,15 @@
     @endif
   @endif
 
+  @if (! empty($ready))
+    <h2>Ready to use</h2>
+    <p class="ready">
+      @foreach ($ready as $link)
+        <a class="btn-ghost" href="{{ $link['url'] }}">{{ $link['label'] }} →</a>
+      @endforeach
+    </p>
+  @endif
+
   <h2>Coming in the next phases</h2>
   <ul>
     @foreach ($comingNext as $item)
