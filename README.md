@@ -1,36 +1,54 @@
 # ReserveBot
 
 Room and equipment reservation website for the BSCpE Department (CMPE 453 project).
-Node.js + Express + EJS, with a MariaDB/MySQL database.
+Built with Laravel (PHP) and Blade pages, on a MariaDB/MySQL database.
 
-## Run it with Docker (easiest)
+The earlier Node.js version is saved on the `node-version` branch.
 
-You only need **Docker Desktop**. No XAMPP, no Node.js, no `npm install`,
-and no importing the database by hand.
+## Run it on your PC (XAMPP + Composer)
 
-1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and open it.
-   On Windows the installer sets up WSL 2 for you.
-2. Get the code and start everything:
+You need:
+- **XAMPP** with PHP 8.3 or newer, for PHP and the MySQL/MariaDB database
+- **Composer**, from https://getcomposer.org/download/ (when it asks for PHP, pick `C:\xampp\php\php.exe`)
+- PHP's **zip** extension turned on: in the XAMPP Control Panel, Apache row, click
+  **Config** → **PHP (php.ini)**, find `;extension=zip`, delete the `;`, and save
+
+No Node.js or `npm install` needed.
+
+**First time:**
+1. In the XAMPP Control Panel, start **MySQL**.
+2. Get the code and install Laravel's packages:
    ```
    git clone https://github.com/Andrie-Martin/ReserveBot.git
    cd ReserveBot
-   docker compose up --build
+   composer install
    ```
-   The first run downloads a few hundred MB and loads the database, so give it a minute or two.
-3. Open:
-   - **http://localhost:3000**: the website
-   - **http://localhost:8080**: phpMyAdmin, already logged in
+3. Make your settings file and give it a secret key:
+   ```
+   copy .env.example .env
+   php artisan key:generate
+   ```
+4. Build the database (tables + BSCpE data + test accounts). If it asks to create the `reservebot` database, answer **yes**:
+   ```
+   php artisan migrate --seed
+   ```
+5. Start the website and open http://localhost:8000
+   ```
+   php artisan serve
+   ```
+
+**Every day after that:** start MySQL in XAMPP, then run `php artisan serve` in this folder.
 
 | To | Run |
 |---|---|
-| Stop | `Ctrl+C`, or `docker compose down` in another window |
-| See your code changes | `Ctrl+C`, then `docker compose up --build` |
-| Reset the database to the `.sql` files | `docker compose down -v`, then `docker compose up --build` |
+| Start the website | `php artisan serve` (stop it with `Ctrl+C`) |
+| Rebuild the database from scratch (deletes everything and reloads the test data) | `php artisan migrate:fresh --drop-views --seed` |
+| Check that the website can reach the database | open http://localhost:8000/test-db |
+| Run the automatic tests | `php artisan test` |
 
-The `.sql` files only load into an empty database. After someone changes
-`database/schema.sql` or `database/bscpe_seed.sql`, run the reset.
-
-If port 3000 is taken, stop any `node app.js` you have running first.
+If your `reservebot` database still has the Node.js version's tables, clear them once with
+`php artisan db:wipe --drop-views`, then run `php artisan migrate --seed`. (The rebuild
+command only clears tables after Laravel has built the database at least once.)
 
 ## Test accounts
 
@@ -43,35 +61,65 @@ All use the password `Password123!`
 | staff@reservebot.test | Lab staff |
 | admin@reservebot.test | Admin |
 
-## Run it without Docker (XAMPP + Node.js)
+## Database
 
-1. In XAMPP, start **MySQL**. In phpMyAdmin's **Import** tab, import
-   `database/schema.sql`, then `database/bscpe_seed.sql`.
-2. Install Node.js 22 or newer, then run `npm install` in this folder.
-3. Create a file named `.env` in this folder:
-   ```
-   PORT=3000
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=
-   DB_NAME=reservebot
-   SESSION_SECRET=any-long-random-text
-   ```
-4. Run `node app.js` and open http://localhost:3000
+The tables are defined in `database/migrations/` (one file per table) and filled by
+the seeders in `database/seeders/`. `database/queries.sql` has example SQL for the
+core lookups (room conflicts, free rooms, available equipment).
 
-**Mixing both:** to edit code quickly with the database in Docker, run
-`docker compose up db phpmyadmin`, then `node app.js` with these `.env` values:
-`DB_PORT=3307`, `DB_USER=reservebot`, `DB_PASSWORD=reservebot`.
+Names follow Laravel's style. The same 14 tables and the view, renamed:
+
+| Node.js version | Laravel version |
+|---|---|
+| Department | departments |
+| DepartmentConfig | department_configs |
+| Term | terms |
+| Section | sections |
+| Course | courses |
+| Room | rooms |
+| DepartmentRoom | department_room |
+| Users | users |
+| ClassSchedule | class_schedules |
+| EquipmentCategory | equipment_categories |
+| Equipment | equipment |
+| Reservation | reservations |
+| ReservationEquipment | reservation_equipment |
+| OverrideLog | override_logs |
+| TimetableView (view) | timetable_view (view) |
+
+Columns follow the same pattern. Each table's key is `id`, and other tables point to it
+as `<table>_id`, e.g. `ReservationID` became `reservations.id` and `reservation_equipment.reservation_id`.
+Other examples: `StartTime` → `start_time`, `PasswordHash` → `password`,
+`ScheduleID` → `class_schedule_id`, `CategoryID` → `category_id`,
+`ReviewedBy` → `reviewed_by`, `ChangedByUserID` → `changed_by`, `CreatedAt` → `created_at`.
+
+Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is logged in),
+`password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`.
+
+### Adding a department
+
+Copy `database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of
+that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder`.
 
 ## Folders
 
 | Path | What's in it |
 |---|---|
-| `app.js` | Starts the server |
-| `db.js` | Database connection |
-| `middleware/` | Who can open which page |
-| `routes/` | Pages and form handlers |
-| `views/` | HTML templates (EJS) |
-| `public/` | CSS |
-| `database/` | `schema.sql`, `bscpe_seed.sql`, example queries, template for adding a department |
+| `routes/web.php` | Every page address, and who may open it |
+| `app/Http/Controllers/` | The code behind each page (login, rep, staff, admin, webhook) |
+| `app/Http/Middleware/RequireRole.php` | Keeps each role to its own pages |
+| `app/Models/` | One class per table |
+| `resources/views/` | HTML templates (Blade) |
+| `public/css/style.css` | Styles |
+| `database/migrations/` | Table definitions |
+| `database/seeders/` | BSCpE data, test accounts, template for a new department |
+| `.env` | Your own settings and secrets. Never committed. |
+
+## Messenger bot (paused)
+
+The webhook from the first version is still at `/webhook`. It reads `VERIFY_TOKEN` and
+`PAGE_ACCESS_TOKEN` from `.env`, and writes incoming messages to `storage/logs/laravel.log`.
+
+## Docker
+
+Being redone for Laravel. The Node.js Docker setup is on the `node-version` branch.

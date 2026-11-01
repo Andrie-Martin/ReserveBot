@@ -1,12 +1,12 @@
 -- ============================================================
 -- ReserveBot: core lookups (optional file, nothing is changed)
 -- Paste into phpMyAdmin's SQL tab to try them.
--- In the Node app, each @variable becomes a ? placeholder.
+-- In Laravel, each @variable becomes a ? placeholder or a query builder call.
 --
 -- Rules these queries follow:
 --  * A reservation holds its slot while Pending, Confirmed or InUse.
 --  * A timetable entry blocks its room on that weekday, but only
---    between the term's StartDate and EndDate.
+--    between the term's start_date and end_date.
 --  * Rooms are shared, so conflicts are checked across ALL departments.
 -- ============================================================
 USE reservebot;
@@ -23,27 +23,27 @@ SET @end       := TIMESTAMP(@next_tue, '13:00');
 -- 1. Why is this room busy? (no rows = free)
 --    Expected: rep1's reservation and the CMPE 451 class, both 11:30 AM-1:30 PM
 --    When a rep books a session of THEIR OWN scheduled class, also add
---    AND cs.ScheduleID <> <that class's ScheduleID>  to the second half.
+--    AND cs.id <> <that class's id>  to the second half.
 -- ------------------------------------------------------------
-SELECT 'Reservation' AS BlockedBy, r.ReservationID AS ID,
-       TIME(r.StartTime) AS FromTime, TIME(r.EndTime) AS ToTime, r.Status AS Detail
-FROM Reservation r
-JOIN Room rm ON rm.RoomID = r.RoomID
-WHERE rm.Name = @room
-  AND r.Status IN ('Pending', 'Confirmed', 'InUse')
-  AND r.StartTime < @end AND r.EndTime > @start
+SELECT 'Reservation' AS blocked_by, r.id,
+       TIME(r.start_time) AS from_time, TIME(r.end_time) AS to_time, r.status AS detail
+FROM reservations r
+JOIN rooms rm ON rm.id = r.room_id
+WHERE rm.name = @room
+  AND r.status IN ('Pending', 'Confirmed', 'InUse')
+  AND r.start_time < @end AND r.end_time > @start
 UNION ALL
-SELECT 'Timetable', cs.ScheduleID, cs.StartTime, cs.EndTime,
-       COALESCE(CONCAT(c.Code, ' ', COALESCE(s.Name, '')), cs.Note)
-FROM ClassSchedule cs
-JOIN Room rm ON rm.RoomID = cs.RoomID
-JOIN Term t  ON t.TermID = cs.TermID
-LEFT JOIN Course c  ON c.CourseID = cs.CourseID
-LEFT JOIN Section s ON s.SectionID = cs.SectionID
-WHERE rm.Name = @room
-  AND DATE(@start) BETWEEN t.StartDate AND t.EndDate
-  AND cs.DayOfWeek = ELT(WEEKDAY(@start) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
-  AND cs.StartTime < TIME(@end) AND cs.EndTime > TIME(@start);
+SELECT 'Timetable', cs.id, cs.start_time, cs.end_time,
+       COALESCE(CONCAT(c.code, ' ', COALESCE(s.name, '')), cs.note)
+FROM class_schedules cs
+JOIN rooms rm ON rm.id = cs.room_id
+JOIN terms t  ON t.id = cs.term_id
+LEFT JOIN courses c  ON c.id = cs.course_id
+LEFT JOIN sections s ON s.id = cs.section_id
+WHERE rm.name = @room
+  AND DATE(@start) BETWEEN t.start_date AND t.end_date
+  AND cs.day_of_week = ELT(WEEKDAY(@start) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
+  AND cs.start_time < TIME(@end) AND cs.end_time > TIME(@start);
 
 -- ------------------------------------------------------------
 -- 2. Which of the department's rooms are free for the whole window?
@@ -53,25 +53,25 @@ WHERE rm.Name = @room
 SET @start := TIMESTAMP(@next_tue, '08:00');
 SET @end   := TIMESTAMP(@next_tue, '10:00');
 
-SELECT rm.Name AS Room, rm.Capacity
-FROM Room rm
-JOIN DepartmentRoom dr ON dr.RoomID = rm.RoomID
-JOIN Department d      ON d.DepartmentID = dr.DepartmentID
-WHERE d.Slug = @dept_slug
-  AND rm.IsActive = 1
+SELECT rm.name AS room, rm.capacity
+FROM rooms rm
+JOIN department_room dr ON dr.room_id = rm.id
+JOIN departments d      ON d.id = dr.department_id
+WHERE d.slug = @dept_slug
+  AND rm.is_active = 1
   AND NOT EXISTS (
-        SELECT 1 FROM Reservation r
-        WHERE r.RoomID = rm.RoomID
-          AND r.Status IN ('Pending', 'Confirmed', 'InUse')
-          AND r.StartTime < @end AND r.EndTime > @start)
+        SELECT 1 FROM reservations r
+        WHERE r.room_id = rm.id
+          AND r.status IN ('Pending', 'Confirmed', 'InUse')
+          AND r.start_time < @end AND r.end_time > @start)
   AND NOT EXISTS (
-        SELECT 1 FROM ClassSchedule cs
-        JOIN Term t ON t.TermID = cs.TermID
-        WHERE cs.RoomID = rm.RoomID
-          AND DATE(@start) BETWEEN t.StartDate AND t.EndDate
-          AND cs.DayOfWeek = ELT(WEEKDAY(@start) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
-          AND cs.StartTime < TIME(@end) AND cs.EndTime > TIME(@start))
-ORDER BY rm.Name;
+        SELECT 1 FROM class_schedules cs
+        JOIN terms t ON t.id = cs.term_id
+        WHERE cs.room_id = rm.id
+          AND DATE(@start) BETWEEN t.start_date AND t.end_date
+          AND cs.day_of_week = ELT(WEEKDAY(@start) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
+          AND cs.start_time < TIME(@end) AND cs.end_time > TIME(@start))
+ORDER BY rm.name;
 
 -- ------------------------------------------------------------
 -- 3. A rep's scheduled classes on a date (what they can book)
@@ -79,17 +79,17 @@ ORDER BY rm.Name;
 SET @email := 'rep1@reservebot.test';
 SET @date  := @next_tue;
 
-SELECT cs.ScheduleID, rm.Name AS Room, cs.StartTime, cs.EndTime,
-       c.Code, c.Title, cs.Instructor
-FROM Users u
-JOIN ClassSchedule cs ON cs.SectionID = u.SectionID
-JOIN Term t           ON t.TermID = cs.TermID
-JOIN Room rm          ON rm.RoomID = cs.RoomID
-JOIN Course c         ON c.CourseID = cs.CourseID
-WHERE u.Email = @email
-  AND @date BETWEEN t.StartDate AND t.EndDate
-  AND cs.DayOfWeek = ELT(WEEKDAY(@date) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
-ORDER BY cs.StartTime;
+SELECT cs.id AS schedule_id, rm.name AS room, cs.start_time, cs.end_time,
+       c.code, c.title, cs.instructor
+FROM users u
+JOIN class_schedules cs ON cs.section_id = u.section_id
+JOIN terms t            ON t.id = cs.term_id
+JOIN rooms rm           ON rm.id = cs.room_id
+JOIN courses c          ON c.id = cs.course_id
+WHERE u.email = @email
+  AND @date BETWEEN t.start_date AND t.end_date
+  AND cs.day_of_week = ELT(WEEKDAY(@date) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
+ORDER BY cs.start_time;
 
 -- ------------------------------------------------------------
 -- 4. Equipment still available in the window
@@ -100,41 +100,41 @@ ORDER BY cs.StartTime;
 SET @start := TIMESTAMP(@next_tue, '12:00');
 SET @end   := TIMESTAMP(@next_tue, '13:00');
 
-SELECT ec.Name AS Category, e.Name AS Item, e.TotalQty,
-       e.TotalQty - COALESCE((
-         SELECT SUM(re.QtyRequested)
-         FROM ReservationEquipment re
-         JOIN Reservation r ON r.ReservationID = re.ReservationID
-         WHERE re.EquipmentID = e.EquipmentID
-           AND r.Status IN ('Pending', 'Confirmed', 'InUse')
-           AND r.StartTime < @end AND r.EndTime > @start), 0) AS Available,
-       e.MaxPerRequest
-FROM Equipment e
-JOIN EquipmentCategory ec ON ec.CategoryID = e.CategoryID
-JOIN Department d         ON d.DepartmentID = ec.DepartmentID
-WHERE d.Slug = @dept_slug AND e.IsActive = 1
-ORDER BY ec.SortOrder, e.SortOrder;
+SELECT ec.name AS category, e.name AS item, e.total_qty,
+       e.total_qty - COALESCE((
+         SELECT SUM(re.qty_requested)
+         FROM reservation_equipment re
+         JOIN reservations r ON r.id = re.reservation_id
+         WHERE re.equipment_id = e.id
+           AND r.status IN ('Pending', 'Confirmed', 'InUse')
+           AND r.start_time < @end AND r.end_time > @start), 0) AS available,
+       e.max_per_request
+FROM equipment e
+JOIN equipment_categories ec ON ec.id = e.category_id
+JOIN departments d           ON d.id = ec.department_id
+WHERE d.slug = @dept_slug AND e.is_active = 1
+ORDER BY ec.sort_order, e.sort_order;
 
 -- ------------------------------------------------------------
 -- 5. One room's full day (timetable + reservations), e.g. for the staff dashboard
 -- ------------------------------------------------------------
 SET @day := @next_tue;
 
-SELECT cs.StartTime, cs.EndTime, 'Timetable' AS Source,
-       COALESCE(CONCAT(c.Code, ' ', COALESCE(c.Title, ''), ' / ', COALESCE(s.Name, '')), cs.Note) AS What
-FROM ClassSchedule cs
-JOIN Room rm ON rm.RoomID = cs.RoomID
-JOIN Term t  ON t.TermID = cs.TermID
-LEFT JOIN Course c  ON c.CourseID = cs.CourseID
-LEFT JOIN Section s ON s.SectionID = cs.SectionID
-WHERE rm.Name = @room
-  AND @day BETWEEN t.StartDate AND t.EndDate
-  AND cs.DayOfWeek = ELT(WEEKDAY(@day) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
+SELECT cs.start_time, cs.end_time, 'Timetable' AS source,
+       COALESCE(CONCAT(c.code, ' ', COALESCE(c.title, ''), ' / ', COALESCE(s.name, '')), cs.note) AS what
+FROM class_schedules cs
+JOIN rooms rm ON rm.id = cs.room_id
+JOIN terms t  ON t.id = cs.term_id
+LEFT JOIN courses c  ON c.id = cs.course_id
+LEFT JOIN sections s ON s.id = cs.section_id
+WHERE rm.name = @room
+  AND @day BETWEEN t.start_date AND t.end_date
+  AND cs.day_of_week = ELT(WEEKDAY(@day) + 1, 'Mon','Tue','Wed','Thu','Fri','Sat','Sun')
 UNION ALL
-SELECT TIME(r.StartTime), TIME(r.EndTime), CONCAT('Reservation #', r.ReservationID),
-       CONCAT(r.Status, ' - ', COALESCE(r.Purpose, 'scheduled class'), ' - ', u.Name)
-FROM Reservation r
-JOIN Room rm ON rm.RoomID = r.RoomID
-JOIN Users u ON u.UserID = r.UserID
-WHERE rm.Name = @room AND DATE(r.StartTime) = @day
+SELECT TIME(r.start_time), TIME(r.end_time), CONCAT('Reservation #', r.id),
+       CONCAT(r.status, ' - ', COALESCE(r.purpose, 'scheduled class'), ' - ', u.name)
+FROM reservations r
+JOIN rooms rm ON rm.id = r.room_id
+JOIN users u  ON u.id = r.user_id
+WHERE rm.name = @room AND DATE(r.start_time) = @day
 ORDER BY 1;
