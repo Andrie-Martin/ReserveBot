@@ -1,0 +1,7 @@
+# Kept out of the app image
+node_modules
+.env
+.git
+ngrok.exe
+database
+*.log

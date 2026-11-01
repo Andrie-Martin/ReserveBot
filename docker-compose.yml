@@ -1,0 +1,65 @@
+# ReserveBot: the whole system in containers (database, website, phpMyAdmin).
+#
+#   docker compose up --build    start everything (the first run downloads a few hundred MB)
+#   http://localhost:3000        the website
+#   http://localhost:8080        phpMyAdmin
+#   Ctrl+C, then
+#   docker compose down          stop (your data is kept)
+#   docker compose down -v       stop AND wipe the database; the next start reloads the .sql files
+name: reservebot
+
+services:
+  db:
+    image: mariadb:10.11                       # same version as XAMPP
+    command: ["--default-time-zone=+08:00"]    # Philippine time for NOW() and CURDATE()
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: reservebot
+      MARIADB_USER: reservebot
+      MARIADB_PASSWORD: reservebot
+    volumes:
+      - db-data:/var/lib/mysql
+      # Loaded automatically, in this order, the first time the database starts
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/bscpe_seed.sql:/docker-entrypoint-initdb.d/02-bscpe_seed.sql:ro
+    ports:
+      - "3307:3306"                            # 3307 on your PC, so it doesn't clash with XAMPP
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    build: .
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: reservebot
+      DB_PASSWORD: reservebot
+      DB_NAME: reservebot
+      # Uses SESSION_SECRET from your .env if you have one; otherwise a development-only value
+      SESSION_SECRET: ${SESSION_SECRET:-dev-only-secret-change-me}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy             # wait until the database is loaded
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
