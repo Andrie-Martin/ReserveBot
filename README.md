@@ -7,7 +7,7 @@ The earlier Node.js version is saved on the `node-version` branch.
 
 ## Run it with Docker (easiest)
 
-You only need **Docker Desktop**. No XAMPP, PHP, Composer, or importing anything by hand.
+It needs **Docker Desktop**. No XAMPP, PHP, Composer, or importing anything by hand.
 
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and open it.
    On Windows the installer sets up WSL 2 for you.
