@@ -1,0 +1,17 @@
+# Kept out of the app image
+.git
+.env
+.env.*
+vendor
+node_modules
+ngrok.exe
+bootstrap/cache/*.php
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing
+database/*.sqlite
+.phpunit.cache
+.phpunit.result.cache
+*.log

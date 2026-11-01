@@ -22,6 +22,12 @@ class TestDataSeeder extends Seeder
 {
     public function run(): void
     {
+        if (User::where('email', 'admin@reservebot.test')->exists()) {
+            $this->command?->warn('The test accounts are already in the database. Nothing was added.');
+
+            return;
+        }
+
         $bscpe = Department::where('slug', 'bscpe')->firstOrFail();
 
         $admin = $this->account($bscpe, 'BSCpE Office Admin', 'admin@reservebot.test', 'admin');

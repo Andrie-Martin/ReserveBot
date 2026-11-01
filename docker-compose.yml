@@ -1,0 +1,71 @@
+# ReserveBot: the whole system in containers (website, database, phpMyAdmin).
+#
+#   docker compose up --build    start everything (the first run downloads a few hundred MB)
+#   http://localhost:8000        the website
+#   http://localhost:8080        phpMyAdmin
+#   Ctrl+C, then
+#   docker compose down          stop (your data is kept)
+#   docker compose down -v       stop AND wipe the database; the next start rebuilds it with the test data
+name: reservebot
+
+services:
+  db:
+    image: mariadb:10.11                       # same version as XAMPP
+    command: ["--default-time-zone=+08:00"]    # Philippine time for NOW() and CURDATE()
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: reservebot
+      MARIADB_USER: reservebot
+      MARIADB_PASSWORD: reservebot
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3307:3306"                            # 3307 on your PC, so it doesn't clash with XAMPP
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    build: .
+    environment:
+      APP_NAME: ReserveBot
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      # Uses APP_KEY from your .env if you have one; otherwise a development-only key
+      APP_KEY: ${APP_KEY:-base64:a4BmvBlJnAj93YSkzq2JPx26kBzBIsa5xRYusk2MZV0=}
+      DB_CONNECTION: mariadb
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: reservebot
+      DB_USERNAME: reservebot
+      DB_PASSWORD: reservebot
+      SESSION_LIFETIME: 480
+      LOG_CHANNEL: stderr                      # Laravel's log shows up in this window
+      # Messenger bot (paused): taken from your .env if set
+      VERIFY_TOKEN: ${VERIFY_TOKEN:-}
+      PAGE_ACCESS_TOKEN: ${PAGE_ACCESS_TOKEN:-}
+    ports:
+      - "8000:80"
+    depends_on:
+      db:
+        condition: service_healthy             # wait until the database is ready
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

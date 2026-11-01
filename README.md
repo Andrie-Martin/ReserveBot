@@ -5,6 +5,36 @@ Built with Laravel (PHP) and Blade pages, on a MariaDB/MySQL database.
 
 The earlier Node.js version is saved on the `node-version` branch.
 
+## Run it with Docker (easiest)
+
+You only need **Docker Desktop**. No XAMPP, PHP, Composer, or importing anything by hand.
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and open it.
+   On Windows the installer sets up WSL 2 for you.
+2. Get the code and start everything:
+   ```
+   git clone https://github.com/Andrie-Martin/ReserveBot.git
+   cd ReserveBot
+   docker compose up --build
+   ```
+   The first run downloads a few hundred MB and builds the database, so give it a few minutes.
+3. Open:
+   - **http://localhost:8000**: the website
+   - **http://localhost:8080**: phpMyAdmin, already logged in
+
+| To | Run |
+|---|---|
+| Stop | `Ctrl+C`, or `docker compose down` in another window |
+| See your code changes | `Ctrl+C`, then `docker compose up --build` |
+| Reset the database (rebuilds it with the test data) | `docker compose down -v`, then `docker compose up --build` |
+
+Docker has its own database, separate from XAMPP's, so XAMPP's MySQL can stay on.
+If port 8000 is taken, stop any `php artisan serve` you have running first.
+
+**Mixing both:** to edit code without rebuilding, run only the database in Docker
+(`docker compose up db phpmyadmin`) and the website with `php artisan serve`, using these
+`.env` values: `DB_PORT=3307`, `DB_USERNAME=reservebot`, `DB_PASSWORD=reservebot`.
+
 ## Run it on your PC (XAMPP + Composer)
 
 You need:
@@ -113,13 +143,12 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | `public/css/style.css` | Styles |
 | `database/migrations/` | Table definitions |
 | `database/seeders/` | BSCpE data, test accounts, template for a new department |
+| `routes/api.php` | Addresses other programs call: the Messenger webhook and `/test-db` |
+| `Dockerfile`, `docker-compose.yml`, `docker/` | The Docker setup |
 | `.env` | Your own settings and secrets. Never committed. |
 
 ## Messenger bot (paused)
 
 The webhook from the first version is still at `/webhook`. It reads `VERIFY_TOKEN` and
-`PAGE_ACCESS_TOKEN` from `.env`, and writes incoming messages to `storage/logs/laravel.log`.
-
-## Docker
-
-Being redone for Laravel. The Node.js Docker setup is on the `node-version` branch.
+`PAGE_ACCESS_TOKEN` from `.env`, and writes incoming messages to `storage/logs/laravel.log`
+(in Docker, to the `docker compose up` window).
