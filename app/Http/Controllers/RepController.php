@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassSchedule;
+use App\Services\ClassChecks;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class RepController extends Controller
 {
-    public function home(Request $request): View
+    public function home(Request $request, ClassChecks $checks): View
     {
         $user = $request->user()->load('department', 'section');
 
@@ -33,6 +34,8 @@ class RepController extends Controller
                 ['label' => 'See and cancel my bookings', 'url' => route('bookings.mine')],
             ],
             'comingNext' => [],
+            // Phase 10: the block's classes in the next 7 days: face-to-face or online?
+            'meetings' => $user->section_id ? $checks->forBlock($user->section_id, 7) : [],
         ]);
     }
 }

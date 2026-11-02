@@ -6,6 +6,7 @@ use App\Models\DepartmentConfig;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\Bookings;
+use App\Services\ClassChecks;
 use App\Services\StaffDesk;
 use App\Support\BookingRules;
 use App\Support\StaffRules;
@@ -24,7 +25,7 @@ class TodayController extends Controller
     /** How far back the day picker goes (for checking what happened) */
     private const DAYS_BACK = 7;
 
-    public function __construct(private StaffDesk $desk, private Bookings $bookings) {}
+    public function __construct(private StaffDesk $desk, private Bookings $bookings, private ClassChecks $checks) {}
 
     /** GET /today?date=2026-11-03 */
     public function index(Request $request): View
@@ -59,6 +60,8 @@ class TodayController extends Controller
             'toHandOut' => $all->where('status', 'Confirmed')->values(),
             'waiting' => $all->where('status', 'Pending')->values(),
             'done' => $all->whereIn('status', ['Completed', 'NoShow', 'Cancelled', 'Rejected'])->values(),
+            // Phase 10: the department's classes this day: face-to-face or online?
+            'classes' => $this->checks->forDepartment($user->department_id, $date),
         ]);
     }
 

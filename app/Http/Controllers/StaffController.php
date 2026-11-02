@@ -31,7 +31,7 @@ class StaffController extends Controller
                 ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
             ],
             'comingNext' => [
-                'Reports: bookings, no-shows and equipment use',
+                'Reminders by Facebook Messenger, once the site is online',
             ],
         ]);
     }

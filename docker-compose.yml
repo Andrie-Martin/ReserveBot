@@ -1,4 +1,4 @@
-# ReserveBot: the whole system in containers (website, database, phpMyAdmin).
+# ReserveBot: the whole system in containers (website, reminder emails, database, phpMyAdmin).
 #
 #   docker compose up --build    start everything (the first run downloads a few hundred MB)
 #   http://localhost:8000        the website
@@ -30,7 +30,7 @@ services:
 
   app:
     build: .
-    environment:
+    environment: &app-environment                # the scheduler below uses the same settings
       APP_NAME: ReserveBot
       APP_ENV: local
       APP_DEBUG: "true"
@@ -63,6 +63,19 @@ services:
     depends_on:
       db:
         condition: service_healthy             # wait until the database is ready
+    restart: unless-stopped
+
+  # Phase 10: sends the reminder and "is your class face-to-face?" emails (checks every minute).
+  # Same code and settings as the website; it runs Laravel's scheduler instead of Apache.
+  scheduler:
+    build: .
+    entrypoint: ["php", "artisan", "schedule:work"]
+    environment: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started             # the website's start builds or updates the tables
     restart: unless-stopped
 
   phpmyadmin:

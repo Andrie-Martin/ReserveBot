@@ -131,6 +131,32 @@ Gmail sends up to about 500 emails a day. The App Password works like the accoun
 it stays in `.env`, which is never committed. Links in the emails use the address the site
 was opened with, so while you test on `localhost`, open them on the same PC.
 
+## Reminders and the face-to-face check
+
+Block reps get emails 1 day, 5 hours and 1 hour before:
+
+- **their approved bookings** (a reminder), and
+- **their block's classes**, asking *"Is it face-to-face?"*. **Online** frees the class's room
+  for that day: it shows as free on Free rooms and anyone can book it. **No answer** frees it
+  too, when the 5-hour email goes out, but only if the rep got the day-before email (blocks
+  without a connected rep keep their rooms). **Face-to-face** takes a freed room back unless
+  someone has booked it since.
+
+Emails due from 10 PM to 6 AM go out at 9 PM the night before. Reps can also answer on their
+home page, and lab staff and admins on the Today page. Facebook Messenger can come later, once
+the site is online (Meta needs approved message templates for reminders).
+
+The emails only go out while Laravel's **scheduler** runs:
+
+- **XAMPP:** keep a second terminal open in the project folder running `php artisan schedule:work`
+  (stop it with `Ctrl+C`). Nothing is sent while your PC is off.
+- **Docker:** the `scheduler` container does it.
+- **Online:** a cron job that runs `php artisan schedule:run` every minute.
+
+The links in these emails use `APP_URL` from `.env`, so it must be the address people open the
+site with (e.g. `http://localhost:8000`, or the real address once it's online).
+To try it without waiting, pretend it's another time: `php artisan reminders:send --at="2026-11-05 08:30"`.
+
 ## Database
 
 The tables are defined in `database/migrations/` (one file per table) and filled by
@@ -179,7 +205,8 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | `app/Http/Controllers/` | The code behind each page (login, accounts, home pages, free rooms, booking, webhook) |
 | `app/Services/` | Reading the timetable and bookings, and saving bookings |
 | `app/Support/` | Time-slot math, the booking rules, the account checks and photo resizing (no database, so they're easy to test) |
-| `app/Notifications/` | The emails: connect your email, pick a new password |
+| `app/Notifications/`, `resources/views/mail/` | The emails: connect your email, pick a new password, reminders |
+| `app/Console/Commands/`, `routes/console.php` | `reminders:send` and its every-minute schedule |
 | `app/Http/Middleware/` | Keeps each role to its own pages, logs out turned-off accounts, asks for a new password first |
 | `app/Models/` | One class per table |
 | `resources/views/` | HTML templates (Blade) |

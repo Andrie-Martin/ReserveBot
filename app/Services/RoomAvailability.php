@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\ClassCheck;
 use App\Models\ClassSchedule;
 use App\Models\DepartmentConfig;
 use App\Models\Reservation;
 use App\Models\Term;
 use App\Models\User;
+use App\Support\ClassCheckRules;
 use App\Support\TimeSlots;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -15,11 +17,14 @@ use Illuminate\Support\Collection;
  * Reads the timetable and bookings for the free rooms page.
  *
  * busy():   what keeps each room busy on one day (every department's classes and bookings,
- *           because rooms are shared)
+ *           because rooms are shared). Phase 10: a class that's online, or wasn't confirmed
+ *           face-to-face in time, doesn't keep its room busy (App\Services\ClassChecks).
  * agenda(): what the viewer has on each day, for the month calendar
  */
 class RoomAvailability
 {
+    public function __construct(private ClassChecks $checks) {}
+
     public const DAY_NAMES = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
 
     public const STATUS_WORDS = ['Pending' => 'waiting for approval', 'Confirmed' => 'confirmed', 'InUse' => 'in use now'];
@@ -65,7 +70,13 @@ class RoomAvailability
         $sessions = $bookings->whereNotNull('class_schedule_id')->keyBy('class_schedule_id');
         $shownSessions = [];
 
+        // Phase 10: classes that are online today, or weren't confirmed face-to-face in time, free their room
+        $freed = $this->checks->freedIds($classes, $date);
+
         foreach ($classes as $entry) {
+            if (in_array($entry->id, $freed)) {
+                continue;
+            }
             $start = DepartmentConfig::minutes($entry->start_time);
             $end = DepartmentConfig::minutes($entry->end_time);
 
@@ -168,6 +179,13 @@ class RoomAvailability
             ->orderBy('start_time')
             ->get();
 
+        // Phase 10: the block's face-to-face answers for these days
+        $checks = $classes->isEmpty() ? collect() : ClassCheck::whereIn('class_schedule_id', $classes->pluck('id'))
+            ->whereBetween('class_date', [$from->toDateString(), $to->toDateString()])
+            ->get()
+            ->keyBy(fn ($check) => $check->class_schedule_id.'_'.$check->class_date->toDateString());
+        $now = CarbonImmutable::now();
+
         $agenda = [];
         for ($day = $from; $day->lte($to); $day = $day->addDay()) {
             $key = $day->toDateString();
@@ -192,8 +210,14 @@ class RoomAvailability
                 $start = DepartmentConfig::minutes($class->start_time);
                 $end = DepartmentConfig::minutes($class->end_time);
                 $course = trim(($class->course?->code ?? 'Class').' '.($class->course?->title ?? ''));
+                $check = $checks->get($class->id.'_'.$key);
+                $state = $dayBookings->contains('class_schedule_id', $class->id) ? 'booked'
+                    : ClassCheckRules::state($check?->answer, $check?->asked_at?->toImmutable(), $day->startOfDay()->addMinutes($start), $now);
                 $items[] = [
                     'kind' => 'class', 'start' => $start, 'end' => $end, 'room' => $class->room->name, 'noRoom' => false,
+                    // Phase 10: 'Face-to-face', 'Online · room freed' or 'Not confirmed · room freed' (nothing while waiting)
+                    'check' => in_array($state, ['f2f', 'online', 'freed'], true) ? ClassChecks::LABELS[$state] : null,
+                    'freed' => ClassCheckRules::roomFree($state),
                     'text' => $class->course?->code ?? 'Class', 'title' => $course, 'status' => $session?->status,
                     'tag' => $session ? self::tag($session) : null,
                     'url' => $session && $session->user_id === $viewer->id ? route('bookings.show', $session) : null,

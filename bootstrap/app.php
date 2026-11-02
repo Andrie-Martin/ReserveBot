@@ -35,9 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
-        // An emailed "connect your email" link that expired or was cut short
-        $exceptions->render(fn (InvalidSignatureException $e) => response()->view('auth.email_link', [
+        // An emailed link that expired or was cut short: "connect your email", or a class's
+        // face-to-face buttons (Phase 10), which work until the class ends
+        $exceptions->render(fn (InvalidSignatureException $e, Request $request) => response()->view('auth.email_link', [
             'ok' => false,
-            'message' => 'This link has expired or isn’t complete. Log in and send a new one from My account.',
+            'message' => $request->is('class-check/*')
+                ? 'This link has expired (it works until the class ends) or isn’t complete. Reps can also answer on their home page.'
+                : 'This link has expired or isn’t complete. Log in and send a new one from My account.',
         ], 403));
     })->create();

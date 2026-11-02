@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ClassCheckController;
 use App\Http\Controllers\EmailLinkController;
 use App\Http\Controllers\ManageEquipmentController;
 use App\Http\Controllers\ManageRoomsController;
@@ -37,6 +38,12 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 // before it expires; it works whether or not you're logged in (e.g. opened on a phone).
 Route::get('/connect-email/{user}/{hash}', [EmailLinkController::class, 'connect'])
     ->middleware(['signed', 'throttle:email-links'])->name('email.connect');
+
+// Phase 10: the buttons in the "is your class face-to-face?" emails. A page for one rep that works
+// without logging in, until the class ends ('signed' = only the exact link we sent).
+Route::match(['get', 'post'], '/class-check/{class}/{date}/{user}', [ClassCheckController::class, 'email'])
+    ->where('date', '\d{4}-\d{2}-\d{2}')
+    ->middleware(['signed', 'throttle:email-links'])->name('class-check');
 
 // ---- Pages for logged-in users ('auth' sends everyone else to /login) ----
 // 'auth.session' logs a session out when the account's password changes (on another device, or by an admin).
@@ -73,6 +80,10 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         // Phase 6: a rep's own bookings, and cancelling one (with a reason)
         Route::get('/my-bookings', [BookingController::class, 'mine'])->name('bookings.mine');
         Route::post('/bookings/{reservation}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
+        // Phase 10: is one of the block's classes face-to-face? (home page)
+        Route::post('/classes/{class}/{date}/answer', [ClassCheckController::class, 'asRep'])
+            ->where('date', '\d{4}-\d{2}-\d{2}')->name('classes.answer');
     });
 
     // One booking: the rep who made it, and their department's lab staff and admins
@@ -91,6 +102,10 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         Route::post('/bookings/{reservation}/no-show', [TodayController::class, 'noShow'])->name('bookings.no-show');
         Route::post('/bookings/{reservation}/staff-cancel', [TodayController::class, 'cancel'])->name('bookings.staff-cancel');
         Route::post('/bookings/{reservation}/move', [TodayController::class, 'move'])->name('bookings.move');
+
+        // Phase 10: lab staff and admins mark a class face-to-face or online (Today page)
+        Route::post('/classes/{class}/{date}/mark', [ClassCheckController::class, 'asStaff'])
+            ->where('date', '\d{4}-\d{2}-\d{2}')->name('classes.mark');
 
         // Phase 8: managing rooms, equipment and the booking rules
         Route::prefix('manage')->name('manage.')->group(function () {

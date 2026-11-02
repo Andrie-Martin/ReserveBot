@@ -34,7 +34,7 @@ class AdminController extends Controller
                 ['label' => 'Rep and lab staff accounts', 'url' => route('accounts.index')],
             ],
             'comingNext' => [
-                'Reports: bookings, no-shows and equipment use',
+                'Reminders by Facebook Messenger, once the site is online',
             ],
         ]);
     }

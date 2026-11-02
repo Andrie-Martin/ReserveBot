@@ -1,4 +1,6 @@
 @extends('layouts.app')
+@use('App\Services\ClassChecks')
+@use('App\Support\TimeSlots')
 
 @section('title', "Today's schedule")
 
@@ -56,6 +58,41 @@
     @foreach ($waiting as $r)
       @include('today._card', ['r' => $r, 'staff' => $staff])
     @endforeach
+  @endif
+
+  @if ($classes)
+    {{-- Phase 10: the department's classes this day. Online, or not confirmed by the 5-hour email, frees the room. --}}
+    @php
+      $freedCount = collect($classes)->filter(fn ($m) => in_array($m['state'], ['online', 'freed'], true))->count();
+      $waitingCount = collect($classes)->where('state', 'waiting')->count();
+    @endphp
+    <details class="done-list class-list" @if ($date->isToday()) open @endif>
+      <summary>Classes <span class="count">{{ count($classes) }}</span>
+        <span class="muted">{{ $freedCount }} {{ $freedCount === 1 ? 'room' : 'rooms' }} freed · {{ $waitingCount }} not confirmed yet</span></summary>
+      <table class="mtable class-table">
+        <thead>
+          <tr><th>Time</th><th>Room</th><th>Class</th><th>Face-to-face?</th><th><span class="sr-only">Mark</span></th></tr>
+        </thead>
+        <tbody>
+          @foreach ($classes as $m)
+            @php $freed = in_array($m['state'], ['online', 'freed'], true); @endphp
+            <tr @class(['off' => $freed])>
+              <td class="nowrap">{{ TimeSlots::span($m['start']->hour * 60 + $m['start']->minute, $m['end']->hour * 60 + $m['end']->minute) }}</td>
+              <td>{{ $m['class']->room->name }}</td>
+              <td>{{ $m['class']->course?->code ?? 'Class' }}@if ($m['class']->section) <span class="muted">· {{ $m['class']->section->name }}</span>@endif</td>
+              <td>
+                <span class="st {{ ClassChecks::BADGES[$m['state']] }}">{{ ClassChecks::LABELS[$m['state']] }}</span>
+                @if ($m['check']?->answeredBy)
+                  <span class="muted small">by {{ $m['check']->answeredBy->name }}</span>
+                @endif
+              </td>
+              <td>@include('classes._answer', ['m' => $m, 'route' => 'classes.mark'])</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+      <p class="hint">Reps get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
+    </details>
   @endif
 
   @if ($done->isNotEmpty())

@@ -70,11 +70,12 @@
                       <span class="evts">
                         @foreach (array_slice($items, 0, $shown) as $it)
                           @php $booked = $it['kind'] === 'class' && in_array($it['status'], ['Confirmed', 'InUse'], true); @endphp
-                          <span @class(['evt', 'k-'.$it['kind'], 'pending' => $it['status'] === 'Pending', 'booked' => $booked]) title="{{ $it['tip'] }}">
+                          <span @class(['evt', 'k-'.$it['kind'], 'pending' => $it['status'] === 'Pending', 'booked' => $booked, 'freed' => ! empty($it['freed'])]) title="{{ $it['tip'] }}{{ ! empty($it['check']) ? ' · '.$it['check'] : '' }}">
                             <span class="t">{!! $clock !!}<b>{{ TimeSlots::clock($it['start']) }}</b> <span class="x">{{ $it['text'] }}</span></span>
                             <span class="w">{!! $it['noRoom'] ? $box : $pin !!}{{ $it['room'] }}</span>
                             @if ($booked)<span class="ok" aria-hidden="true">✓</span>@endif
                             @if ($it['tag'])<span class="sr-only">({{ $it['tag'] }})</span>@endif
+                            @if (! empty($it['check']))<span class="sr-only">({{ $it['check'] }})</span>@endif
                           </span>
                         @endforeach
                         @if (count($items) > $shown)
@@ -154,6 +155,10 @@
               <span class="what">{{ $it['title'] }} <span class="where">· {{ $it['room'] }}</span></span>
               @if ($it['tag'])
                 <span @class(['st', 'st-pending' => $it['status'] === 'Pending'])>{{ $it['tag'] }}</span>
+              @endif
+              @if (! empty($it['check']))
+                {{-- Phase 10: is the class face-to-face? --}}
+                <span @class(['st', 'st-freed' => ! empty($it['freed'])])>{{ $it['check'] }}</span>
               @endif
               @if (! empty($it['bookUrl']))
                 <a class="btn-book" href="{{ $it['bookUrl'] }}">Book<span class="sr-only"> {{ $it['text'] }} at {{ TimeSlots::clock($it['start']) }}</span></a>
