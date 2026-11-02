@@ -26,9 +26,11 @@ class AdminController extends Controller
                 'label' => $pending === 1 ? 'request waiting for approval' : 'requests waiting for approval',
             ],
             'classes' => null,
-            'ready' => [['label' => 'See which rooms are free', 'url' => route('rooms')]],
+            'ready' => [
+                ['label' => 'Review requests', 'url' => route('requests')],
+                ['label' => 'See which rooms are free', 'url' => route('rooms')],
+            ],
             'comingNext' => [
-                'Approve or reject requests',
                 'Manage rooms, equipment and stock counts',
                 'Department settings and reports',
                 'Create and delete accounts for reps and lab staff, and change passwords',

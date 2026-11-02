@@ -30,10 +30,9 @@ class RepController extends Controller
             'ready' => [
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
                 ['label' => 'Book a room or equipment', 'url' => route('book')],
+                ['label' => 'See and cancel my bookings', 'url' => route('bookings.mine')],
             ],
-            'comingNext' => [
-                'See all your bookings in one list, and cancel them',
-            ],
+            'comingNext' => [],
         ]);
     }
 }

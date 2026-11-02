@@ -13,6 +13,9 @@ class Reservation extends Model
     /** While a reservation has one of these statuses, its room and equipment are taken */
     public const BLOCKING_STATUSES = ['Pending', 'Confirmed', 'InUse'];
 
+    /** A rep can cancel a booking with one of these statuses (until the department's cancel deadline) */
+    public const CANCELLABLE_STATUSES = ['Pending', 'Confirmed'];
+
     /** What each status is called on the pages */
     public const STATUS_LABELS = [
         'Pending' => 'Waiting for approval',
@@ -105,6 +108,12 @@ class Reservation extends Model
         }
 
         return $items->join(', ');
+    }
+
+    /** How many requests from $user's department wait for approval (for the top bar) */
+    public static function waitingCountFor(User $user): int
+    {
+        return self::where('status', 'Pending')->whereRelation('user', 'department_id', $user->department_id)->count();
     }
 
     public function statusLabel(): string

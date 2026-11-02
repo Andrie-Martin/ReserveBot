@@ -36,7 +36,7 @@ class DepartmentConfig extends Model
         'max_booking_minutes' => 180,
         'max_days_ahead' => 14,
         'min_notice_minutes' => 60,
-        'cancel_cutoff_minutes' => 60,
+        'cancel_cutoff_minutes' => 180,
         'no_show_grace_minutes' => 15,
     ];
 

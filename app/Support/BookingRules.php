@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\DepartmentConfig;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 
 /**
  * A department's booking rules (the department_configs row) as checks on a day and times.
@@ -20,6 +21,7 @@ class BookingRules
         public readonly int $maxMinutes,        // longest extra booking (class sessions keep their own length)
         public readonly int $maxDaysAhead,
         public readonly int $noticeMinutes,     // how long before the start you must book
+        public readonly int $cancelMinutes,     // how long before the start a rep can still cancel
         public readonly bool $needsApproval,
         public readonly CarbonImmutable $now,
     ) {}
@@ -29,7 +31,8 @@ class BookingRules
         return new self(
             $config->openDays(), $config->opensAt(), $config->closesAt(), $config->slot_minutes,
             $config->min_booking_minutes, $config->max_booking_minutes, $config->max_days_ahead,
-            $config->min_notice_minutes, $config->requires_approval, $now ?? CarbonImmutable::now(),
+            $config->min_notice_minutes, $config->cancel_cutoff_minutes, $config->requires_approval,
+            $now ?? CarbonImmutable::now(),
         );
     }
 
@@ -110,6 +113,18 @@ class BookingRules
         }
 
         return $this->checkNotice($start);
+    }
+
+    /** The last moment a rep can cancel a booking that starts at $start */
+    public function cancelDeadline(CarbonInterface $start): CarbonImmutable
+    {
+        return CarbonImmutable::instance($start)->subMinutes($this->cancelMinutes);
+    }
+
+    /** True while a booking that starts at $start can still be cancelled by its rep */
+    public function canCancel(CarbonInterface $start): bool
+    {
+        return $this->now->lte($this->cancelDeadline($start));
     }
 
     private function checkNotice(CarbonImmutable $start): ?string

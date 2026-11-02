@@ -1,3 +1,4 @@
+@use('App\Models\Reservation')
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +18,12 @@
           <a href="{{ url('/') }}" @class(['active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')])>Home</a>
           <a href="{{ route('rooms') }}" @class(['active' => request()->routeIs('rooms')])>Free rooms</a>
           @if (auth()->user()->role === 'rep')
-            <a href="{{ route('book') }}" @class(['active' => request()->routeIs('book', 'bookings.*')])>Book</a>
+            <a href="{{ route('book') }}" @class(['active' => request()->routeIs('book')])>Book</a>
+            <a href="{{ route('bookings.mine') }}" @class(['active' => request()->routeIs('bookings.mine', 'bookings.show')])>My bookings</a>
+          @else
+            {{-- Lab staff and admins: how many requests wait for approval --}}
+            @php $waitingCount = Reservation::waitingCountFor(auth()->user()); @endphp
+            <a href="{{ route('requests') }}" @class(['active' => request()->routeIs('requests', 'bookings.show')])>Requests @if ($waitingCount)<span class="nav-count">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>@endif</a>
           @endif
         </nav>
         <div class="who">

@@ -167,14 +167,78 @@ class BookingController extends Controller
     /** One booking. Its owner can see it, and so can the lab staff and admins of the owner's department. */
     public function show(Request $request, Reservation $reservation): View
     {
-        $user = $request->user();
+        [$user, $rules] = $this->context($request);
         $reservation->load(['user.section', 'room', 'classSchedule.course', 'classSchedule.section', 'equipment.category', 'reviewer']);
 
         $isStaff = in_array($user->role, ['lab_staff', 'admin'], true)
             && $reservation->user->department_id === $user->department_id;
-        abort_unless($reservation->user_id === $user->id || $isStaff, 404);
+        $isOwner = $reservation->user_id === $user->id;
+        abort_unless($isOwner || $isStaff, 404);
 
-        return view('bookings.show', ['reservation' => $reservation]);
+        $cancellable = $isOwner && in_array($reservation->status, Reservation::CANCELLABLE_STATUSES, true);
+
+        return view('bookings.show', [
+            'reservation' => $reservation,
+            'canReview' => $isStaff && $reservation->status === 'Pending',
+            'canCancel' => $cancellable && $rules->canCancel($reservation->start_time),
+            'tooLateToCancel' => $cancellable && ! $rules->canCancel($reservation->start_time),
+            'cancelDeadline' => $rules->cancelDeadline($reservation->start_time),
+            'cancelHours' => BookingRules::duration($rules->cancelMinutes),
+        ]);
+    }
+
+    /** GET /my-bookings: the rep's bookings, coming up first, then past and closed ones */
+    public function mine(Request $request): View
+    {
+        [$user, $rules] = $this->context($request);
+        $now = CarbonImmutable::now();
+
+        $bookings = Reservation::with(['room', 'equipment', 'classSchedule.course'])
+            ->where('user_id', $user->id)
+            ->orderBy('start_time')
+            ->get();
+
+        // Coming up: still holding its room or items, and not over yet
+        [$upcoming, $past] = $bookings->partition(
+            fn ($booking) => in_array($booking->status, Reservation::BLOCKING_STATUSES, true) && $booking->end_time->gte($now)
+        );
+
+        return view('bookings.mine', [
+            'upcoming' => $upcoming->values(),
+            'past' => $past->sortByDesc('start_time')->take(30)->values(),
+            'rules' => $rules,
+        ]);
+    }
+
+    /** POST /bookings/{reservation}/cancel: the rep cancels their own booking, with a reason */
+    public function cancel(Request $request, Reservation $reservation): RedirectResponse
+    {
+        [$user, $rules] = $this->context($request);
+        abort_unless($reservation->user_id === $user->id, 404);
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:255'],
+        ], [
+            'reason.required' => 'Please say why you’re cancelling.',
+            'reason.max' => 'Keep the reason under 255 characters.',
+        ]);
+
+        if (! in_array($reservation->status, Reservation::CANCELLABLE_STATUSES, true)) {
+            return back()->with('problem', 'This booking can’t be cancelled: it’s '.strtolower($reservation->statusLabel()).'.');
+        }
+        if (! $rules->canCancel($reservation->start_time)) {
+            return back()->with('problem', 'It’s too late to cancel here: bookings can be cancelled until '
+                .BookingRules::duration($rules->cancelMinutes).' before they start. Please tell the lab staff.');
+        }
+
+        // Only if it's still Pending or Confirmed (lab staff might have just changed it)
+        $changed = Reservation::whereKey($reservation->id)
+            ->whereIn('status', Reservation::CANCELLABLE_STATUSES)
+            ->update(['status' => 'Cancelled', 'status_reason' => trim($data['reason']), 'updated_at' => now()]);
+
+        return $changed
+            ? redirect()->route('bookings.show', $reservation)->with('status', 'Booking cancelled. The room and items are free again.')
+            : back()->with('problem', 'This booking just changed. Please check its status.');
     }
 
     private function context(Request $request): array

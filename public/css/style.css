@@ -382,3 +382,75 @@ button.btn-next { width: auto; min-width: 230px; padding: 11px 22px; }
   .booking-head { flex-direction: column; }
   .room-name .btn-book { display: inline-block; margin: 0 0 0 auto; }
 }
+
+/* ---------- Approvals and My bookings (Phase 6) ---------- */
+.nav-count { display: inline-block; min-width: 20px; margin-left: 2px; padding: 0 6px; border-radius: 999px; background: #DC2626; color: #fff; font-size: 11.5px; font-weight: 700; line-height: 18px; text-align: center; vertical-align: 1px; }
+h2 .count { display: inline-block; min-width: 22px; margin-left: 4px; padding: 0 7px; border-radius: 999px; background: #F3F4F6; color: var(--muted); font-size: 12.5px; line-height: 20px; text-align: center; }
+.field-error { margin: 6px 0 0; color: var(--error); font-size: 13.5px; }
+button.btn-approve { width: auto; padding: 8px 18px; background: #15803D; }
+button.btn-approve:hover { background: #166534; }
+button.btn-reject { width: auto; margin-top: 8px; padding: 8px 16px; background: #B91C1C; }
+button.btn-reject:hover { background: #991B1B; }
+details.reject > summary, details.cancel-box > summary { width: fit-content; padding: 7px 14px; border: 1px solid #FECACA; border-radius: 8px; background: #fff; color: #B91C1C; font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; }
+details.reject > summary::-webkit-details-marker, details.cancel-box > summary::-webkit-details-marker { display: none; }
+details.reject[open] > summary, details.cancel-box[open] > summary { background: #FEF2F2; }
+details.reject form, details.cancel-box form { margin-top: 10px; }
+details.reject textarea, details.cancel-box textarea { display: block; width: 100%; padding: 9px 10px; border: 1px solid #D1D5DB; border-radius: 8px; font: inherit; resize: vertical; }
+details.reject textarea:focus, details.cancel-box textarea:focus { outline: 2px solid var(--brand); border-color: transparent; }
+
+/* One booking's page: decide or cancel */
+.review-box { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #FDE68A; border-radius: 12px; background: #FFFBEB; }
+.review-title { margin: 0 0 10px; color: #92400E; font-weight: 600; }
+.review-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+.review-actions form { margin: 0; }
+.review-actions details.reject { flex: 1 1 260px; }
+.cancel-box { margin: 0 0 20px; }
+.cancel-box .hint { margin: 0 0 10px; }
+
+/* My bookings */
+.mine-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.mine-head .muted { margin: 0; }
+.mine-card h2 { margin-top: 26px; }
+.blist { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.brow { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 4px 18px; margin: 0; padding: 12px 16px; border-top: 1px solid var(--line); }
+.brow:first-child { border-top: 0; }
+.brow-when strong { display: block; font-size: 15px; }
+.brow-when span { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.brow-what p { margin: 0; }
+.brow-title { font-size: 15px; font-weight: 600; }
+.brow-title a { color: var(--text); text-decoration: none; }
+.brow-title a:hover { color: var(--brand); text-decoration: underline; }
+.brow-meta, .brow-items { color: var(--muted); font-size: 13.5px; }
+.brow-reason { margin-top: 4px !important; color: #991B1B; font-size: 13.5px; }
+.brow-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.brow-cancel { color: #B91C1C; font-size: 13.5px; font-weight: 600; }
+.blist.past .brow { background: #FCFCFD; }
+
+/* Requests (lab staff and admins) */
+.requests-card h2 { margin-top: 26px; }
+.req { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px 24px; margin: 0 0 12px; padding: 16px; border: 1px solid var(--line); border-left: 4px solid #F59E0B; border-radius: 12px; }
+.req-main p { margin: 0; }
+.req-when { color: var(--muted); font-size: 14px; }
+.req-when strong { color: var(--text); }
+.req-title { margin: 4px 0 8px !important; font-size: 16.5px; font-weight: 700; }
+.req-facts { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 3px 12px; margin: 0; font-size: 14px; }
+.req-facts dt { color: var(--muted); }
+.req-facts dd { margin: 0; }
+.req-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.req-actions form { margin: 0; }
+.req-actions details.reject { width: 100%; }
+.req-link { font-size: 13.5px; }
+.tag-warn, .tag-today { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.tag-warn { background: #FEE2E2; color: #991B1B; }
+.tag-today { background: var(--brand); color: #fff; }
+.decided { margin: 0; padding: 0; list-style: none; }
+.decided li { margin: 0; padding: 8px 0; border-top: 1px dashed var(--line); font-size: 14px; }
+.decided .status-badge { padding: 1px 9px; font-size: 12px; }
+.decided-why { display: block; margin-top: 2px; color: #991B1B; font-size: 13px; }
+
+@media (max-width: 640px) {
+  .req { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .brow { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
+  .brow-when { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; }
+  .brow-side { grid-row: 2; grid-column: 2; }
+}

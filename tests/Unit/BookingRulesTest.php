@@ -20,6 +20,7 @@ class BookingRulesTest extends TestCase
             maxMinutes: 180,
             maxDaysAhead: 14,
             noticeMinutes: 60,
+            cancelMinutes: 180,
             needsApproval: true,
             now: CarbonImmutable::parse($now),
         );
@@ -105,6 +106,15 @@ class BookingRulesTest extends TestCase
         $this->assertCount(13, $days);                                   // November 2 to 16, without the two Sundays
         $this->assertSame('2026-11-02', $days[0]->toDateString());
         $this->assertSame('2026-11-16', end($days)->toDateString());
+    }
+
+    public function test_reps_can_cancel_until_3_hours_before_the_start(): void
+    {
+        $rules = $this->rules('2026-11-03 09:00');
+
+        $this->assertTrue($rules->canCancel(CarbonImmutable::parse('2026-11-03 12:00')));     // exactly 3 hours left
+        $this->assertFalse($rules->canCancel(CarbonImmutable::parse('2026-11-03 11:30')));    // only 2½ hours left
+        $this->assertSame('2026-11-04 05:00', $rules->cancelDeadline(CarbonImmutable::parse('2026-11-04 08:00'))->format('Y-m-d H:i'));
     }
 
     public function test_lengths_are_written_in_words(): void
