@@ -78,7 +78,8 @@ class AvailabilityController extends Controller
             // A Book button on each of the rep's classes that day that isn't booked yet and isn't too soon
             $bookingRules = BookingRules::for($rules);
             foreach ($dayItems as &$item) {
-                if ($item['kind'] === 'class' && ! $item['status'] && $bookingRules->checkSession($date->addMinutes($item['start'])) === null) {
+                if ($item['kind'] === 'class' && ! $item['status'] && ! $item['booked_elsewhere']
+                    && $bookingRules->checkSession($date->addMinutes($item['start'])) === null) {
                     $item['bookUrl'] = route('book', ['for' => 'class', 'session' => $item['schedule_id'].'_'.$date->toDateString()]);
                 }
             }

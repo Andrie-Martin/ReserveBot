@@ -28,6 +28,7 @@ class AdminController extends Controller
             'classes' => null,
             'ready' => [
                 ['label' => 'Review requests', 'url' => route('requests')],
+                ['label' => "Today's schedule", 'url' => route('today')],
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
             ],
             'comingNext' => [

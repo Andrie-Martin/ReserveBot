@@ -104,6 +104,31 @@ class BookingRules
         return $this->checkNotice($day->addMinutes($from));
     }
 
+    /**
+     * What's wrong with lab staff moving a booking to $day from $from to $to, or null if it's fine.
+     * Same days and time lists as booking, but no notice or length limits; it just can't be over already.
+     */
+    public function checkMove(CarbonImmutable $day, int $from, int $to): ?string
+    {
+        if ($day->lt($this->today()) || $day->gt($this->lastDay())) {
+            return $this->windowMessage();
+        }
+        if (! $this->isOpen($day)) {
+            return 'Rooms and equipment aren’t booked on '.$day->format('l').'s.';
+        }
+        if (! in_array($from, $this->starts(), true) || ! in_array($to, $this->ends(), true)) {
+            return 'Pick a start and an end time from the lists.';
+        }
+        if ($to <= $from) {
+            return 'Pick an end time that is after the start time.';
+        }
+        if ($day->addMinutes($to)->lte($this->now)) {
+            return 'That time is already over.';
+        }
+
+        return null;
+    }
+
     /** What's wrong with booking a class session that starts at $start, or null if it's fine */
     public function checkSession(CarbonImmutable $start): ?string
     {

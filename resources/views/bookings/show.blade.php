@@ -68,7 +68,7 @@
     @endif
 
     @if (filled($reservation->status_reason))
-      <dt>{{ ['Rejected' => 'Why it was rejected', 'Cancelled' => 'Why it was cancelled'][$reservation->status] ?? 'Note' }}</dt>
+      <dt>{{ ['Rejected' => 'Why it was rejected', 'Cancelled' => 'Why it was cancelled', 'Completed' => 'Return note'][$reservation->status] ?? 'Note' }}</dt>
       <dd>{{ $reservation->status_reason }}</dd>
     @endif
   </dl>
@@ -98,6 +98,86 @@
     </div>
   @endif
 
+  {{-- Lab staff and admins: hand out, take back, no-show --}}
+  @if ($isStaff && in_array($reservation->status, ['Confirmed', 'InUse'], true))
+    <div class="staff-box">
+      <p class="review-title">Lab staff</p>
+      @include('bookings._staff_actions', ['r' => $reservation, 'staff' => $staff])
+    </div>
+  @endif
+
+  {{-- Lab staff and admins: cancel or move an approved booking, with a reason the rep sees --}}
+  @if ($canChange)
+    @php
+      $moveErrors = $errors->getBag('move');
+      $cancelErrors = $errors->getBag('cancel');
+      $nowFrom = $start->hour * 60 + $start->minute;
+      $nowTo = $end->hour * 60 + $end->minute;
+    @endphp
+    <details class="change-box" id="change" @if ($moveErrors->any() || $cancelErrors->any()) open @endif>
+      <summary>Cancel or move this booking</summary>
+      <div class="change-grid">
+        <form method="post" action="{{ route('bookings.move', $reservation) }}" class="book-form">
+          @csrf
+          <h3>Move it</h3>
+          @if ($moveErrors->any())
+            <p class="error">{{ $moveErrors->first() }}</p>
+          @endif
+          <div class="field-row">
+            <div>
+              <label for="move-date" class="field-label">Day</label>
+              <select id="move-date" name="date">
+                @foreach ($moveDays as $day)
+                  <option value="{{ $day->toDateString() }}" @selected(old('date', $start->toDateString()) === $day->toDateString())>{{ $day->format('D, M j') }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div>
+              <label for="move-from" class="field-label">From</label>
+              <select id="move-from" name="from">
+                @foreach ($starts as $t)
+                  <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('from', TimeSlots::hhmm($nowFrom)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div>
+              <label for="move-to" class="field-label">To</label>
+              <select id="move-to" name="to">
+                @foreach ($ends as $t)
+                  <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('to', TimeSlots::hhmm($nowTo)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+          @if ($reservation->room_id)
+            <label for="move-room" class="field-label">Room</label>
+            <select id="move-room" name="room">
+              @foreach ($rooms as $room)
+                <option value="{{ $room->id }}" @selected((int) old('room', $reservation->room_id) === $room->id)>{{ $room->name }}{{ $room->id === $reservation->room_id ? ' (now)' : '' }}</option>
+              @endforeach
+            </select>
+          @else
+            <p class="hint">Equipment only, so there’s no room to change.</p>
+          @endif
+          <label for="move-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
+          <textarea id="move-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The projector in CEA300 is broken">{{ $moveErrors->any() ? old('reason') : '' }}</textarea>
+          <p class="hint">The new room and items are checked again before anything changes.</p>
+          <button type="submit" class="btn-approve">Move booking</button>
+        </form>
+        <form method="post" action="{{ route('bookings.staff-cancel', $reservation) }}">
+          @csrf
+          <h3>Cancel it</h3>
+          @if ($cancelErrors->any())
+            <p class="error">{{ $cancelErrors->first() }}</p>
+          @endif
+          <label for="staff-cancel-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
+          <textarea id="staff-cancel-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The building is closed that day">{{ $cancelErrors->any() ? old('reason') : '' }}</textarea>
+          <button type="submit" class="btn-reject">Cancel booking</button>
+        </form>
+      </div>
+    </details>
+  @endif
+
   {{-- The rep: cancel, with a reason, until the department's deadline --}}
   @if ($canCancel)
     <details class="cancel-box" id="cancel" @if ($errors->has('reason')) open @endif>
@@ -117,6 +197,19 @@
     <p class="notice">It’s too late to cancel here: bookings can be cancelled until {{ $cancelHours }} before they start. Please tell the lab staff.</p>
   @endif
 
+  {{-- Every change lab staff or an admin made, with their reasons (the rep sees this too) --}}
+  @if ($history->isNotEmpty())
+    <h2 class="history-title">History</h2>
+    <ul class="history">
+      @foreach ($history as $log)
+        <li>
+          <span class="history-when">{{ $log->created_at?->format('M j, g:i A') }}</span>
+          <span><strong>{{ $log->changedBy?->name ?? 'Someone' }}</strong> {{ $log->describe() }}.@if ($log->hasOwnReason()) <span class="history-why">“{{ $log->reason }}”</span>@endif</span>
+        </li>
+      @endforeach
+    </ul>
+  @endif
+
   <p class="actions">
     @if ($start->toDateString() >= today()->toDateString())
       <a class="btn-ghost" href="{{ route('rooms', ['date' => $start->toDateString()]) }}#day">See that day on Free rooms</a>
@@ -125,6 +218,7 @@
       <a class="btn-ghost" href="{{ route('bookings.mine') }}">All my bookings</a>
       <a class="btn-ghost" href="{{ route('book') }}">Make another booking</a>
     @else
+      <a class="btn-ghost" href="{{ route('today', ['date' => $start->toDateString()]) }}">That day’s schedule</a>
       <a class="btn-ghost" href="{{ route('requests') }}">All requests</a>
     @endif
   </p>

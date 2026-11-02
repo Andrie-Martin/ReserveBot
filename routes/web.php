@@ -7,6 +7,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RepController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\TodayController;
 use Illuminate\Support\Facades\Route;
 
 // ---- Log in / log out ----
@@ -43,6 +44,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests', [ReviewController::class, 'index'])->name('requests');
         Route::post('/bookings/{reservation}/approve', [ReviewController::class, 'approve'])->name('bookings.approve');
         Route::post('/bookings/{reservation}/reject', [ReviewController::class, 'reject'])->name('bookings.reject');
+
+        // Phase 7: the lab staff's day
+        Route::get('/today', [TodayController::class, 'index'])->name('today');
+        Route::post('/bookings/{reservation}/hand-out', [TodayController::class, 'handOut'])->name('bookings.hand-out');
+        Route::post('/bookings/{reservation}/returned', [TodayController::class, 'returned'])->name('bookings.returned');
+        Route::post('/bookings/{reservation}/no-show', [TodayController::class, 'noShow'])->name('bookings.no-show');
+        Route::post('/bookings/{reservation}/staff-cancel', [TodayController::class, 'cancel'])->name('bookings.staff-cancel');
+        Route::post('/bookings/{reservation}/move', [TodayController::class, 'move'])->name('bookings.move');
     });
 
     // Block reps

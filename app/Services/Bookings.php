@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\DepartmentConfig;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
+use App\Models\OverrideLog;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\User;
@@ -192,6 +193,66 @@ class Bookings
         }, 3);   // try again up to 3 times if MariaDB reports a deadlock
     }
 
+    /**
+     * Lab staff move an approved booking to another day, time and/or room (with a reason).
+     * Like place(): checked again inside a transaction with the booking, room and items locked.
+     * Throws a ValidationException (error bag 'move') when the room or an item isn't free then.
+     */
+    public function move(Reservation $booking, User $staff, CarbonImmutable $day, int $from, int $to, ?Room $room, string $reason): void
+    {
+        DB::transaction(function () use ($booking, $staff, $day, $from, $to, $room, $reason) {
+            // 1. Lock: the booking, then the room, then its items
+            $fresh = Reservation::whereKey($booking->id)->lockForUpdate()->first();
+            if ($fresh->status !== 'Confirmed') {
+                throw ValidationException::withMessages(['move' => 'This booking just changed: it’s now '
+                    .strtolower($fresh->statusLabel()).'.'])->errorBag('move');
+            }
+            if ($room) {
+                Room::whereKey($room->id)->lockForUpdate()->first();
+            }
+            $items = $booking->equipment()->get();
+            Equipment::whereKey($items->pluck('id'))->orderBy('id')->lockForUpdate()->get();
+
+            $start = $day->addMinutes($from);
+            $end = $day->addMinutes($to);
+
+            // 2. The room must be free then, not counting this booking or its own class
+            if ($room) {
+                $busy = array_filter(
+                    $this->availability->busy(collect([$room->id]), $day, $staff)[$room->id] ?? [],
+                    fn ($item) => $item['reservation_id'] !== $booking->id
+                        && ! ($booking->class_schedule_id && $item['schedule_id'] === $booking->class_schedule_id),
+                );
+                if ($clash = TimeSlots::firstClash($busy, $from, $to)) {
+                    throw ValidationException::withMessages(['room' => $room->name.' is busy then: '.$clash['label']
+                        .' ('.TimeSlots::span($clash['start'], $clash['end']).').'])->errorBag('move');
+                }
+            }
+
+            // 3. Enough of each item then, not counting this booking's own
+            $inUse = $this->inUse($items->pluck('id')->all(), $start, $end, $booking->id);
+            foreach ($items as $item) {
+                $free = $item->total_qty - ($inUse[$item->id] ?? 0);
+                if ($item->pivot->qty_requested > $free) {
+                    throw ValidationException::withMessages(['items' => 'Only '.max(0, $free).' × '.$item->name
+                        .' '.($free === 1 ? 'is' : 'are').' free then; this booking has '.$item->pivot->qty_requested.'.'])->errorBag('move');
+                }
+            }
+
+            // 4. Save, and write down what changed
+            $old = ['room' => $booking->room?->name, 'start' => $booking->start_time->format('Y-m-d H:i'), 'end' => $booking->end_time->format('Y-m-d H:i')];
+            $fresh->update(['room_id' => $room?->id, 'start_time' => $start, 'end_time' => $end]);
+            OverrideLog::create([
+                'reservation_id' => $booking->id,
+                'changed_by' => $staff->id,
+                'action' => 'Rescheduled',
+                'old_value' => $old,
+                'new_value' => ['room' => $room?->name, 'start' => $start->format('Y-m-d H:i'), 'end' => $end->format('Y-m-d H:i')],
+                'reason' => $reason,
+            ]);
+        }, 3);
+    }
+
     /** Throws if the room is taken (a class or a booking) during the booking */
     private function checkRoom(array $b): void
     {
@@ -247,12 +308,12 @@ class Bookings
     }
 
     /**
-     * How many of each item other bookings hold between $start and $end.
+     * How many of each item other bookings hold between $start and $end ($except: leave that booking out).
      * Same rule as rooms: Pending, Confirmed and InUse bookings that overlap.
      *
      * @return array<int, int> equipment id => quantity
      */
-    private function inUse(array $equipmentIds, CarbonImmutable $start, CarbonImmutable $end): array
+    private function inUse(array $equipmentIds, CarbonImmutable $start, CarbonImmutable $end, ?int $except = null): array
     {
         if (! $equipmentIds) {
             return [];
@@ -263,6 +324,7 @@ class Bookings
             ->whereIn('r.status', Reservation::BLOCKING_STATUSES)
             ->where('r.start_time', '<', $end)
             ->where('r.end_time', '>', $start)
+            ->when($except, fn ($q) => $q->where('r.id', '!=', $except))    // a booking being moved doesn't count against itself
             ->whereIn('re.equipment_id', $equipmentIds)
             ->groupBy('re.equipment_id')
             ->selectRaw('re.equipment_id, SUM(re.qty_requested) AS qty')

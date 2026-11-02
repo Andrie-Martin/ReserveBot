@@ -23,7 +23,8 @@
           @else
             {{-- Lab staff and admins: how many requests wait for approval --}}
             @php $waitingCount = Reservation::waitingCountFor(auth()->user()); @endphp
-            <a href="{{ route('requests') }}" @class(['active' => request()->routeIs('requests', 'bookings.show')])>Requests @if ($waitingCount)<span class="nav-count">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>@endif</a>
+            <a href="{{ route('today') }}" @class(['active' => request()->routeIs('today')])>Today</a>
+            <a href="{{ route('requests') }}" @class(['active' => request()->routeIs('requests')])>Requests @if ($waitingCount)<span class="nav-count">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>@endif</a>
           @endif
         </nav>
         <div class="who">

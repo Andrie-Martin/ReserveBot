@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use App\Services\Bookings;
 use App\Support\BookingRules;
+use App\Support\StaffRules;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -176,9 +177,18 @@ class BookingController extends Controller
         abort_unless($isOwner || $isStaff, 404);
 
         $cancellable = $isOwner && in_array($reservation->status, Reservation::CANCELLABLE_STATUSES, true);
+        $staff = $isStaff ? new StaffRules(DepartmentConfig::forDepartment($user->department)->no_show_grace_minutes, CarbonImmutable::now()) : null;
 
         return view('bookings.show', [
             'reservation' => $reservation,
+            'history' => $reservation->overrideLogs()->with('changedBy')->orderBy('created_at')->orderBy('id')->get(),
+            'isStaff' => $isStaff,
+            'staff' => $staff,
+            'canChange' => $isStaff && $staff->canChange($reservation->status, $reservation->end_time),
+            'moveDays' => $isStaff ? $rules->days() : [],
+            'starts' => $rules->starts(),
+            'ends' => $rules->ends(),
+            'rooms' => $isStaff ? $user->department->rooms()->where('is_active', true)->orderBy('name')->get() : collect(),
             'canReview' => $isStaff && $reservation->status === 'Pending',
             'canCancel' => $cancellable && $rules->canCancel($reservation->start_time),
             'tooLateToCancel' => $cancellable && ! $rules->canCancel($reservation->start_time),

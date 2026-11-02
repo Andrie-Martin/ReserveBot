@@ -35,7 +35,7 @@ class RoomAvailability
     /**
      * Busy items for each room on $date, worded for $viewer.
      * Each item: kind (class, blocked or booking), start and end (minutes after midnight),
-     * label, detail (lines for a tooltip), status, mine.
+     * label, detail (lines for a tooltip), status, mine, schedule_id and reservation_id (which entry it is).
      *
      * @return array<int, list<array>> room id => items sorted by start
      */
@@ -72,7 +72,8 @@ class RoomAvailability
             if ($entry->entry_type === 'Blocked') {
                 $note = $entry->note ?: 'Not available';
                 $busy[$entry->room_id][] = ['kind' => 'blocked', 'start' => $start, 'end' => $end,
-                    'status' => null, 'mine' => false, 'label' => $note, 'detail' => [$note]];
+                    'status' => null, 'mine' => false, 'label' => $note, 'detail' => [$note],
+                    'schedule_id' => $entry->id, 'reservation_id' => null];
 
                 continue;
             }
@@ -80,7 +81,7 @@ class RoomAvailability
             $code = $entry->course?->code ?? 'Class';
             $section = $entry->section?->name;
             $session = $sessions->get($entry->id);
-            if ($session && $session->room_id === $entry->room_id) {
+            if ($session && $session->room_id === $entry->room_id && self::atClassTime($session, $entry)) {
                 $shownSessions[] = $session->id;
             } else {
                 $session = null;
@@ -97,6 +98,7 @@ class RoomAvailability
 
             $busy[$entry->room_id][] = [
                 'kind' => 'class', 'start' => $start, 'end' => $end, 'status' => $session?->status, 'mine' => $mine,
+                'schedule_id' => $entry->id, 'reservation_id' => $session?->id,
                 'label' => ($mine ? 'Your class · ' : '').($section ? $code.' · '.$section : $code),
                 'detail' => $detail,
             ];
@@ -122,7 +124,8 @@ class RoomAvailability
             }
 
             $busy[$booking->room_id][] = ['kind' => 'booking', 'start' => $start, 'end' => $end,
-                'status' => $booking->status, 'mine' => $mine, 'label' => $label, 'detail' => $detail];
+                'status' => $booking->status, 'mine' => $mine, 'label' => $label, 'detail' => $detail,
+                'schedule_id' => $booking->class_schedule_id, 'reservation_id' => $booking->id];
         }
 
         foreach ($busy as &$items) {
@@ -179,7 +182,10 @@ class RoomAvailability
                     || $key > $class->term->end_date->toDateString()) {
                     continue;
                 }
-                $session = $dayBookings->firstWhere('class_schedule_id', $class->id);
+                // A booking of this session, still at the class's own time (and room, if it has one).
+                // Once lab staff move it, it shows as a booking of its own instead.
+                $session = $dayBookings->first(fn ($b) => $b->class_schedule_id === $class->id
+                    && ($b->room_id === null || $b->room_id === $class->room_id) && self::atClassTime($b, $class));
                 if ($session) {
                     $sessionIds[] = $session->id;
                 }
@@ -192,6 +198,8 @@ class RoomAvailability
                     'tag' => $session ? self::tag($session) : null,
                     'url' => $session && $session->user_id === $viewer->id ? route('bookings.show', $session) : null,
                     'schedule_id' => $class->id,
+                    // lab staff moved this session's booking to another time or room (it shows on its own)
+                    'booked_elsewhere' => ! $session && $dayBookings->contains('class_schedule_id', $class->id),
                     'tip' => $course.', '.TimeSlots::range($start, $end).' in '.$class->room->name
                         .($session ? ' (booked: '.self::tag($session).')' : ''),
                 ];
@@ -226,6 +234,13 @@ class RoomAvailability
         }
 
         return $agenda;
+    }
+
+    /** True when a class-session booking is still at its class's own start and end time */
+    private static function atClassTime(Reservation $booking, ClassSchedule $class): bool
+    {
+        return $booking->start_time->format('H:i:s') === $class->start_time
+            && $booking->end_time->format('H:i:s') === $class->end_time;
     }
 
     /** 'Room and equipment · waiting for approval' */

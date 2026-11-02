@@ -16,8 +16,8 @@
     @if ($b->hasEquipment())
       <p class="brow-items">{{ $b->itemsText() }}</p>
     @endif
-    @if (filled($b->status_reason) && in_array($b->status, ['Rejected', 'Cancelled'], true))
-      <p class="brow-reason">{{ $b->status === 'Rejected' ? 'Rejected' : 'Cancelled' }}: “{{ $b->status_reason }}”</p>
+    @if (filled($b->status_reason) && in_array($b->status, ['Rejected', 'Cancelled', 'Completed'], true))
+      <p @class(['brow-reason', 'note' => $b->status === 'Completed'])>{{ ['Rejected' => 'Rejected', 'Cancelled' => 'Cancelled', 'Completed' => 'Return note'][$b->status] }}: “{{ $b->status_reason }}”</p>
     @endif
   </div>
   <div class="brow-side">
