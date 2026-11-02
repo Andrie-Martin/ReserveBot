@@ -29,6 +29,7 @@ class StaffController extends Controller
                 ['label' => 'Review requests', 'url' => route('requests')],
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
                 ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
+                ['label' => 'Timetable (new semester)', 'url' => route('manage.timetable')],
             ],
             'comingNext' => [
                 'Reminders by Facebook Messenger, once the site is online',

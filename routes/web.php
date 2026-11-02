@@ -11,6 +11,7 @@ use App\Http\Controllers\EmailLinkController;
 use App\Http\Controllers\ManageEquipmentController;
 use App\Http\Controllers\ManageRoomsController;
 use App\Http\Controllers\ManageRulesController;
+use App\Http\Controllers\ManageTimetableController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PhotoController;
@@ -123,6 +124,27 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
             Route::get('/rules', [ManageRulesController::class, 'edit'])->name('rules');
             Route::put('/rules', [ManageRulesController::class, 'update'])->name('rules.update');
             Route::put('/semesters/{term}', [ManageRulesController::class, 'updateTerm'])->name('terms.update');
+
+            // Phase 11: the timetable. A new one (uploaded, or changed on the site) is checked, then
+            // replaces the one in use right away; the one in use is kept as a backup.
+            Route::get('/timetable', [ManageTimetableController::class, 'index'])->name('timetable');
+            Route::get('/timetable/view', [ManageTimetableController::class, 'view'])->name('timetable.view');
+            Route::get('/timetable/download', [ManageTimetableController::class, 'download'])->name('timetable.download');
+            Route::post('/timetable/upload', [ManageTimetableController::class, 'upload'])->name('timetable.upload');
+            Route::post('/timetable/draft', [ManageTimetableController::class, 'start'])->name('timetable.start');
+            Route::get('/timetable/draft', [ManageTimetableController::class, 'draft'])->name('timetable.draft');
+            Route::delete('/timetable/draft', [ManageTimetableController::class, 'discard'])->name('timetable.discard');
+            Route::get('/timetable/draft/download', [ManageTimetableController::class, 'downloadDraft'])->name('timetable.draft.download');
+            Route::post('/timetable/draft/rows', [ManageTimetableController::class, 'addRow'])->name('timetable.rows.store');
+            Route::post('/timetable/draft/rows/undo', [ManageTimetableController::class, 'undo'])->name('timetable.rows.undo');
+            Route::get('/timetable/draft/rows/{row}', [ManageTimetableController::class, 'editRow'])->whereNumber('row')->name('timetable.rows.edit');
+            Route::put('/timetable/draft/rows/{row}', [ManageTimetableController::class, 'updateRow'])->whereNumber('row')->name('timetable.rows.update');
+            Route::delete('/timetable/draft/rows/{row}', [ManageTimetableController::class, 'deleteRow'])->whereNumber('row')->name('timetable.rows.destroy');
+            Route::get('/timetable/check', [ManageTimetableController::class, 'check'])->name('timetable.check');
+            Route::post('/timetable/semester', [ManageTimetableController::class, 'semester'])->name('timetable.semester');
+            Route::post('/timetable/replace', [ManageTimetableController::class, 'apply'])->name('timetable.apply');
+            Route::get('/timetable/backups/{backup}/download', [ManageTimetableController::class, 'downloadBackup'])->name('timetable.backups.download');
+            Route::post('/timetable/backups/{backup}/restore', [ManageTimetableController::class, 'restore'])->name('timetable.backups.restore');
         });
     });
 

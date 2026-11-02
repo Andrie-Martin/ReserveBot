@@ -31,6 +31,7 @@ class AdminController extends Controller
                 ['label' => "Today's schedule", 'url' => route('today')],
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
                 ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
+                ['label' => 'Timetable (new semester)', 'url' => route('manage.timetable')],
                 ['label' => 'Rep and lab staff accounts', 'url' => route('accounts.index')],
             ],
             'comingNext' => [

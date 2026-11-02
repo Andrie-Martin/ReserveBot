@@ -40,8 +40,9 @@ If port 8000 is taken, stop any `php artisan serve` you have running first.
 You need:
 - **XAMPP** with PHP 8.3 or newer, for PHP and the MySQL/MariaDB database
 - **Composer**, from https://getcomposer.org/download/ (when it asks for PHP, pick `C:\xampp\php\php.exe`)
-- PHP's **zip** extension turned on: in the XAMPP Control Panel, Apache row, click
-  **Config** → **PHP (php.ini)**, find `;extension=zip`, delete the `;`, and save
+- PHP's **zip** extension turned on (Composer and the timetable's Excel files need it): in the
+  XAMPP Control Panel, Apache row, click **Config** → **PHP (php.ini)**, find `;extension=zip`,
+  delete the `;`, save, and restart Apache and `php artisan serve`
 
 No Node.js or `npm install` needed.
 
@@ -157,6 +158,33 @@ The links in these emails use `APP_URL` from `.env`, so it must be the address p
 site with (e.g. `http://localhost:8000`, or the real address once it's online).
 To try it without waiting, pretend it's another time: `php artisan reminders:send --at="2026-11-05 08:30"`.
 
+## Timetable (a new semester)
+
+Lab staff and admins change the timetable on **Manage → Timetable**, two ways:
+
+1. **Excel:** download the template (the timetable in use, one row per class: Day, Start, End,
+   Room, Course code, Course title, Block, Instructor, Note), change it in Excel or Google
+   Sheets, and upload it. CSV files work too. Time a room isn't available is a row with
+   `BLOCKED` as the course code and the reason in Note. The template's second sheet explains
+   the rest.
+2. **On the site:** start from a copy of the timetable in use and add, change or delete
+   classes day by day. Each room's (or block's) week shows as a grid.
+
+Either way it's a new timetable **in progress**: nothing changes until someone presses
+**Replace the timetable** on the check page. The check page shows what changes, what must be
+fixed first (a day or time it can't read), things worth a look (two classes in one room at
+once, a block in two places), new rooms and blocks it adds, reps whose block has no class in
+it, and upcoming bookings that overlap a new class. Those bookings are kept; Manage →
+Timetable lists them until they're moved or cancelled. For a new semester, type its name and
+dates there too: classes only count between those dates.
+
+Replacing works **right away**, and the timetable it replaces is saved under **Backups**,
+where **Bring back…** restores it the same way. A class that stays the same keeps its
+face-to-face answers and class-session bookings.
+
+`.xlsx` files need PHP's zip extension (see "Run it on your PC"; the Docker image has it).
+Without it, the downloads are CSV files and only CSV files can be uploaded.
+
 ## Database
 
 The tables are defined in `database/migrations/` (one file per table) and filled by
@@ -189,6 +217,10 @@ Other examples: `StartTime` → `start_time`, `PasswordHash` → `password`,
 `ScheduleID` → `class_schedule_id`, `CategoryID` → `category_id`,
 `ReviewedBy` → `reviewed_by`, `ChangedByUserID` → `changed_by`, `CreatedAt` → `created_at`.
 
+Added since then: `class_checks` and `reminder_log` (the face-to-face answers and the
+reminders already sent), and `timetable_drafts` and `timetable_backups` (a new timetable in
+progress, and the timetables it replaced).
+
 Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is logged in),
 `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`.
 
@@ -203,8 +235,8 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 |---|---|
 | `routes/web.php` | Every page address, and who may open it |
 | `app/Http/Controllers/` | The code behind each page (login, accounts, home pages, free rooms, booking, webhook) |
-| `app/Services/` | Reading the timetable and bookings, and saving bookings |
-| `app/Support/` | Time-slot math, the booking rules, the account checks and photo resizing (no database, so they're easy to test) |
+| `app/Services/` | Reading the timetable and bookings, saving bookings, and replacing the timetable |
+| `app/Support/` | Time-slot math, the booking rules, the account checks, photo resizing, and reading and writing the timetable's Excel and CSV files (no database, so they're easy to test) |
 | `app/Notifications/`, `resources/views/mail/` | The emails: connect your email, pick a new password, reminders |
 | `app/Console/Commands/`, `routes/console.php` | `reminders:send` and its every-minute schedule |
 | `app/Http/Middleware/` | Keeps each role to its own pages, logs out turned-off accounts, asks for a new password first |
