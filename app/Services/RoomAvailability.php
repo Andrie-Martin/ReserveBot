@@ -135,8 +135,9 @@ class RoomAvailability
     /**
      * What the viewer has on each day from $from to $to, for the month calendar.
      * Reps: their block's classes and their own bookings. Lab staff and admins: the department's bookings.
-     * Each item: kind (class or booking), start and end (minutes), room, text (short, for the calendar),
-     * title (longer, for the day's list), status, tip.
+     * Each item: kind (class or booking), start and end (minutes), room (or 'Equipment only' with noRoom),
+     * text (short, for the calendar), title (longer, for the day's list), status, tag (what was booked and
+     * its status), url (the booking's page, if the viewer may open it), schedule_id (classes), tip.
      *
      * @return array<string, list<array>> 'Y-m-d' => items sorted by time
      */
@@ -144,21 +145,23 @@ class RoomAvailability
     {
         $staffView = $viewer->role !== 'rep';
 
-        $bookings = Reservation::with(['room', 'user.section', 'classSchedule.course'])
+        $classes = $staffView || ! $viewer->section_id ? collect() : ClassSchedule::with(['room', 'course', 'term'])
+            ->where('section_id', $viewer->section_id)
+            ->where('entry_type', 'Class')
+            ->orderBy('start_time')
+            ->get();
+
+        // Staff: the department's bookings. Reps: their own, plus any booking of their block's classes
+        // (a block can have more than one rep).
+        $bookings = Reservation::with(['room', 'user.section', 'classSchedule.course', 'equipment'])
             ->whereIn('status', Reservation::BLOCKING_STATUSES)
             ->where('start_time', '>=', $from->startOfDay())
             ->where('start_time', '<', $to->addDay()->startOfDay())
             ->when(
                 $staffView,
                 fn ($q) => $q->whereRelation('user', 'department_id', $viewer->department_id),
-                fn ($q) => $q->where('user_id', $viewer->id),
+                fn ($q) => $q->where(fn ($q) => $q->where('user_id', $viewer->id)->orWhereIn('class_schedule_id', $classes->pluck('id'))),
             )
-            ->orderBy('start_time')
-            ->get();
-
-        $classes = $staffView || ! $viewer->section_id ? collect() : ClassSchedule::with(['room', 'course', 'term'])
-            ->where('section_id', $viewer->section_id)
-            ->where('entry_type', 'Class')
             ->orderBy('start_time')
             ->get();
 
@@ -184,10 +187,13 @@ class RoomAvailability
                 $end = DepartmentConfig::minutes($class->end_time);
                 $course = trim(($class->course?->code ?? 'Class').' '.($class->course?->title ?? ''));
                 $items[] = [
-                    'kind' => 'class', 'start' => $start, 'end' => $end, 'room' => $class->room->name,
+                    'kind' => 'class', 'start' => $start, 'end' => $end, 'room' => $class->room->name, 'noRoom' => false,
                     'text' => $class->course?->code ?? 'Class', 'title' => $course, 'status' => $session?->status,
+                    'tag' => $session ? self::tag($session) : null,
+                    'url' => $session && $session->user_id === $viewer->id ? route('bookings.show', $session) : null,
+                    'schedule_id' => $class->id,
                     'tip' => $course.', '.TimeSlots::range($start, $end).' in '.$class->room->name
-                        .($session ? ' (room booked, '.self::STATUS_WORDS[$session->status].')' : ''),
+                        .($session ? ' (booked: '.self::tag($session).')' : ''),
                 ];
             }
 
@@ -200,12 +206,17 @@ class RoomAvailability
                 $what = $booking->purpose ?: ($booking->classSchedule?->course?->code ?? 'Booking');
                 $booker = $booking->user;
                 $who = $booker->name.($booker->section ? ' ('.$booker->section->name.')' : '');
+                $where = $booking->room?->name;   // empty for an equipment-only booking
                 $items[] = [
-                    'kind' => 'booking', 'start' => $start, 'end' => $end, 'room' => $booking->room->name,
+                    'kind' => 'booking', 'start' => $start, 'end' => $end, 'room' => $where ?? 'Equipment only', 'noRoom' => $where === null,
                     'text' => $staffView ? ($booker->section?->name ?? $booker->name) : $what,
                     'title' => $staffView ? $who.': '.$what : 'Your booking: '.$what,
                     'status' => $booking->status,
-                    'tip' => ($staffView ? $who.': ' : '').$what.', '.TimeSlots::range($start, $end).' in '.$booking->room->name
+                    'tag' => self::tag($booking),
+                    'url' => $staffView || $booking->user_id === $viewer->id ? route('bookings.show', $booking) : null,
+                    'schedule_id' => null,
+                    'tip' => ($staffView ? $who.': ' : '').$what.', '.TimeSlots::range($start, $end)
+                        .($where ? ' in '.$where : '').($booking->hasEquipment() ? ' · '.$booking->itemsText() : '')
                         .' ('.self::STATUS_WORDS[$booking->status].')',
                 ];
             }
@@ -215,6 +226,12 @@ class RoomAvailability
         }
 
         return $agenda;
+    }
+
+    /** 'Room and equipment · waiting for approval' */
+    public static function tag(Reservation $booking): string
+    {
+        return $booking->needLabel().' · '.self::STATUS_WORDS[$booking->status];
     }
 
     /** A booking's start and end on this day, in minutes (cut at midnight if it runs over) */

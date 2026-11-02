@@ -9,7 +9,8 @@
 @php
   $clock = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M8 4.75V8l2.25 1.5"/></svg>';
   $pin = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s4.75-4.2 4.75-8a4.75 4.75 0 0 0-9.5 0c0 3.8 4.75 8 4.75 8z"/><circle cx="8" cy="6.5" r="1.6"/></svg>';
-  // Words for a status tag: a class whose room is booked, or a booking
+  $box = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 8 2.25 13.5 5v6L8 13.75 2.5 11z"/><path d="M2.5 5 8 7.75 13.5 5M8 7.75v6"/></svg>';
+  // Words for a status tag in a room's list: a class whose room is booked, or a booking
   $statusWords = fn ($item) => ($item['kind'] === 'class' ? 'room booked, ' : '').RoomAvailability::STATUS_WORDS[$item['status']];
 @endphp
 
@@ -71,9 +72,9 @@
                           @php $booked = $it['kind'] === 'class' && in_array($it['status'], ['Confirmed', 'InUse'], true); @endphp
                           <span @class(['evt', 'k-'.$it['kind'], 'pending' => $it['status'] === 'Pending', 'booked' => $booked]) title="{{ $it['tip'] }}">
                             <span class="t">{!! $clock !!}<b>{{ TimeSlots::clock($it['start']) }}</b> <span class="x">{{ $it['text'] }}</span></span>
-                            <span class="w">{!! $pin !!}{{ $it['room'] }}</span>
+                            <span class="w">{!! $it['noRoom'] ? $box : $pin !!}{{ $it['room'] }}</span>
                             @if ($booked)<span class="ok" aria-hidden="true">✓</span>@endif
-                            @if ($it['status'])<span class="sr-only">({{ $statusWords($it) }})</span>@endif
+                            @if ($it['tag'])<span class="sr-only">({{ $it['tag'] }})</span>@endif
                           </span>
                         @endforeach
                         @if (count($items) > $shown)
@@ -103,7 +104,7 @@
     @else
       <li><span class="sw sw-class"></span>Your block’s class</li>
       <li><span class="sw sw-booking"></span>Your booking</li>
-      <li><span class="ok">✓</span>Room booked for the class</li>
+      <li><span class="ok">✓</span>Booked for the class</li>
     @endif
     <li><span class="sw sw-pending"></span>Waiting for approval</li>
     <li><span class="sw sw-off"></span>Can’t pick (past, closed or too far ahead)</li>
@@ -151,8 +152,13 @@
             <li @class(['k-'.$it['kind'], 'pending' => $it['status'] === 'Pending'])>
               <span class="when">{{ TimeSlots::span($it['start'], $it['end']) }}</span>
               <span class="what">{{ $it['title'] }} <span class="where">· {{ $it['room'] }}</span></span>
-              @if ($it['status'])
-                <span @class(['st', 'st-pending' => $it['status'] === 'Pending'])>{{ $statusWords($it) }}</span>
+              @if ($it['tag'])
+                <span @class(['st', 'st-pending' => $it['status'] === 'Pending'])>{{ $it['tag'] }}</span>
+              @endif
+              @if (! empty($it['bookUrl']))
+                <a class="btn-book" href="{{ $it['bookUrl'] }}">Book<span class="sr-only"> {{ $it['text'] }} at {{ TimeSlots::clock($it['start']) }}</span></a>
+              @elseif ($it['url'])
+                <a class="agenda-link" href="{{ $it['url'] }}">Details<span class="sr-only"> of {{ $it['title'] }}</span></a>
               @endif
             </li>
           @endforeach
@@ -217,6 +223,9 @@
           <div class="room-name">
             <strong>{{ $room->name }}</strong>
             <span>{{ $room->capacity ? $room->capacity.' seats' : 'Seats not recorded' }}</span>
+            @if ($row['bookUrl'])
+              <a class="btn-book" href="{{ $row['bookUrl'] }}">Book<span class="sr-only"> {{ $room->name }}</span></a>
+            @endif
           </div>
           <div class="room-body">
             @if ($row['match'] === true)

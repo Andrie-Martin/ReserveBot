@@ -16,6 +16,9 @@
         <nav class="topnav" aria-label="Main">
           <a href="{{ url('/') }}" @class(['active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')])>Home</a>
           <a href="{{ route('rooms') }}" @class(['active' => request()->routeIs('rooms')])>Free rooms</a>
+          @if (auth()->user()->role === 'rep')
+            <a href="{{ route('book') }}" @class(['active' => request()->routeIs('book', 'bookings.*')])>Book</a>
+          @endif
         </nav>
         <div class="who">
           <span>{{ auth()->user()->name }} · {{ auth()->user()->roleLabel() }}</span>

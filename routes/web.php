@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RepController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,15 @@ Route::middleware('auth')->group(function () {
 
     // Phase 4: which rooms are free (every role)
     Route::get('/rooms', [AvailabilityController::class, 'index'])->name('rooms');
+
+    // Phase 5: booking a room, equipment, or both (block reps)
+    Route::middleware('role:rep')->group(function () {
+        Route::get('/book', [BookingController::class, 'create'])->name('book');
+        Route::post('/book', [BookingController::class, 'store'])->name('book.store');
+    });
+
+    // One booking: the rep who made it, and their department's lab staff and admins
+    Route::get('/bookings/{reservation}', [BookingController::class, 'show'])->name('bookings.show');
 
     // Block reps
     Route::prefix('rep')->name('rep.')->middleware('role:rep')->group(function () {

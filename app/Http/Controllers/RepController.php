@@ -24,14 +24,15 @@ class RepController extends Controller
         return view('home', [
             'title' => 'Home',
             'user' => $user,
-            'intro' => 'This is where you will book rooms and equipment for your block.',
+            'intro' => 'Book rooms and equipment for your block, and check which rooms are free.',
             'stat' => null,
             'classes' => $classes,
-            'ready' => [['label' => 'See which rooms are free', 'url' => route('rooms')]],
+            'ready' => [
+                ['label' => 'See which rooms are free', 'url' => route('rooms')],
+                ['label' => 'Book a room or equipment', 'url' => route('book')],
+            ],
             'comingNext' => [
-                'Book a session of one of your classes, or a free slot for a make-up class',
-                'Request equipment like projectors and HDMI cables',
-                'See and cancel your reservations',
+                'See all your bookings in one list, and cancel them',
             ],
         ]);
     }

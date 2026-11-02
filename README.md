@@ -136,13 +136,16 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | Path | What's in it |
 |---|---|
 | `routes/web.php` | Every page address, and who may open it |
-| `app/Http/Controllers/` | The code behind each page (login, rep, staff, admin, webhook) |
+| `app/Http/Controllers/` | The code behind each page (login, home pages, free rooms, booking, webhook) |
+| `app/Services/` | Reading the timetable and bookings, and saving bookings |
+| `app/Support/` | Time-slot math and the booking rules (no database, so they're easy to test) |
 | `app/Http/Middleware/RequireRole.php` | Keeps each role to its own pages |
 | `app/Models/` | One class per table |
 | `resources/views/` | HTML templates (Blade) |
 | `public/css/style.css` | Styles |
 | `database/migrations/` | Table definitions |
 | `database/seeders/` | BSCpE data, test accounts, template for a new department |
+| `tests/` | Automatic tests (`php artisan test`) |
 | `routes/api.php` | Addresses other programs call: the Messenger webhook and `/test-db` |
 | `Dockerfile`, `docker-compose.yml`, `docker/` | The Docker setup |
 | `.env` | Your own settings and secrets. Never committed. |

@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * Test accounts and two sample reservations, for trying the site.
+ * Test accounts and three sample reservations, for trying the site.
  * Don't run this on the real (production) database.
  *
  * All test accounts use the password:  Password123!
@@ -38,6 +38,7 @@ class TestDataSeeder extends Seeder
         // Dated relative to today, so they stay useful
         $nextTuesday = today()->next(Carbon::TUESDAY);
         $nextMonday = today()->next(Carbon::MONDAY);
+        $nextThursday = today()->next(Carbon::THURSDAY);
 
         // (a) Bea (BSCPE 4-5) books next Tuesday's CMPE 451 Introduction to Cybersecurity class. Approved.
         $class = ClassSchedule::where('day_of_week', 'Tue')
@@ -49,6 +50,7 @@ class TestDataSeeder extends Seeder
             'user_id' => $bea->id,
             'room_id' => $class->room_id,
             'class_schedule_id' => $class->id,
+            'purpose' => 'Lecture with slides',
             'start_time' => $nextTuesday->copy()->setTimeFromTimeString($class->start_time),
             'end_time' => $nextTuesday->copy()->setTimeFromTimeString($class->end_time),
             'status' => 'Confirmed',
@@ -71,7 +73,24 @@ class TestDataSeeder extends Seeder
         ]);
         $makeUp->equipment()->attach($this->items($bscpe, ['Extension Cord']), ['qty_requested' => 2]);
 
-        $this->command?->info('Test data: 4 accounts (password Password123!), 2 sample reservations');
+        // (c) Bea borrows equipment only (no room) for next Thursday's CMPE 451 class. Waiting for approval.
+        $thursdayClass = ClassSchedule::where('day_of_week', 'Thu')
+            ->whereRelation('section', 'name', 'BSCPE 4-5')
+            ->whereRelation('course', 'code', 'CMPE 451')
+            ->firstOrFail();
+
+        $borrow = Reservation::create([
+            'user_id' => $bea->id,
+            'room_id' => null,
+            'class_schedule_id' => $thursdayClass->id,
+            'purpose' => 'Lab activity',
+            'start_time' => $nextThursday->copy()->setTimeFromTimeString($thursdayClass->start_time),
+            'end_time' => $nextThursday->copy()->setTimeFromTimeString($thursdayClass->end_time),
+            'status' => 'Pending',
+        ]);
+        $borrow->equipment()->attach($this->items($bscpe, ['Digital Multi-Tester', 'Power Supply']), ['qty_requested' => 2]);
+
+        $this->command?->info('Test data: 4 accounts (password Password123!), 3 sample reservations');
     }
 
     private function account(Department $department, string $name, string $email, string $role, ?string $section = null): User

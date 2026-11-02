@@ -20,7 +20,7 @@ class AdminController extends Controller
         return view('home', [
             'title' => 'Admin',
             'user' => $user,
-            'intro' => 'This is where you will approve requests and manage the department.',
+            'intro' => 'This is where you will approve requests and manage the department and its accounts.',
             'stat' => [
                 'value' => $pending,
                 'label' => $pending === 1 ? 'request waiting for approval' : 'requests waiting for approval',
@@ -28,10 +28,10 @@ class AdminController extends Controller
             'classes' => null,
             'ready' => [['label' => 'See which rooms are free', 'url' => route('rooms')]],
             'comingNext' => [
-                'Approve or reject pending requests',
+                'Approve or reject requests',
                 'Manage rooms, equipment and stock counts',
-                'Create accounts for reps and lab staff',
                 'Department settings and reports',
+                'Create and delete accounts for reps and lab staff, and change passwords',
             ],
         ]);
     }

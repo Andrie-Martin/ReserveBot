@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DepartmentConfig;
 use App\Services\RoomAvailability;
+use App\Support\BookingRules;
 use App\Support\TimeSlots;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -51,18 +52,38 @@ class AvailabilityController extends Controller
             $this->keep = ['from' => TimeSlots::hhmm($search['from']), 'to' => TimeSlots::hhmm($search['to'])];
         }
 
-        $roomList = $rooms->map(fn ($room) => [
-            'room' => $room,
-            'free' => TimeSlots::freeRanges($busy[$room->id] ?? [], $opens, $closes, $step, $now),
-            'busy' => $busy[$room->id] ?? [],
-            'allDay' => $this->blockedAllDay($busy[$room->id] ?? [], $opens, $closes),
-            'match' => $search ? ! isset($search['clashes'][$room->id]) : null,
-            'clash' => $search['clashes'][$room->id] ?? null,
-        ]);
+        // Phase 5: reps get Book buttons (a room with free time left; while searching, only rooms free then)
+        $canBook = $user->role === 'rep';
+        $roomList = $rooms->map(function ($room) use ($busy, $opens, $closes, $step, $now, $search, $canBook, $date) {
+            $row = [
+                'room' => $room,
+                'free' => TimeSlots::freeRanges($busy[$room->id] ?? [], $opens, $closes, $step, $now),
+                'busy' => $busy[$room->id] ?? [],
+                'allDay' => $this->blockedAllDay($busy[$room->id] ?? [], $opens, $closes),
+                'match' => $search ? ! isset($search['clashes'][$room->id]) : null,
+                'clash' => $search['clashes'][$room->id] ?? null,
+            ];
+            $row['bookUrl'] = $canBook && $row['free'] && $row['match'] !== false
+                ? route('book', ['for' => 'other', 'date' => $date->toDateString()] + $this->keep + ['room' => $room->id])
+                : null;
+
+            return $row;
+        });
 
         // The month on show (Sunday to Saturday) and what the viewer has on each day of it
         [$gridStart, $gridEnd] = $this->monthGrid($date);
         $agenda = $availability->agenda($gridStart, $gridEnd, $user);
+        $dayItems = $isOpen ? ($agenda[$date->toDateString()] ?? []) : [];
+        if ($canBook) {
+            // A Book button on each of the rep's classes that day that isn't booked yet and isn't too soon
+            $bookingRules = BookingRules::for($rules);
+            foreach ($dayItems as &$item) {
+                if ($item['kind'] === 'class' && ! $item['status'] && $bookingRules->checkSession($date->addMinutes($item['start'])) === null) {
+                    $item['bookUrl'] = route('book', ['for' => 'class', 'session' => $item['schedule_id'].'_'.$date->toDateString()]);
+                }
+            }
+            unset($item);
+        }
         $prevDay = $this->nextPickable($date, -1);
         $nextDay = $this->nextPickable($date, 1);
 
@@ -74,7 +95,8 @@ class AvailabilityController extends Controller
             'lastDay' => $this->lastDay,
             'date' => $date,
             'dateError' => $dateError,
-            'dayItems' => $isOpen ? ($agenda[$date->toDateString()] ?? []) : [],
+            'dayItems' => $dayItems,
+            'canBook' => $canBook,
             'prevUrl' => $prevDay ? $this->dayUrl($prevDay) : null,
             'nextUrl' => $nextDay ? $this->dayUrl($nextDay) : null,
             'isOpen' => $isOpen,
