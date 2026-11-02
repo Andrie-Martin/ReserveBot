@@ -20,7 +20,7 @@ class AdminController extends Controller
         return view('home', [
             'title' => 'Admin',
             'user' => $user,
-            'intro' => 'This is where you will approve requests and manage the department and its accounts.',
+            'intro' => 'Approve requests, run the day, and manage the department and its accounts.',
             'stat' => [
                 'value' => $pending,
                 'label' => $pending === 1 ? 'request waiting for approval' : 'requests waiting for approval',
@@ -31,10 +31,10 @@ class AdminController extends Controller
                 ['label' => "Today's schedule", 'url' => route('today')],
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
                 ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
+                ['label' => 'Rep and lab staff accounts', 'url' => route('accounts.index')],
             ],
             'comingNext' => [
                 'Reports: bookings, no-shows and equipment use',
-                'Create and delete accounts for reps and lab staff, and change passwords',
             ],
         ]);
     }

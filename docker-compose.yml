@@ -5,7 +5,7 @@
 #   http://localhost:8080        phpMyAdmin
 #   Ctrl+C, then
 #   docker compose down          stop (your data is kept)
-#   docker compose down -v       stop AND wipe the database; the next start rebuilds it with the test data
+#   docker compose down -v       stop AND wipe the database and photos; the next start rebuilds it with the test data
 name: reservebot
 
 services:
@@ -48,6 +48,16 @@ services:
       # Messenger bot (paused): taken from your .env if set
       VERIFY_TOKEN: ${VERIFY_TOKEN:-}
       PAGE_ACCESS_TOKEN: ${PAGE_ACCESS_TOKEN:-}
+      # Email (Gmail, see README): taken from your .env if set; otherwise emails only show in this window
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-reservebot@example.com}
+      MAIL_FROM_NAME: ReserveBot
+    volumes:
+      - photos:/var/www/html/storage/app/private/photos   # profile photos survive rebuilds
     ports:
       - "8000:80"
     depends_on:
@@ -69,3 +79,4 @@ services:
 
 volumes:
   db-data:
+  photos:

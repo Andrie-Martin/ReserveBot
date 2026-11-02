@@ -86,7 +86,7 @@ class ExampleDepartmentSeeder extends DepartmentSeeder
     protected function accounts(): array
     {
         // First accounts: at least one admin and one lab staff.
-        // [name, email, role]. Password: Password123! (change it after the first login)
+        // [name, email, role]. Password: Password123! (the site asks for a new one at the first login)
         return [
             ['ECE Office Admin', 'admin.ece@reservebot.test', 'admin'],         // EXAMPLE
             ['ECE Lab Assistant', 'staff.ece@reservebot.test', 'lab_staff'],    // EXAMPLE

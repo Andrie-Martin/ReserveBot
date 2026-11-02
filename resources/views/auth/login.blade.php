@@ -7,6 +7,9 @@
   <h1>Log in</h1>
   <p class="muted">Book rooms and equipment for your class.</p>
 
+  @if (session('status'))
+    <p class="success" role="status">{{ session('status') }}</p>
+  @endif
   @error('email')
     <p class="error">{{ $message }}</p>
   @enderror
@@ -23,5 +26,6 @@
     </label>
     <button type="submit">Log in</button>
   </form>
+  <p class="form-foot"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
 </section>
 @endsection

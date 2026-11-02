@@ -43,7 +43,7 @@ abstract class DepartmentSeeder extends Seeder
         return [];
     }
 
-    /** First accounts: [[name, email, role], ...]. They get the password Password123! */
+    /** First accounts: [[name, email, role], ...]. They get the password Password123! and pick their own at the first login */
     protected function accounts(): array
     {
         return [];
@@ -105,6 +105,7 @@ abstract class DepartmentSeeder extends Seeder
                     'email' => Str::lower($email),
                     'role' => $role,
                     'password' => 'Password123!',   // hashed automatically by the User model
+                    'must_change_password' => true, // they pick their own at the first login
                 ]);
             }
 

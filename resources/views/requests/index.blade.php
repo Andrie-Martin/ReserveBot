@@ -30,7 +30,7 @@
         </p>
         <p class="req-title">{{ $r->purpose }}</p>
         <dl class="req-facts">
-          <dt>Who</dt><dd>{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif</dd>
+          <dt>Who</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span>{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif @if ($r->user->school_id)<span class="muted small">· {{ $r->user->school_id }}</span>@endif</span></dd>
           <dt>Needs</dt><dd>{{ $r->needLabel() }}</dd>
           <dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd>
           @if ($r->hasEquipment())

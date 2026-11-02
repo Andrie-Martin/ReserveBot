@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
  * Don't run this on the real (production) database.
  *
  * All test accounts use the password:  Password123!
+ * They count as having connected their email and picked their own password (Phase 9), so
+ * they work right away even though @reservebot.test emails can't receive anything.
  */
 class TestDataSeeder extends Seeder
 {
@@ -32,8 +34,8 @@ class TestDataSeeder extends Seeder
 
         $admin = $this->account($bscpe, 'BSCpE Office Admin', 'admin@reservebot.test', 'admin');
         $this->account($bscpe, 'Lab Assistant', 'staff@reservebot.test', 'lab_staff');
-        $bea = $this->account($bscpe, 'Bea Prieto', 'rep1@reservebot.test', 'rep', 'BSCPE 4-5');
-        $maria = $this->account($bscpe, 'Maria Santos', 'rep2@reservebot.test', 'rep', 'BSCPE 3-1');
+        $bea = $this->account($bscpe, 'Bea Prieto', 'rep1@reservebot.test', 'rep', 'BSCPE 4-5', '2022-00145-MN-0');
+        $maria = $this->account($bscpe, 'Maria Santos', 'rep2@reservebot.test', 'rep', 'BSCPE 3-1', '2023-01872-MN-0');
 
         // Dated relative to today, so they stay useful
         $nextTuesday = today()->next(Carbon::TUESDAY);
@@ -93,16 +95,20 @@ class TestDataSeeder extends Seeder
         $this->command?->info('Test data: 4 accounts (password Password123!), 3 sample reservations');
     }
 
-    private function account(Department $department, string $name, string $email, string $role, ?string $section = null): User
+    private function account(Department $department, string $name, string $email, string $role, ?string $section = null, ?string $schoolId = null): User
     {
-        return User::create([
+        $user = User::create([
             'department_id' => $department->id,
             'section_id' => $section ? Section::where('name', $section)->value('id') : null,
+            'school_id' => $schoolId,      // made-up PUP student numbers
             'name' => $name,
             'email' => $email,
             'role' => $role,
             'password' => 'Password123!',   // hashed automatically by the User model
         ]);
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 
     /** IDs of this department's equipment with these names */

@@ -18,6 +18,7 @@
   </div>
   <div class="tcard-main">
     <p class="tcard-title">{{ $r->room?->name ?? 'Equipment only' }} · {{ $r->user->name }}@if ($r->user->section) <span class="muted">({{ $r->user->section->name }})</span>@endif</p>
+    <p class="tcard-who"><x-avatar :user="$r->user" size="md" /> <span>{{ $r->user->school_id ? 'School ID '.$r->user->school_id : 'No School ID yet' }}</span></p>
     <p class="tcard-reason">{{ $r->purpose }}@if ($r->classSchedule) <span class="muted">· {{ $r->classSchedule->course?->code ?? 'Class' }} class</span>@endif</p>
     @if ($r->hasEquipment())
       <p class="tcard-items">{{ $r->itemsText() }}</p>
