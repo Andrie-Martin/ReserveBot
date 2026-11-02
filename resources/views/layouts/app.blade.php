@@ -25,6 +25,7 @@
             @php $waitingCount = Reservation::waitingCountFor(auth()->user()); @endphp
             <a href="{{ route('today') }}" @class(['active' => request()->routeIs('today')])>Today</a>
             <a href="{{ route('requests') }}" @class(['active' => request()->routeIs('requests')])>Requests @if ($waitingCount)<span class="nav-count">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>@endif</a>
+            <a href="{{ route('manage.rooms') }}" @class(['active' => request()->routeIs('manage.*')])>Manage</a>
           @endif
         </nav>
         <div class="who">

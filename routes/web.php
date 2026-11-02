@@ -4,6 +4,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ManageEquipmentController;
+use App\Http\Controllers\ManageRoomsController;
+use App\Http\Controllers\ManageRulesController;
 use App\Http\Controllers\RepController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
@@ -52,6 +55,24 @@ Route::middleware('auth')->group(function () {
         Route::post('/bookings/{reservation}/no-show', [TodayController::class, 'noShow'])->name('bookings.no-show');
         Route::post('/bookings/{reservation}/staff-cancel', [TodayController::class, 'cancel'])->name('bookings.staff-cancel');
         Route::post('/bookings/{reservation}/move', [TodayController::class, 'move'])->name('bookings.move');
+
+        // Phase 8: managing rooms, equipment and the booking rules
+        Route::prefix('manage')->name('manage.')->group(function () {
+            Route::get('/', fn () => redirect()->route('manage.rooms'))->name('index');
+            Route::get('/rooms', [ManageRoomsController::class, 'index'])->name('rooms');
+            Route::post('/rooms', [ManageRoomsController::class, 'store'])->name('rooms.store');
+            Route::get('/rooms/{room}', [ManageRoomsController::class, 'edit'])->name('rooms.edit');
+            Route::put('/rooms/{room}', [ManageRoomsController::class, 'update'])->name('rooms.update');
+            Route::get('/equipment', [ManageEquipmentController::class, 'index'])->name('equipment');
+            Route::post('/equipment', [ManageEquipmentController::class, 'store'])->name('equipment.store');
+            Route::get('/equipment/{equipment}', [ManageEquipmentController::class, 'edit'])->name('equipment.edit');
+            Route::put('/equipment/{equipment}', [ManageEquipmentController::class, 'update'])->name('equipment.update');
+            Route::post('/categories', [ManageEquipmentController::class, 'storeCategory'])->name('categories.store');
+            Route::put('/categories/{category}', [ManageEquipmentController::class, 'updateCategory'])->name('categories.update');
+            Route::get('/rules', [ManageRulesController::class, 'edit'])->name('rules');
+            Route::put('/rules', [ManageRulesController::class, 'update'])->name('rules.update');
+            Route::put('/semesters/{term}', [ManageRulesController::class, 'updateTerm'])->name('terms.update');
+        });
     });
 
     // Block reps

@@ -1,0 +1,122 @@
+@extends('layouts.app')
+@use('App\Http\Controllers\ManageRulesController')
+
+@section('title', 'Booking rules')
+
+@section('content')
+@php
+  $bag = $errors->getBag('rules');
+  $days = old('open_days', $config->openDays());
+  $value = fn ($field, $current) => old($field, $current);
+@endphp
+<section class="card manage-card">
+  <h1>Manage</h1>
+  @include('manage._tabs')
+
+  <p class="muted">{{ auth()->user()->department->name }}’s booking rules. New bookings follow them as soon as you save; bookings already made stay as they are.</p>
+
+  <form method="post" action="{{ route('manage.rules.update') }}" class="mform rules-form">
+    @csrf
+    @method('PUT')
+    @include('manage._errors', ['bag' => $bag])
+
+    <fieldset>
+      <legend>Approval</legend>
+      <label class="check"><input type="checkbox" name="requires_approval" value="1" @checked(old('_token') ? old('requires_approval') : $config->requires_approval)> New bookings wait for approval from lab staff or an admin</label>
+      <p class="hint">Untick to confirm bookings right away.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Open days</legend>
+      <div class="day-checks">
+        @foreach (ManageRulesController::DAYS as $day)
+          <label class="check"><input type="checkbox" name="open_days[]" value="{{ $day }}" @checked(in_array($day, (array) $days, true))> {{ $day }}</label>
+        @endforeach
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Hours</legend>
+      <div class="mgrid">
+        <div>
+          <label for="opens" class="field-label">Opens at</label>
+          <input id="opens" name="business_hours_start" type="time" step="900" required value="{{ $value('business_hours_start', substr($config->business_hours_start, 0, 5)) }}">
+        </div>
+        <div>
+          <label for="closes" class="field-label">Closes at</label>
+          <input id="closes" name="business_hours_end" type="time" step="900" required value="{{ $value('business_hours_end', substr($config->business_hours_end, 0, 5)) }}">
+        </div>
+        <div>
+          <label for="step" class="field-label">Time steps</label>
+          <select id="step" name="slot_minutes">
+            @foreach ([15, 30, 60] as $minutes)
+              <option value="{{ $minutes }}" @selected((int) $value('slot_minutes', $config->slot_minutes) === $minutes)>{{ $minutes }} minutes</option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Booking length <span class="optional">(a class session keeps its own length)</span></legend>
+      <div class="mgrid">
+        <div>
+          <label for="min" class="field-label">Shortest <span class="optional">(minutes)</span></label>
+          <input id="min" name="min_booking_minutes" type="number" min="15" max="720" required value="{{ $value('min_booking_minutes', $config->min_booking_minutes) }}">
+        </div>
+        <div>
+          <label for="max" class="field-label">Longest <span class="optional">(minutes)</span></label>
+          <input id="max" name="max_booking_minutes" type="number" min="15" max="720" required value="{{ $value('max_booking_minutes', $config->max_booking_minutes) }}">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Timing</legend>
+      <div class="mgrid">
+        <div>
+          <label for="ahead" class="field-label">Book up to <span class="optional">(days ahead)</span></label>
+          <input id="ahead" name="max_days_ahead" type="number" min="1" max="90" required value="{{ $value('max_days_ahead', $config->max_days_ahead) }}">
+        </div>
+        <div>
+          <label for="notice" class="field-label">Book at least <span class="optional">(minutes before it starts)</span></label>
+          <input id="notice" name="min_notice_minutes" type="number" min="0" max="2880" required value="{{ $value('min_notice_minutes', $config->min_notice_minutes) }}">
+        </div>
+        <div>
+          <label for="cancel" class="field-label">Reps can cancel until <span class="optional">(minutes before it starts)</span></label>
+          <input id="cancel" name="cancel_cutoff_minutes" type="number" min="0" max="2880" required value="{{ $value('cancel_cutoff_minutes', $config->cancel_cutoff_minutes) }}">
+        </div>
+        <div>
+          <label for="late" class="field-label">Show “Late” after <span class="optional">(minutes after the start)</span></label>
+          <input id="late" name="no_show_grace_minutes" type="number" min="0" max="240" required value="{{ $value('no_show_grace_minutes', $config->no_show_grace_minutes) }}">
+        </div>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="btn-small">Save rules</button>
+  </form>
+
+  <h2>Semester dates</h2>
+  <p class="muted">Shared by every department. Classes on the timetable only count between these dates.</p>
+  @foreach ($terms as $term)
+    @php $termBag = $errors->getBag('term'.$term->id); @endphp
+    <form method="post" action="{{ route('manage.terms.update', $term) }}" class="mform term-form">
+      @csrf
+      @method('PUT')
+      <p class="term-name">{{ $term->name }}</p>
+      @include('manage._errors', ['bag' => $termBag])
+      <div class="mgrid">
+        <div>
+          <label for="start-{{ $term->id }}" class="field-label">First day</label>
+          <input id="start-{{ $term->id }}" name="start_date" type="date" required value="{{ $termBag->any() ? old('start_date') : $term->start_date->toDateString() }}">
+        </div>
+        <div>
+          <label for="end-{{ $term->id }}" class="field-label">Last day</label>
+          <input id="end-{{ $term->id }}" name="end_date" type="date" required value="{{ $termBag->any() ? old('end_date') : $term->end_date->toDateString() }}">
+        </div>
+      </div>
+      <button type="submit" class="btn-small">Save dates</button>
+    </form>
+  @endforeach
+</section>
+@endsection

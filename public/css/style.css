@@ -528,3 +528,63 @@ details.return button { margin-top: 8px; }
   .change-grid { grid-template-columns: minmax(0, 1fr); }
   .history li { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* ---------- Manage rooms, equipment and rules (Phase 8) ---------- */
+.topnav { flex-wrap: wrap; row-gap: 4px; }
+.manage-card { max-width: 980px; margin: 0 auto; }
+.manage-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+.manage-tabs a { padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); font-size: 14px; text-decoration: none; }
+.manage-tabs a:hover { border-color: var(--brand); color: var(--brand); }
+.manage-tabs a.on { border-color: var(--brand); background: var(--brand); color: #fff; font-weight: 600; }
+.manage-card h2 { margin-top: 26px; }
+.mtable { margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px; border-collapse: separate; border-spacing: 0; overflow: hidden; }
+.mtable th { background: #FAFAFB; font-size: 13px; }
+.mtable td, .mtable th { padding: 9px 12px; }
+.mtable tbody tr:last-child td { border-bottom: 0; }
+.mtable tr.off td { background: #FAFAFB; color: var(--muted); }
+.mtable td.note { color: var(--muted); font-size: 13px; }
+.tag-shared { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: #EDE9FE; color: var(--brand-dark); font-size: 11.5px; font-weight: 600; }
+.add-box { margin-top: 18px; }
+.add-box > summary { width: fit-content; padding: 8px 14px; border: 1px dashed var(--brand); border-radius: 8px; color: var(--brand); font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; }
+.add-box > summary::-webkit-details-marker { display: none; }
+.add-box[open] > summary { border-style: solid; background: var(--brand-soft); }
+.add-box form { margin-top: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; }
+.add-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.add-row .add-box { flex: 1 1 320px; }
+.mform { margin: 0 0 8px; }
+.mform input:not([type=checkbox]), .mform select { display: block; width: 100%; margin: 0; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 8px; background: #fff; font: inherit; }
+.mform input:focus, .mform select:focus { outline: 2px solid var(--brand); border-color: transparent; }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 14px; margin-bottom: 12px; }
+.mform .field-label { margin-bottom: 6px; }
+.mform button.btn-small { margin-top: 4px; }
+label.check { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-weight: 500; }
+label.check input { display: inline-block; width: 18px; height: 18px; margin: 0; accent-color: var(--brand); }
+.day-checks { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.day-checks label.check { margin: 0; }
+.rules-form fieldset { margin: 0 0 16px; padding: 14px 16px 6px; border: 1px solid var(--line); border-radius: 12px; }
+.rules-form legend { padding: 0 6px; font-size: 14.5px; font-weight: 700; }
+.rules-form .hint { margin: -6px 0 10px; }
+.term-form { margin: 10px 0 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; }
+.term-name { margin: 0 0 10px; font-weight: 700; }
+.back { margin: 0 0 4px; font-size: 14px; }
+.edit-title { margin: 0 0 14px !important; font-size: 22px; }
+.mcat { margin-top: 8px; }
+.mcat-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-top: 22px; }
+.mcat-head h2 { margin: 0; }
+.rename > summary { color: var(--brand); font-size: 13.5px; cursor: pointer; }
+.inline-form { display: flex; gap: 8px; margin-top: 6px; }
+.inline-form input { display: block; width: 220px; margin: 0; padding: 7px 10px; border: 1px solid #D1D5DB; border-radius: 8px; font: inherit; }
+.mlist { margin: 8px 0 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.mlist li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.mlist li:first-child { border-top: 0; }
+.mlist li.over { background: #FFF5F5; }
+.mlist-when { min-width: 190px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mlist-what { flex: 1 1 200px; }
+.mlist .status-badge { padding: 1px 9px; font-size: 12px; }
+@media (max-width: 640px) {
+  .topnav { gap: 4px 14px; }
+  .hide-sm { display: none; }
+  .mtable td, .mtable th { padding: 8px; }
+  .inline-form input { width: 100%; }
+  .mlist-when { min-width: 0; width: 100%; }
+}

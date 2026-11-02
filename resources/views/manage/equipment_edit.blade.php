@@ -1,0 +1,64 @@
+@extends('layouts.app')
+@use('App\Support\TimeSlots')
+
+@section('title', 'Edit '.$item->name)
+
+@section('content')
+<section class="card manage-card">
+  <h1>Manage</h1>
+  @include('manage._tabs')
+
+  <p class="back"><a href="{{ route('manage.equipment') }}">‹ All equipment</a></p>
+  <h2 class="edit-title">{{ $item->name }}</h2>
+
+  <form method="post" action="{{ route('manage.equipment.update', $item) }}" class="mform">
+    @csrf
+    @method('PUT')
+    @include('manage._errors', ['bag' => $errors->getBag('default')])
+    <div class="mgrid">
+      <div>
+        <label for="category_id" class="field-label">Category</label>
+        <select id="category_id" name="category_id" required>
+          @foreach ($categories as $category)
+            <option value="{{ $category->id }}" @selected((int) old('category_id', $item->category_id) === $category->id)>{{ $category->name }}</option>
+          @endforeach
+        </select>
+      </div>
+      <div>
+        <label for="name" class="field-label">Name</label>
+        <input id="name" name="name" maxlength="60" required value="{{ old('name', $item->name) }}">
+      </div>
+      <div>
+        <label for="total_qty" class="field-label">Stock</label>
+        <input id="total_qty" name="total_qty" type="number" min="0" max="9999" required value="{{ old('total_qty', $item->total_qty) }}">
+      </div>
+      <div>
+        <label for="max_per_request" class="field-label">Most per booking</label>
+        <input id="max_per_request" name="max_per_request" type="number" min="1" max="99" required value="{{ old('max_per_request', $item->max_per_request) }}">
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $item->is_active)> Can be booked <span class="optional">(untick to turn the item off)</span></label>
+    <button type="submit" class="btn-small">Save</button>
+  </form>
+
+  <h2>Upcoming bookings with this item <span class="count">{{ $upcoming->count() }}</span></h2>
+  @if ($over)
+    <p class="error">{{ count($over) }} {{ count($over) === 1 ? 'booking asks' : 'bookings ask' }} for more {{ $item->name }} than you have ({{ $item->total_qty }}) at the same time. Open {{ count($over) === 1 ? 'it' : 'each one' }} to move or cancel it, or raise the stock.</p>
+  @endif
+  @if ($upcoming->isEmpty())
+    <p class="empty">None.</p>
+  @else
+    <ul class="mlist">
+      @foreach ($upcoming as $b)
+        <li @class(['over' => in_array($b->id, $over, true)])>
+          <span class="mlist-when">{{ $b->start_time->format('D, M j') }} · {{ TimeSlots::span($b->start_time->hour * 60 + $b->start_time->minute, $b->end_time->isSameDay($b->start_time) ? $b->end_time->hour * 60 + $b->end_time->minute : 1440) }}</span>
+          <span class="mlist-what">×{{ $b->asked }} · {{ $b->room?->name ?? 'No room' }} · {{ $b->user->name }}@if ($b->user->section) ({{ $b->user->section->name }})@endif</span>
+          @if (in_array($b->id, $over, true))<span class="tag-warn">Too many</span>@endif
+          <span class="status-badge st-{{ strtolower($b->status) }}">{{ $b->statusLabel() }}</span>
+          <a href="{{ route('bookings.show', $b) }}#change">Open</a>
+        </li>
+      @endforeach
+    </ul>
+  @endif
+</section>
+@endsection

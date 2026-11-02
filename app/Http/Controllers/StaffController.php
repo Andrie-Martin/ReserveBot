@@ -28,10 +28,10 @@ class StaffController extends Controller
                 ['label' => "Today's schedule", 'url' => route('today')],
                 ['label' => 'Review requests', 'url' => route('requests')],
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
+                ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
             ],
             'comingNext' => [
-                'Manage rooms, equipment and stock counts',
-                'Department settings and reports',
+                'Reports: bookings, no-shows and equipment use',
             ],
         ]);
     }
