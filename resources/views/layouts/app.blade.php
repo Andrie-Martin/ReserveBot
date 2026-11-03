@@ -7,6 +7,9 @@
   <title>@yield('title') · ReserveBot</title>
   {{-- ?v= changes whenever style.css changes, so browsers never keep an old copy --}}
   <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/foundations/fonts.css') }}?v={{ filemtime(public_path('css/foundations/fonts.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/foundations/tokens.css') }}?v={{ filemtime(public_path('css/foundations/tokens.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/foundations/components.css') }}?v={{ filemtime(public_path('css/foundations/components.css')) }}">
 </head>
 <body>
   <header class="topbar">

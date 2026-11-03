@@ -1,0 +1,62 @@
+/* Repository design contract; not independently measured from Figma.
+   rb tokens deliberately do not replace the legacy style.css variables. */
+:root {
+  --rb-color-maroon: #6B1932;
+  --rb-color-deep: #481021;
+  --rb-color-accent: #A2384E;
+  --rb-color-gold: #D6A451;
+  --rb-color-canvas: #F8F5EF;
+  --rb-color-cream: #F2EADF;
+  --rb-color-white: #FFFFFF;
+  --rb-text-primary: #232022;
+  --rb-text-muted: #4B5563;
+  --rb-surface-canvas: var(--rb-color-canvas);
+  --rb-surface-panel: var(--rb-color-white);
+  --rb-surface-muted: var(--rb-color-cream);
+  --rb-action-primary-bg: var(--rb-color-maroon);
+  --rb-action-primary-hover: var(--rb-color-deep);
+  --rb-action-primary-text: var(--rb-color-white);
+  --rb-border-control: #6B7280;
+  --rb-border-subtle: #E5E7EB;
+  --rb-focus-color: var(--rb-color-maroon);
+  --rb-success-text: #166534;
+  --rb-success-bg: #DCFCE7;
+  --rb-warning-text: #92400E;
+  --rb-warning-bg: #FEF3C7;
+  --rb-danger-text: #991B1B;
+  --rb-danger-bg: #FEE2E2;
+  --rb-neutral-text: #4B5563;
+  --rb-neutral-bg: #F3F4F6;
+  --rb-font-family: "ReserveBot Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rb-weight-regular: 400;
+  --rb-weight-medium: 500;
+  --rb-weight-semibold: 600;
+  --rb-weight-bold: 700;
+  --rb-text-caption: .75rem;
+  --rb-text-small: .875rem;
+  --rb-text-body: 1rem;
+  --rb-text-h3: 1.125rem;
+  --rb-text-h2: 1.375rem;
+  --rb-text-h1: 1.875rem;
+  --rb-text-display: 2.5rem;
+  --rb-leading-heading: 1.25;
+  --rb-leading-body: 1.5;
+  --rb-space-0: 0;
+  --rb-space-1: .25rem;
+  --rb-space-2: .5rem;
+  --rb-space-4: 1rem;
+  --rb-space-6: 1.5rem;
+  --rb-space-8: 2rem;
+  --rb-space-10: 2.5rem;
+  --rb-space-12: 3rem;
+  --rb-space-16: 4rem;
+  /* User-approved provisional design-kit references. */
+  --rb-radius-control: .625rem;
+  --rb-radius-card: 1rem;
+  --rb-radius-pill: 999px;
+  --rb-border-width: 1px;
+  --rb-focus-width: 2px;
+  --rb-focus-offset: 2px;
+  --rb-control-height: 2.75rem;
+  --rb-grid-min: 16rem;
+}
