@@ -204,3 +204,26 @@ Compared with the initial planning seed, this inventory explicitly adds admin ho
 **UNVERIFIED:** Figma mapping, browser role/state rendering, responsive/a11y behavior, SMTP delivery, transaction races, and database-backed workflows. The read-only audit checked source and syntax, not every screen in a browser. Existing tests mostly cover helper logic, with only two guest-page feature checks.
 
 Before touching any screen, trace its routes/middleware/controller/service/models/view/CSS and relevant tests against the then-current checkout. Record a field/action/error/role matrix and before screenshots; agree on any unknown behavior before code changes. After implementation, test all applicable roles, denied records, empty/populated collections, validation/old input, flash messages, stale sessions, and workflow-specific states above. Every owning phase uses the explicit regression and merge gates in the roadmap. Stop after Phase 00 documentation for review; no Phase 01 until review and merge to `dev`.
+
+## Phase 02 export coverage update — 2026-11-04
+
+This supplements the Phase 00 **live-Figma UNVERIFIED** statement above. Fourteen user-supplied exports are now versioned in `references/figma/` and were visually inspected for the approved Phase 02 shell. This is static-image coverage, not live-node access or verification of every state.
+
+| Export | Inventory coverage | Phase 02 use |
+|---|---|---|
+| 00 Foundations | Shared visual kit | Palette, typography, spacing/radius labels, unofficial PU motif |
+| 01 Login | S01 | Guest institutional strip and branding only; form redesign deferred |
+| 02 Representative dashboard | S08 | Representative desktop shell |
+| 03 Room availability | S11 | Same representative shell; content deferred |
+| 04 New reservation | S12 | Same shell; both current form stages preserved |
+| 05 My bookings | S13 | My bookings active state |
+| 06 Booking details | S14 | Representative My bookings active state |
+| 07 Lab staff dashboard | S09 | Staff shell, Today/Requests/Manage rooms/Equipment destinations |
+| 08 Approval queue | S15 | Requests active state; real waiting count retained |
+| 09 Today's schedule | S16 | Today active state |
+| 10 Admin manage rooms | S18 | Admin shell; current Accounts action retained despite export omission |
+| 11 Equipment inventory | S20 | Separate Equipment shortcut to existing authorized route |
+| 12 Mobile representative dashboard | S08, mobile | Four bottom links and collapsed account/menu control |
+| Reusable UI components | Shared visual kit | Brand, nav tiles, active row, controls/card patterns |
+
+Expanded menus, staff/admin mobile, onboarding, email/account, signed-link, permission, validation, empty and server-error states are **not shown by these exports**. Their shell behavior follows verified current code and the approved accessibility adaptations. No new route or functional permission was inferred from an image. Page content remains owned by its later phase.

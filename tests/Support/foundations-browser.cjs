@@ -18,10 +18,10 @@ const publicDir = path.resolve(__dirname, '../../public');
       const url = new URL(request.url());
       assert.equal(url.hostname, 'reservebot.test', 'No external requests allowed');
       const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-      const base = /^(css|fonts)\//.test(relative) ? publicDir : fixtureDir;
+      const base = /^(css|fonts|js)\//.test(relative) ? publicDir : fixtureDir;
       const file = path.resolve(base, relative || 'gallery.html');
       assert.ok(file.startsWith(base + path.sep), 'Path must stay inside fixture/assets directory');
-      const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.woff2') ? 'font/woff2' : 'text/html';
+      const type = file.endsWith('.js') ? 'text/javascript' : file.endsWith('.css') ? 'text/css' : file.endsWith('.woff2') ? 'font/woff2' : 'text/html';
       await route.fulfill({ status: 200, contentType: type, body: fs.readFileSync(file) });
     });
     const visit = async name => page.goto('http://reservebot.test/' + name + '.html');
@@ -31,7 +31,7 @@ const publicDir = path.resolve(__dirname, '../../public');
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         document.activeElement?.blur();
       });
-      return page.evaluate(() => [...document.body.querySelectorAll('*')].map(el => {
+      return page.evaluate(() => [...document.querySelector('main').querySelectorAll('*')].map(el => {
       const style = getComputedStyle(el);
       return [el.tagName, el.className, ...Array.from(style).filter(key => !key.startsWith('--rb-')).sort().map(key => [key, style.getPropertyValue(key)])];
     }));
@@ -41,7 +41,7 @@ const publicDir = path.resolve(__dirname, '../../public');
       await visit('legacy');
       const withFoundations = await snapshot();
       await page.screenshot({ path: path.join(fixtureDir, `legacy-${width}-after.png`), fullPage: true });
-      await page.locator('link[href*="/foundations/"]').evaluateAll(links => links.forEach(link => link.remove()));
+      await page.locator('link[href*="/foundations/"]:not([href*="tokens.css"])').evaluateAll(links => links.forEach(link => link.remove()));
       assert.deepEqual(await snapshot(), withFoundations, 'Legacy login computed styles changed at ' + width);
       await page.screenshot({ path: path.join(fixtureDir, `legacy-${width}-before.png`), fullPage: true });
       await visit('gallery');
@@ -86,9 +86,9 @@ const publicDir = path.resolve(__dirname, '../../public');
         if (visible) assert.ok(await page.locator(`${form} ${visible}`).first().isVisible(), `${name}=${value} visible panel`);
         const before = await data(form);
         const styles = await snapshot();
-        await page.locator('link[href*="/foundations/"]').evaluateAll(links => links.forEach(link => link.remove()));
-        assert.deepEqual(await data(form), before, 'Foundation CSS changed submitted values');
-        assert.deepEqual(await snapshot(), styles, 'Foundation CSS changed existing conditional form styles');
+        await page.locator('link[href*="/foundations/"]:not([href*="tokens.css"])').evaluateAll(links => links.forEach(link => link.remove()));
+        assert.deepEqual(await data(form), before, 'Foundation font/component CSS changed submitted values');
+        assert.deepEqual(await snapshot(), styles, 'Foundation font/component CSS changed existing conditional form styles');
         conditionalStates++;
       }
     }
@@ -133,7 +133,7 @@ const publicDir = path.resolve(__dirname, '../../public');
     });
     for (const [a,b,ratio] of contrast) assert.ok(ratio >= (a==='border-control'?3:4.5), `${a}/${b} contrast ${ratio}`);
     assert.deepEqual(failures, []);
-    console.log(JSON.stringify({result:'PASS', widths:[320,375,768,1440], conditionalStates, fonts:loaded, contrast:contrast.map(([a,b,r])=>[a,b,+r.toFixed(2)]), checks:['legacy computed-style parity','native FormData','keyboard focus','disabled skip','datalist autofill','text enlargement','no external requests'], screenshots:fixtureDir}, null, 2));
+    console.log(JSON.stringify({result:'PASS', widths:[320,375,768,1440], conditionalStates, fonts:loaded, contrast:contrast.map(([a,b,r])=>[a,b,+r.toFixed(2)]), checks:['legacy content computed-style parity (shell intentionally changed)','native FormData','keyboard focus','disabled skip','datalist autofill','text enlargement','no external requests'], screenshots:fixtureDir}, null, 2));
   } finally {
     await browser.close();
   }

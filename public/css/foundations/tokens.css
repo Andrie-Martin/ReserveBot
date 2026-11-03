@@ -8,6 +8,12 @@
   --rb-color-canvas: #F8F5EF;
   --rb-color-cream: #F2EADF;
   --rb-color-white: #FFFFFF;
+  /* Phase 02: labels/pixels from supplied exports; additive shell tokens. */
+  --rb-text-secondary: #736C6D;
+  --rb-border-warm: #E9E2DA;
+  --rb-surface-active: #F8EDF0;
+  --rb-sidebar-width: 15.75rem;
+  --rb-shell-gutter: 3rem;
   --rb-text-primary: #232022;
   --rb-text-muted: #4B5563;
   --rb-surface-canvas: var(--rb-color-canvas);
