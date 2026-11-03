@@ -124,3 +124,32 @@ Keep native forms, CSRF/method fields, signed action URLs, submitter attributes,
 Components use native controls, explicit labels, visible focus, wrapped text/actions, 44px default targets, readable caption/body sizes, and text alongside status color. Default error summaries announce once; inline errors supply descriptions without additional alert roles. No custom interaction JS or animation is required. Horizontal scrolling is confined to labelled table containers where necessary.
 
 See [Phase 01 evidence and reproduction](../codex/PHASE_01_FOUNDATIONS.md) for isolated fixtures, commands, verification limits, and complete file inventory. Examples are test-only, explicitly labelled sample data, and have no production route.
+
+## Phase 02 — exported-reference shell
+
+Implemented on `feat/frontend-02-layout`, from `472a54d`, after approval of the revised exported-image plan. **No live Figma inspection is claimed.** Earlier access/Starter-plan limits remain unresolved. All 14 user-supplied PNGs under `references/figma/` were visually reviewed; exports prove only their pictured states. They are preserved unchanged.
+
+The foundations export explicitly labels Inter, the existing eight palette colors, secondary text `#736C6D`, borders `#E9E2DA`, 8px spacing, 24–40px margins, 10px controls and 16px cards. These are export-supported kit references, not measurements of live Figma nodes. Desktop active-row pixels support `#F8EDF0`. New additive tokens are `--rb-text-secondary`, `--rb-border-warm`, `--rb-surface-active`, `--rb-sidebar-width` (15.75rem) and `--rb-shell-gutter` (3rem). Existing Phase 01 muted/control/status tokens remain unchanged.
+
+The 1440px desktop raster shows a 30px institutional strip, white header through y106, a sidebar boundary at x252, and content starting around x298. These inform minimum strip/header heights, a 252px sidebar and 48px content gutter. The mobile reference is 390×844, with a compact strip/header and four text-only bottom links. Typography uses local Inter only within shell subtrees. The unofficial PU monogram is text plus a gold CSS underline, not an official seal or downloaded artwork.
+
+### Shared shell and component contracts
+
+`layouts.app` owns the **single** role-aware navigation definition and the one existing staff waiting-count call. Shared partials render institutional masthead, header, account controls, navigation, advisory card and email notice. A single navigation DOM adapts to sidebar, representative bottom navigation or staff/admin disclosure. Existing `x-avatar`, `x-ui.button`, `x-ui.card` and `x-ui.alert` are reused.
+
+- `x-ui.brand`: required `href`, forwarded attributes; text ReserveBot and institutional subtitle; decorative monogram hidden from assistive technology.
+- `x-ui.nav-item`: `href`, escaped `label`, `tile`, optional `mobile`, `active=false`, `count=0`; forwarded attributes, native anchor, `aria-current=page` for active state, labelled nonzero waiting count. It does not authorize or query anything.
+- Staff/admin Equipment links use the existing `manage.equipment` route. Equipment/categories activate Equipment; other `manage.*` routes activate Manage rooms. Existing in-content Rules/Timetable tabs stay intact. Accounts remains admin-only even though absent from the export.
+- Account and logout are rendered once. The existing POST/CSRF logout occupies the action area where the concept shows unsupported Help. Real account name/role/photo replaces sample initials. Onboarding retains name/logout only. `hideUser` is evaluated before authentication. Email notice suppression, copy, POST resend and `connect_note` replacement behavior are preserved.
+
+`css/layout.css` loads after foundations; `js/layout.js` is a deferred local progressive enhancement. Both use independent `filemtime` keys. Only shell elements opt into `.rb-ui`; main content is deliberately outside that scope. No legacy variables or stylesheet rules are modified.
+
+### Responsive and accessibility decisions
+
+The following are implementation assumptions approved with the revised plan, **not inferred live Figma interactions**: an 80rem breakpoint; fixed representative bottom navigation; an in-flow account/menu disclosure; staff/admin mobile navigation; Escape closing and returning focus; retaining an open menu if resizing would hide its focused control. The toggle transfers focus to the account link when it disappears at desktop width. There is no modal, focus trap, account dropdown, animation, polling or second navigation tree.
+
+Without JavaScript, account/logout and staff links are visible; the nonfunctional toggle stays hidden. Bottom safe space has a rem fallback plus safe-area inset; JavaScript measures actual bottom-bar height using ResizeObserver. Final content and focus targets reserve that space. Minimum 44px actions, visible focus, a skip link, text labels, wrapping long names and 12px minimum shell text take precedence over tiny export microcopy. No official-services claim is made. Sidebar wording is “Reservations follow your department’s rules and current availability,” avoiding a claim that all reservations await approval.
+
+Authenticated main content uses the available shell column instead of the old generic 960px cap. `main-class` is preserved, including availability's `wide` class. Page-owned `.narrow` (400px), `.book-card`/`.booking-card` (880px), `.today-card`/`.manage-card` (980px), `.account-card` (820px), `.welcome-card` (440px) and `.tt-card` (1180px) maxima remain in legacy CSS. Guest/onboarding main retains its prior sizing. Changes in available column width can reflow existing content; they do not migrate its typography, controls, tables or conditional selectors.
+
+See [Phase 02 implementation evidence](../codex/PHASE_02_LAYOUT.md) for screenshots, tests, reference differences and verification limits.

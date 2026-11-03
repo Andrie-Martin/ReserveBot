@@ -1,6 +1,6 @@
 @use('App\Models\Reservation')
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="rb-layout-document">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,75 +10,52 @@
   <link rel="stylesheet" href="{{ asset('css/foundations/fonts.css') }}?v={{ filemtime(public_path('css/foundations/fonts.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/foundations/tokens.css') }}?v={{ filemtime(public_path('css/foundations/tokens.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/foundations/components.css') }}?v={{ filemtime(public_path('css/foundations/components.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
+  <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}" defer></script>
 </head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="{{ url('/') }}">ReserveBot</a>
-    {{-- Error pages for server problems pass hideUser, so the page never needs the database --}}
-    @if (empty($hideUser))
-      @auth
-        @php
-          $me = auth()->user();
-          $settingUp = $me->must_change_password;     // first login: only the "pick your password" page
-        @endphp
-        @unless ($settingUp)
-          <nav class="topnav" aria-label="Main">
-            <a href="{{ url('/') }}" @class(['active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')])>Home</a>
-            <a href="{{ route('rooms') }}" @class(['active' => request()->routeIs('rooms')])>Free rooms</a>
-            @if ($me->role === 'rep')
-              <a href="{{ route('book') }}" @class(['active' => request()->routeIs('book')])>Book</a>
-              <a href="{{ route('bookings.mine') }}" @class(['active' => request()->routeIs('bookings.mine', 'bookings.show')])>My bookings</a>
-            @else
-              {{-- Lab staff and admins: how many requests wait for approval --}}
-              @php $waitingCount = Reservation::waitingCountFor($me); @endphp
-              <a href="{{ route('today') }}" @class(['active' => request()->routeIs('today')])>Today</a>
-              <a href="{{ route('requests') }}" @class(['active' => request()->routeIs('requests')])>Requests @if ($waitingCount)<span class="nav-count">{{ $waitingCount }}<span class="sr-only"> waiting</span></span>@endif</a>
-              <a href="{{ route('manage.rooms') }}" @class(['active' => request()->routeIs('manage.*')])>Manage</a>
-              @if ($me->role === 'admin')
-                <a href="{{ route('accounts.index') }}" @class(['active' => request()->routeIs('accounts.*')])>Accounts</a>
-              @endif
-            @endif
-          </nav>
-        @endunless
-        <div class="who">
-          @if ($settingUp)
-            <span>{{ $me->name }}</span>
-          @else
-            {{-- Name and photo open My account (Information and Password) --}}
-            <a href="{{ route('account') }}" @class(['who-me', 'active' => request()->routeIs('account', 'password.edit')]) title="My account">
-              <x-avatar :user="$me" />
-              <span class="who-name">{{ $me->name }}</span><span class="who-role"> · {{ $me->roleLabel() }}</span>
-            </a>
-          @endif
-          <form method="post" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="link">Log out</button>
-          </form>
-        </div>
-      @endauth
-    @endif
-  </header>
-  @if (empty($hideUser))
-    @auth
-      {{-- Phase 9: until the emailed link is clicked (reps can't book before that) --}}
-      @if (! auth()->user()->must_change_password && ! auth()->user()->hasConnectedEmail() && ! request()->routeIs('account'))
-        <div class="connect-bar" role="status">
-          @if (session('connect_note'))
-            {{-- The answer to "Send it again" --}}
-            <p>{{ session('connect_note') }}</p>
-          @else
-            <p><strong>Connect your email:</strong> open the email we sent to {{ auth()->user()->email }} and click “Connect my email”{{ auth()->user()->role === 'rep' ? ' to start booking' : '' }}.</p>
-            <form method="post" action="{{ route('email.resend') }}">
-              @csrf
-              <button type="submit">Send it again</button>
-            </form>
-          @endif
-        </div>
-      @endif
-    @endauth
+@php
+  // Keep this guard before authentication: server/upload error pages must not resolve a user.
+  $me = empty($hideUser) ? auth()->user() : null;
+  $settingUp = $me && $me->must_change_password;
+  $workspace = $me && ! $settingUp;
+  $representative = $workspace && $me->role === 'rep';
+  $navigation = [];
+  if ($workspace) {
+      $navigation = [
+          ['label' => 'Home', 'mobile' => 'Home', 'tile' => 'H', 'href' => url('/'), 'active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')],
+          ['label' => 'Free rooms', 'mobile' => 'Rooms', 'tile' => 'R', 'href' => route('rooms'), 'active' => request()->routeIs('rooms')],
+      ];
+      if ($representative) {
+          $navigation[] = ['label' => 'Book', 'mobile' => 'Book', 'tile' => '+', 'href' => route('book'), 'active' => request()->routeIs('book')];
+          $navigation[] = ['label' => 'My bookings', 'mobile' => 'Bookings', 'tile' => 'B', 'href' => route('bookings.mine'), 'active' => request()->routeIs('bookings.mine', 'bookings.show')];
+      } else {
+          // One department-scoped query; the same links serve desktop and mobile.
+          $waitingCount = Reservation::waitingCountFor($me);
+          $equipmentActive = request()->routeIs('manage.equipment*', 'manage.categories*');
+          $navigation[] = ['label' => 'Today', 'tile' => 'T', 'href' => route('today'), 'active' => request()->routeIs('today')];
+          $navigation[] = ['label' => 'Requests', 'tile' => '!', 'href' => route('requests'), 'active' => request()->routeIs('requests'), 'count' => $waitingCount];
+          $navigation[] = ['label' => 'Manage rooms', 'tile' => 'M', 'href' => route('manage.rooms'), 'active' => request()->routeIs('manage.*') && ! $equipmentActive];
+          $navigation[] = ['label' => 'Equipment', 'tile' => 'E', 'href' => route('manage.equipment'), 'active' => $equipmentActive];
+          if ($me->role === 'admin') {
+              $navigation[] = ['label' => 'Accounts', 'tile' => 'A', 'href' => route('accounts.index'), 'active' => request()->routeIs('accounts.*')];
+          }
+      }
+  }
+@endphp
+<body @class(['rb-shell', 'rb-shell--guest' => ! $me, 'rb-shell--workspace' => $workspace, 'rb-shell--rep' => $representative])>
+  <a class="rb-skip-link" href="#rb-main">Skip to content</a>
+  @include('layouts.partials.masthead')
+  @include('layouts.partials.header')
+  @if ($workspace)
+    @include('layouts.partials.navigation')
   @endif
-  <main class="@yield('main-class')">
-    @yield('content')
-  </main>
+  <div class="rb-shell__content">
+    @if ($workspace && ! $me->hasConnectedEmail() && ! request()->routeIs('account'))
+      @include('layouts.partials.email-notice')
+    @endif
+    <main id="rb-main" tabindex="-1" class="rb-shell__main @yield('main-class')">
+      @yield('content')
+    </main>
+  </div>
 </body>
 </html>
