@@ -33,7 +33,7 @@ const widths = [320, 375, 390, 768, 1024, 1280, 1440];
     fields:[...f.elements].map(e=>({tag:e.tagName,name:e.name,type:e.type,value:e.value,required:e.required,disabled:e.disabled,readOnly:e.readOnly,minLength:e.minLength,maxLength:e.maxLength,accept:e.accept,autocomplete:e.autocomplete,autofocus:e.autofocus,
      options:e.tagName==='SELECT'?[...e.options].map(o=>[o.value,o.textContent.trim(),o.selected,o.disabled]):null})),
     data:[...new FormData(f)].map(([k,v])=>[k,typeof v==='string'?v:{name:v.name,size:v.size,type:v.type}])})),
-   links:[...document.querySelectorAll('a')].map(a=>[a.getAttribute('href'),a.textContent.replace(/\s+/g,' ').trim()])
+   links:[...document.querySelectorAll('a')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })()])
   }));
   const cases=fs.readdirSync(current).filter(f=>f.endsWith('.html')).map(f=>f.slice(0,-5));
   let states=0;

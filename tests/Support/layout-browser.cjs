@@ -56,7 +56,7 @@ const publicDir = path.resolve(__dirname, '../../public');
         if (state === 'rep') {
           assert.equal(await page.locator('nav a').count(), 4);
           const position = await page.locator('.rb-sidebar').evaluate(el => getComputedStyle(el).position);
-          assert.equal(position, mobile ? 'fixed' : 'static');
+          assert.equal(position, mobile ? 'fixed' : 'sticky');
           await page.locator('#layout-form button').focus();
           await page.keyboard.press('Tab');
           assert.equal(await page.locator(':focus').getAttribute('id'), 'layout-last');
@@ -81,7 +81,7 @@ const publicDir = path.resolve(__dirname, '../../public');
     await page.locator('nav a').last().focus();
     await resize({width:1279,height:844});
     assert.ok(await page.locator('nav a').last().isVisible());
-    assert.equal(await page.locator(':focus').textContent().then(s=>s.trim().replace(/\s+/g,' ')), 'A Accounts');
+    assert.equal(await page.locator(':focus').textContent().then(s=>s.trim().replace(/\s+/g,' ')), 'Accounts');
     checks.push('1279/1280 focus preserved in account/navigation; disappearing toggle focus transferred');
     // No JS fallback: all native account/logout and staff navigation remain reachable.
     const nojs = await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}});

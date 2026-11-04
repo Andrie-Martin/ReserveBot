@@ -177,3 +177,16 @@ S08 representative content and S11 now compose existing card, table-container, l
 Visual direction comes from committed desktop dashboard, availability, mobile dashboard and foundation/component PNGs, not live Figma measurements. Provisional composition defaults: dashboard 2:1 columns, stacked at 70rem; availability 1.45:1 with 22rem minimum day column, stacked at 85rem; compact padding/headings at 40rem. Existing 10px control/16px card radii and Inter/palette tokens remain authoritative. Calendar minimum width is 28rem, reduced to 24.5rem on mobile inside a labelled keyboard-scrollable region; full accessible preview text and complete selected-day agenda remain. Semantic schedule tables scroll locally. Native details and forms work without JavaScript.
 
 Export-only statistics, room classifications and sample bookings are omitted; all real shortcuts, guidance, schedule information, calendar states, search results and disclosures are retained. See [Phase 04 parity and evidence](../codex/PHASE_04_AVAILABILITY.md) for exact checks and outstanding HTTP requirements.
+
+## Stage 1 — shared shell refinement
+
+Approved Stage 1 refines only the shared shell, before the separate task-UX, visual-consistency and theme stages. No live Figma measurement is claimed.
+
+- Desktop navigation remains at the existing 80rem breakpoint. The sidebar is sticky, independently aligned, viewport-limited and vertically scrollable only when its contents overflow. Its advisory uses available space below navigation. Main content keeps document scrolling.
+- `layout.js` measures the remaining visible normal-flow header height (including wrapped names), updates `--rb-sidebar-height` on resize/scroll via animation-frame scheduling, and observes header/masthead resizing. The CSS fallback remains sticky with a viewport height when JavaScript is absent. At extreme text enlargement/short heights, natural document scrolling reveals navigation beneath a tall header; content is not clipped to force an above-fold fit.
+- Header flex items may wrap. Mobile representative bottom navigation, staff disclosure, Escape handling, focus transfer and safe-area clearance remain unchanged.
+- `x-ui.nav-item` now accepts `icon` instead of `tile`. `x-ui.icon` is a local decorative outline SVG with a fixed allowlist (home, rooms, book, bookings, today, requests, manage, equipment, accounts), `aria-hidden` and `focusable=false`. Adjacent labels supply the accessible name. No icon package or external requests.
+- Hover uses the existing muted surface; current-page navigation uses the existing active surface, semibold text and a maroon inset edge; keyboard focus retains its separate outline. Mobile current-page emphasis uses a top edge.
+- Prototype labels are removed from the masthead/header. The header describes the reservation system; the existing login unofficial-site disclaimer remains. No official endorsement or new university mark is introduced.
+
+See [Stage 1 implementation and verification](../codex/STAGE_01_SHELL_REFINEMENT.md). Page content, tokens, legacy CSS, fonts and Phase 05 remain outside this change.

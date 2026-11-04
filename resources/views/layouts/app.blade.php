@@ -23,22 +23,22 @@
   $navigation = [];
   if ($workspace) {
       $navigation = [
-          ['label' => 'Home', 'mobile' => 'Home', 'tile' => 'H', 'href' => url('/'), 'active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')],
-          ['label' => 'Free rooms', 'mobile' => 'Rooms', 'tile' => 'R', 'href' => route('rooms'), 'active' => request()->routeIs('rooms')],
+          ['label' => 'Home', 'mobile' => 'Home', 'icon' => 'home', 'href' => url('/'), 'active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')],
+          ['label' => 'Free rooms', 'mobile' => 'Rooms', 'icon' => 'rooms', 'href' => route('rooms'), 'active' => request()->routeIs('rooms')],
       ];
       if ($representative) {
-          $navigation[] = ['label' => 'Book', 'mobile' => 'Book', 'tile' => '+', 'href' => route('book'), 'active' => request()->routeIs('book')];
-          $navigation[] = ['label' => 'My bookings', 'mobile' => 'Bookings', 'tile' => 'B', 'href' => route('bookings.mine'), 'active' => request()->routeIs('bookings.mine', 'bookings.show')];
+          $navigation[] = ['label' => 'Book', 'mobile' => 'Book', 'icon' => 'book', 'href' => route('book'), 'active' => request()->routeIs('book')];
+          $navigation[] = ['label' => 'My bookings', 'mobile' => 'Bookings', 'icon' => 'bookings', 'href' => route('bookings.mine'), 'active' => request()->routeIs('bookings.mine', 'bookings.show')];
       } else {
           // One department-scoped query; the same links serve desktop and mobile.
           $waitingCount = Reservation::waitingCountFor($me);
           $equipmentActive = request()->routeIs('manage.equipment*', 'manage.categories*');
-          $navigation[] = ['label' => 'Today', 'tile' => 'T', 'href' => route('today'), 'active' => request()->routeIs('today')];
-          $navigation[] = ['label' => 'Requests', 'tile' => '!', 'href' => route('requests'), 'active' => request()->routeIs('requests'), 'count' => $waitingCount];
-          $navigation[] = ['label' => 'Manage rooms', 'tile' => 'M', 'href' => route('manage.rooms'), 'active' => request()->routeIs('manage.*') && ! $equipmentActive];
-          $navigation[] = ['label' => 'Equipment', 'tile' => 'E', 'href' => route('manage.equipment'), 'active' => $equipmentActive];
+          $navigation[] = ['label' => 'Today', 'icon' => 'today', 'href' => route('today'), 'active' => request()->routeIs('today')];
+          $navigation[] = ['label' => 'Requests', 'icon' => 'requests', 'href' => route('requests'), 'active' => request()->routeIs('requests'), 'count' => $waitingCount];
+          $navigation[] = ['label' => 'Manage rooms', 'icon' => 'manage', 'href' => route('manage.rooms'), 'active' => request()->routeIs('manage.*') && ! $equipmentActive];
+          $navigation[] = ['label' => 'Equipment', 'icon' => 'equipment', 'href' => route('manage.equipment'), 'active' => $equipmentActive];
           if ($me->role === 'admin') {
-              $navigation[] = ['label' => 'Accounts', 'tile' => 'A', 'href' => route('accounts.index'), 'active' => request()->routeIs('accounts.*')];
+              $navigation[] = ['label' => 'Accounts', 'icon' => 'accounts', 'href' => route('accounts.index'), 'active' => request()->routeIs('accounts.*')];
           }
       }
   }
