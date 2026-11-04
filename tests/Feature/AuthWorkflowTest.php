@@ -146,6 +146,8 @@ final class AuthWorkflowTest extends TestCase
             if ($role === 'admin') $page->assertDontSee('name="school_id"', false);
             $this->put('/welcome', ['password' => 'OwnPassword123', 'password_confirmation' => 'OwnPassword123'])->assertRedirect('/account');
             $this->assertFalse($user->fresh()->must_change_password);
+            // End this user's session before the next role signs in.
+            $this->post('/logout')->assertRedirect('/login');
         }
     }
 
@@ -303,11 +305,16 @@ final class AuthWorkflowTest extends TestCase
         Storage::disk('local')->assertMissing($path);
         $this->assertNotSame($url,$user->fresh()->photoUrl());
         $staff=$this->user('lab_staff');
+        // Each viewer needs a separate session; keep it intact within their own requests.
+        $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($staff)->get($user->fresh()->photoUrl())->assertOk();
+        $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($this->user())->get($user->fresh()->photoUrl())->assertNotFound();
         $other=Department::create(['name'=>'Other test department','slug'=>'other-'.Str::random(10)]);
+        $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($this->user('admin',['department_id'=>$other->id]))->get($user->fresh()->photoUrl())->assertNotFound();
         $path=$user->fresh()->photo_path;
+        $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($user->fresh())->delete('/account/photo')->assertRedirect('/account');
         Storage::disk('local')->assertMissing($path);
         $this->assertNull($user->fresh()->photo_path);
