@@ -247,3 +247,13 @@ Read-only commands actually used: Git status/branch/log/diff checks; source read
 | U4 — UNVERIFIED | Source mechanisms for locks, signatures, history retention, and account sessions inspected, not exercised end to end. | Test boundary cases before accepting affected frontend work; do not mark them passed from source reading alone. |
 
 No issue above has been fixed in Phase 00. Backend changes need separate review and approval. Documentation completion does not authorize starting Phase 01 or changing Git branches.
+
+## Phase 03 source refresh — 2026-11-04
+
+The Phase 00 introduction and visual baseline above are historical. At Phase 03 base `399c507`, Phases 01/02 are merged. Authentication routes/controllers/middleware/services/models/notifications were retraced against this checkout: the authentication and action contracts above remain unchanged. Current Blade asset order is legacy CSS, foundation fonts/tokens/components, layout CSS, optional page styles, plus the existing deferred layout JS. The shared layout change in Phase 03 is solely `@stack('styles')`; migrated auth/account/error views push independently cache-busted `css/auth.css`.
+
+S01–S07 and the shared error wrapper now compose foundation components. A presentation-only `ui.auth-card` supports compact forms/results; `auth._illustration` is local decorative SVG. Own-account photo/email/information partials retain caller-owned state and native independent forms. Account tabs still render GET links and `status/problem`; account resend keeps its button with `connect_note`, while the unchanged shell replaces its resend controls with that feedback. Hidden-user errors retain the guard before authentication.
+
+The current code preserves login normalization/active-account check/session regeneration/role redirect; main `auth/auth.session/account` gates; mandatory onboarding and school-ID conditions; default/info/photo validation; current-password requirements; legacy rep email exception; private versioned photographs; signed connection URLs; recovery token/email and notification contracts. No backend, schema, configuration, notification, infrastructure or dependency change accompanies this update.
+
+[Phase 03 evidence](../codex/PHASE_03_AUTH.md) distinguishes 60-state render/browser contract preservation from unexecuted real HTTP/security workflows. The runtime dependency probe confirmed container Laravel is available but PHPUnit is absent; local vendor is also absent. New HTTP tests require explicit opt-in to an independently provisioned disposable MariaDB database and never migrate or seed. Earlier runtime/source-match claims are dated observations, not certification that the running service contains this worktree. No deployment/restart was performed.

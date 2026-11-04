@@ -227,3 +227,11 @@ This supplements the Phase 00 **live-Figma UNVERIFIED** statement above. Fourtee
 | Reusable UI components | Shared visual kit | Brand, nav tiles, active row, controls/card patterns |
 
 Expanded menus, staff/admin mobile, onboarding, email/account, signed-link, permission, validation, empty and server-error states are **not shown by these exports**. Their shell behavior follows verified current code and the approved accessibility adaptations. No new route or functional permission was inferred from an image. Page content remains owned by its later phase.
+
+## Phase 03 implementation update — authentication, own account and errors
+
+Current implementation is based on `399c507` on `feat/frontend-03-auth`. S01–S07 and the shared E403/E404/E413/E419/E429/E500 presentation now use Phase 01 components and scoped auth CSS inside the Phase 02 shell. All earlier route/action/field/role contracts above remain current; no backend functionality changed. The live-Figma limitation remains; only S01 has a committed screen export. Other Phase 03 screens follow documented component-based assumptions.
+
+The mandatory before/after [Functional Parity Matrix](../codex/PHASE_03_AUTH.md#functional-parity-matrix) records every current action, visible information group and conditional state. Forms and links were compared against the actual pre-change rendered views in 60 isolated states, including all original paragraph information. No filters, search, pagination, asynchronous loading controls or additional authentication features were introduced.
+
+Coverage includes guest recovery/reset, all three roles, missing/existing school IDs, photo present/absent, grouped staff section options, connected/unconnected email, default/info/photo errors, old input, flashes, signed-result messages and all six error templates. These are isolated rendering/browser results. Real authentication, sessions, password-broker effects, throttles, signed middleware, database/storage authorization and mail behavior remain outstanding HTTP pre-merge checks; see the report rather than treating fixtures as security evidence. Signed class content remains Phase 06, while its existing invalid-signature message remains supported by S07.

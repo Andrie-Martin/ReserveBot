@@ -36,3 +36,11 @@ ReserveBot is a PHP/Laravel room and equipment reservation application for PUP C
 - Review: `docs/codex/PR_CHECKLIST.md`.
 
 If a document disagrees with running code, trust verified code/tests for current behavior, report the discrepancy, and ask before changing functionality.
+
+## Functional Parity Contract — mandatory for every frontend phase
+
+The current Laravel application is the source of truth for functionality; Figma supplies visual direction only. Before redesigning a screen, inventory every interactive control, visible information item, notification, status, shortcut and conditional state. Map each interaction to its route, HTTP method, controller behavior, authorization and state conditions.
+
+Produce a before-and-after Functional Parity Matrix identifying where every existing capability will appear. Preserve all capabilities unless the user explicitly approves removal, including form names/values, CSRF, method spoofing, validation/error bags, old input, redirects, sessions, signed links, permissions and role-specific states.
+
+Missing features in Figma are design coverage gaps, never permission to remove functionality. Do not substitute decorative controls, placeholder links or dummy data for working behavior. Define and execute appropriate regression checks; distinguish isolated rendering from authenticated workflow verification and report every unexecuted check. A redesign that removes working functionality fails acceptance.
