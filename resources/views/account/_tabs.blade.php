@@ -1,11 +1,10 @@
-{{-- Phase 9: the two My account pages, and their messages --}}
-<nav class="manage-tabs" aria-label="My account">
-  <a href="{{ route('account') }}" @class(['on' => request()->routeIs('account')])>Information</a>
-  <a href="{{ route('password.edit') }}" @class(['on' => request()->routeIs('password.edit')])>Password</a>
+<nav class="rb-account-tabs" aria-label="My account">
+  <a href="{{ route('account') }}" @if(request()->routeIs('account')) aria-current="page" @endif>Information</a>
+  <a href="{{ route('password.edit') }}" @if(request()->routeIs('password.edit')) aria-current="page" @endif>Password</a>
 </nav>
 @if (session('status'))
-  <p class="success" role="status">{{ session('status') }}</p>
+  <x-ui.alert tone="success" role="status">{{ session('status') }}</x-ui.alert>
 @endif
 @if (session('problem'))
-  <p class="error" role="alert">{{ session('problem') }}</p>
+  <x-ui.alert tone="danger" role="alert">{{ session('problem') }}</x-ui.alert>
 @endif

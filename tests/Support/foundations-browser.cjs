@@ -38,11 +38,12 @@ const publicDir = path.resolve(__dirname, '../../public');
     };
     for (const width of [320, 375, 768, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
-      await visit('legacy');
+      // Login is migrated in Phase 03; conditional is an untouched real-template fixture.
+      await visit('conditional');
       const withFoundations = await snapshot();
       await page.screenshot({ path: path.join(fixtureDir, `legacy-${width}-after.png`), fullPage: true });
       await page.locator('link[href*="/foundations/"]:not([href*="tokens.css"])').evaluateAll(links => links.forEach(link => link.remove()));
-      assert.deepEqual(await snapshot(), withFoundations, 'Legacy login computed styles changed at ' + width);
+      assert.deepEqual(await snapshot(), withFoundations, 'Untouched conditional content computed styles changed at ' + width);
       await page.screenshot({ path: path.join(fixtureDir, `legacy-${width}-before.png`), fullPage: true });
       await visit('gallery');
       await page.evaluate(() => document.fonts.ready);

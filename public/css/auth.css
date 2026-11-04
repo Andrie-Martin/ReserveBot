@@ -1,0 +1,57 @@
+/* Phase 03 only. Layout dimensions below are documented responsive assumptions. */
+.rb-auth-main--login { max-width: none; margin: 0; padding: 0; }
+.rb-auth-login { display: grid; grid-template-columns: 51% 49%; }
+.rb-auth-login__content { min-width: 0; padding: 6.5rem clamp(2rem, 6.67vw, 6rem) var(--rb-space-6); }
+.rb-auth-eyebrow { margin: 0 0 var(--rb-space-6); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); text-transform: uppercase; }
+.rb-auth-login__intro .rb-heading { line-height: 1.3; }
+.rb-auth-login__intro .rb-heading span { color: var(--rb-color-maroon); }
+.rb-auth-login__intro .rb-description { margin-top: var(--rb-space-10); font-size: var(--rb-text-small); line-height: 1.6; color: var(--rb-text-secondary); }
+.rb-auth-card { max-width: 30rem; margin: var(--rb-space-12) auto; border-color: var(--rb-border-warm); }
+.rb-auth-card__intro .rb-description { font-size: var(--rb-text-small); }
+.rb-auth-card__footer { font-size: var(--rb-text-small); }
+.rb-auth-card__footer a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); }
+.rb-auth-login__card { max-width: 35rem; margin: var(--rb-space-12) 0 var(--rb-space-6); padding: var(--rb-space-8); }
+.rb-auth-form > .rb-button { width: 100%; }
+.rb-auth-disclaimer { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); text-transform: uppercase; }
+.rb-auth-login__art { display: flex; align-items: flex-start; justify-content: center; padding: var(--rb-space-12) var(--rb-space-6); background: var(--rb-surface-muted); min-width: 0; }
+.rb-auth-illustration { display: block; width: 100%; max-width: 32.5rem; height: auto; }
+.rb-auth-illustration__arch { fill: var(--rb-color-maroon); }
+.rb-auth-illustration__building { fill: var(--rb-surface-canvas); }
+.rb-auth-illustration__white { fill: var(--rb-color-white); }
+.rb-auth-illustration__gold { fill: var(--rb-color-gold); }
+.rb-auth-illustration__window { fill: var(--rb-surface-muted); }
+.rb-auth-illustration__base { fill: var(--rb-color-deep); }
+.rb-auth-illustration__caption, .rb-auth-illustration__motto { fill: var(--rb-color-white); font-family: var(--rb-font-family); font-weight: var(--rb-weight-semibold); font-size: 12px; }
+.rb-auth-illustration__motto { font-size: 13px; }
+.rb-account-page { max-width: 51.25rem; }
+.rb-account-page .rb-card { border-color: var(--rb-border-warm); }
+.rb-account-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
+.rb-account-tabs a { padding: var(--rb-space-2) var(--rb-space-4); display: inline-flex; align-items: center; min-height: var(--rb-control-height); text-decoration: none; border-bottom: 3px solid transparent; }
+.rb-account-tabs a[aria-current] { border-bottom-color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+.rb-auth-card a, .rb-account-page a { color: var(--rb-color-maroon); }
+.rb-auth-card a:focus-visible, .rb-account-page a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-account-photo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--rb-space-6); }
+.rb-account-photo__content { flex: 1 1 16rem; min-width: 0; }
+.rb-account-photo__name { margin: 0; font-weight: var(--rb-weight-bold); font-size: var(--rb-text-h3); overflow-wrap: anywhere; }
+.rb-account-photo__forms { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--rb-space-2) var(--rb-space-4); margin-block: var(--rb-space-4); }
+.rb-account-photo__forms form { min-width: 0; max-width: 100%; }
+.rb-account-photo__forms form:first-child { display: grid; gap: var(--rb-space-4); flex: 1 1 16rem; }
+.rb-account-photo__content > .rb-error-summary { margin-top: var(--rb-space-4); }
+.rb-account-photo .rb-control[type=file] { padding: var(--rb-space-2); font-size: var(--rb-text-small); overflow: hidden; }
+.rb-account-photo .rb-control::file-selector-button { padding: var(--rb-space-2); margin-right: var(--rb-space-2); font: inherit; color: var(--rb-color-maroon); background: var(--rb-surface-muted); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); }
+.rb-account-email p, .rb-account-email form { margin: 0; }
+.rb-account-password { max-width: 30rem; }
+.rb-account-readonly { margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px dashed var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+@media (max-width: 63.999rem) {
+  .rb-auth-login { display: block; }
+  .rb-auth-login__art { display: none; }
+  .rb-auth-login__content { max-width: 39rem; margin-inline: auto; padding: var(--rb-space-8) var(--rb-space-4); }
+  .rb-auth-desktop-break { display: none; }
+  .rb-auth-login__intro .rb-heading { font-size: var(--rb-text-h1); }
+  .rb-auth-login__intro .rb-description { margin-top: var(--rb-space-6); }
+  .rb-auth-login__card { margin-top: var(--rb-space-8); }
+}
+@media (max-width: 40rem) {
+  .rb-auth-card { margin-block: var(--rb-space-6); }
+  .rb-auth-login__card { padding: var(--rb-space-4); }
+}
