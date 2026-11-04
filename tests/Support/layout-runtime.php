@@ -84,6 +84,9 @@ function layoutContracts(): int
             $html = layoutRender($role, ['waiting' => $waiting, 'name' => '<script>unsafe</script>']);
             $x = foundationsDocument($html);
             $check($x->query('//nav[@aria-label="Main"]//a')->length === $links, $role.' menu count');
+            $check($x->query('//nav[@aria-label="Main"]//svg[@aria-hidden="true" and @focusable="false"]')->length === $links, $role.' decorative local icons');
+            $check(! str_contains($html, 'rb-nav-item__tile'), 'No placeholder navigation tiles');
+            $check(! str_contains($html, 'ReserveBot · Concept') && ! str_contains($html, 'Unofficial design concept'), 'No prototype shell branding');
             $staff = in_array($role, ['lab_staff', 'admin']);
             $queries = layoutConnection()->queries;
             $check(count($queries) === ($staff ? 1 : 0), $role.' count query multiplicity');

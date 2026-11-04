@@ -1,10 +1,6 @@
 <header class="rb-header rb-ui">
   <x-ui.brand :href="url('/')" />
-  @if ($me)
-    <span class="rb-header__description">Room &amp; equipment reservation system</span>
-  @else
-    <span class="rb-header__concept">Unofficial design concept</span>
-  @endif
+  <span class="rb-header__description">Room &amp; equipment reservation system</span>
   @if ($workspace)
     <x-ui.button variant="quiet" class="rb-menu-toggle" id="rb-menu-toggle" aria-expanded="true"
         :aria-controls="$representative ? 'rb-account-controls' : 'rb-account-controls rb-navigation'" hidden>
