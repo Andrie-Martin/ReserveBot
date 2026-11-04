@@ -169,3 +169,11 @@ Deliberate adaptations: retain Forgot password and the original class-booking de
 Unpictured recovery, reset, onboarding, account, email-result and error states use the same card/field/button/alert vocabulary. Default/info/photo bags remain explicit; summaries announce errors, while inline errors provide control descriptions without additional live regions. Fields retain existing names, old values, constraints, IDs where present, autocomplete, autofocus and native submit behavior. Password/file values are never restored. Photo guidance is associated with the native file input. Tabs and recovery links have visible focus and minimum 44px targets; long text wraps and content can grow.
 
 See [Phase 03 report](../codex/PHASE_03_AUTH.md) for the complete parity matrix, actual tests, screenshots and outstanding HTTP/security review items.
+
+## Phase 04 — representative dashboard and room availability
+
+S08 representative content and S11 now compose existing card, table-container, link-button, select and button components using page-owned `dashboard.css` / `availability.css`. Only migrated wrappers opt into `rb-ui`; page classes use `rb-dashboard*` and `rb-availability*`. The staff/admin home, shared shell, foundations and class-answer partial remain unchanged. No new JavaScript or tokens are needed.
+
+Visual direction comes from committed desktop dashboard, availability, mobile dashboard and foundation/component PNGs, not live Figma measurements. Provisional composition defaults: dashboard 2:1 columns, stacked at 70rem; availability 1.45:1 with 22rem minimum day column, stacked at 85rem; compact padding/headings at 40rem. Existing 10px control/16px card radii and Inter/palette tokens remain authoritative. Calendar minimum width is 28rem, reduced to 24.5rem on mobile inside a labelled keyboard-scrollable region; full accessible preview text and complete selected-day agenda remain. Semantic schedule tables scroll locally. Native details and forms work without JavaScript.
+
+Export-only statistics, room classifications and sample bookings are omitted; all real shortcuts, guidance, schedule information, calendar states, search results and disclosures are retained. See [Phase 04 parity and evidence](../codex/PHASE_04_AVAILABILITY.md) for exact checks and outstanding HTTP requirements.
