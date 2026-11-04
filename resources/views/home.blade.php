@@ -4,7 +4,16 @@
 
 @section('title', $title)
 
+@if ($user->role === 'rep')
+  @push('styles')
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+  @endpush
+@endif
+
 @section('content')
+@if ($user->role === 'rep')
+  @include('home._representative')
+@else
 <section class="card">
   <h1>Welcome, {{ $user->name }}</h1>
   <p class="muted">
@@ -83,4 +92,5 @@
     </ul>
   @endif
 </section>
+@endif
 @endsection
