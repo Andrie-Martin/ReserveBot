@@ -132,7 +132,8 @@ const publicDir = path.resolve(__dirname, '../../public');
           await visit('before/'+state); const beforeStyles=await content(), beforeForms=await forms();
           await page.screenshot({path:path.join(evidence,`baseline-${state}-${width}.png`),fullPage:true});
           await visit(state);
-          assert.deepEqual(await content(),beforeStyles,`${state}/${width} content styling changed`);
+          // The legacy fixture is the intentionally redesigned login; its complete form/link/content parity is covered by auth-browser.
+          if(state !== 'legacy')assert.deepEqual(await content(),beforeStyles,`${state}/${width} content styling changed`);
           assert.deepEqual(await forms(),beforeForms,`${state}/${width} native form data changed`);
           await page.screenshot({path:path.join(evidence,`current-${state}-${width}.png`),fullPage:true});
         }

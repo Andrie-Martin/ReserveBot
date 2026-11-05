@@ -7,6 +7,7 @@
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/availability.css') }}?v={{ filemtime(public_path('css/availability.css')) }}">
+<script src="{{ asset('js/availability.js') }}?v={{ filemtime(public_path('js/availability.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -19,7 +20,23 @@
 @endphp
 
 <div class="rb-availability rb-ui">
-  @include('rooms._calendar')
+  <div class="rb-availability__cal-intro">
+    <h1>Free rooms</h1>
+    <p class="rb-availability__muted">{{ $department->name }} · Pick a day, up to {{ $lastDay->format('F j') }}, to see which rooms are free.</p>
+  </div>
+
   @include('rooms._day')
+  @if ($isOpen)
+    @include('rooms._results')
+  @endif
+  <section class="rb-availability__secondary" id="calendar-and-agenda" aria-label="Calendar and selected-day agenda">
+    @include('rooms._calendar')
+    @include('rooms._calendar-details')
+    @if ($isOpen)
+      <section class="rb-card rb-availability__agenda-card" aria-label="Selected-day agenda">
+        @include('rooms._agenda')
+      </section>
+    @endif
+  </section>
 </div>
 @endsection

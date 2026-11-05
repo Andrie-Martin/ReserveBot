@@ -92,3 +92,9 @@ textarea.rb-control { resize: vertical; }
 @media (max-width: 40rem) {
   .rb-card, .rb-empty-state { padding: var(--rb-space-4); }
 }
+
+/* Native disclosure: callers supply content and counts, never behavior or data queries. */
+.rb-disclosure { min-width: 0; border-top: 1px solid var(--rb-border-warm); }
+.rb-disclosure > summary { min-height: var(--rb-control-height); padding: var(--rb-space-2) 0; cursor: pointer; color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); overflow-wrap: anywhere; }
+.rb-disclosure > summary:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-disclosure__content { min-width: 0; padding-block: var(--rb-space-2); }

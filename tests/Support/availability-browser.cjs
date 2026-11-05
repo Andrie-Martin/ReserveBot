@@ -21,16 +21,22 @@ const widths=[320,390,768,1024,1280,1440];
  const visit=async(name,old=false)=>{await page.goto('http://reservebot.test/'+(old?'before/':'')+name+'.html');await page.evaluate(()=>document.fonts.ready);};
  const contracts=()=>page.evaluate(()=>({
   forms:[...document.forms].map(f=>({action:f.action,method:f.method,enctype:f.enctype,fields:[...f.elements].map(e=>({tag:e.tagName,name:e.name,id:e.id,type:e.type,value:e.value,required:e.required,disabled:e.disabled,options:e.tagName==='SELECT'?[...e.options].map(o=>[o.value,o.textContent.trim(),o.selected,o.disabled]):null})),data:[...new FormData(f)]})),
-  links:[...document.querySelectorAll('a')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })(),a.getAttribute('aria-current'),a.getAttribute('aria-label')]),
+  links:[...document.querySelectorAll('a:not(.rb-availability__event-count):not([href="#calendar-and-agenda"])')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })(),a.getAttribute('aria-current'),a.getAttribute('aria-label')]),
+  records:[...document.querySelectorAll('.rb-dashboard .mlist > li, .rb-dashboard tbody tr, .rb-availability__room-row')].map(e=>{if(!e.classList.contains('rb-availability__room-row'))return e.textContent.replace(/\s+/g,' ').trim();const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let n,parts=[];while(n=w.nextNode()){const text=n.textContent.replace(/\s+/g,' ').trim();if(text)parts.push(text);}return parts.sort();}),
   titles:[...document.querySelectorAll('main [title]')].map(e=>e.title),
   disclosures:[...document.querySelectorAll('main details')].map(e=>e.textContent.replace(/\s+/g,' ').trim())
  }));
  let states=0;const cases=fs.readdirSync(current).filter(f=>f.endsWith('.html')).map(f=>f.slice(0,-5));
  for(const name of cases){
   await visit(name,true);const old=await contracts();
-  const info=await page.locator('main').evaluate(el=>{const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,out=[];while(n=w.nextNode()){const s=n.textContent.replace(/\s+/g,' ').trim();if(s)out.push(s);}return out;});
+  const info=await page.locator('main').evaluate(el=>{const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,out=[];while(n=w.nextNode()){const s=n.textContent.replace(/\s+/g,' ').trim();if(s)out.push(n.parentElement.closest('.rb-availability__event-count')?s.replace('; view details below calendar',''):s);}return out;});
   const staffMain=await page.locator('main').innerHTML();
-  await visit(name);assert.deepEqual(await contracts(),old,name+' exact form/link/disclosure/tooltip parity');
+  await visit(name);const currentContract=await contracts();
+  // DOM order changes intentionally. Compare complete multisets, retaining duplicates.
+  const sorted=items=>items.map(item=>JSON.stringify(item)).sort();
+  for(const key of ['forms','links','titles','records'])assert.deepEqual(sorted(currentContract[key]),sorted(old[key]),name+' exact '+key+' multiset parity');
+  const retained=[...currentContract.disclosures];
+  for(const disclosure of old.disclosures){const at=retained.indexOf(disclosure);assert.ok(at>=0,name+' retained original disclosure');retained.splice(at,1);}
   const text=(await page.locator('main').textContent()).replace(/\s+/g,' ').trim();
   for(const content of info)assert.ok(text.includes(content),name+' retained information: '+content);
   if(name==='home-lab_staff'||name==='home-admin'){

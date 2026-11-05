@@ -1,10 +1,5 @@
 @use('App\Support\TimeSlots')
 <section class="rb-card rb-availability__cal-card" aria-labelledby="cal-title">
-  <div class="rb-availability__cal-intro">
-    <h1>Free rooms</h1>
-    <p class="rb-availability__muted">{{ $department->name }} · Pick a day, up to {{ $lastDay->format('F j') }}, to see which rooms are free.</p>
-  </div>
-
   <div class="rb-availability__cal-bar">
     <h2 id="cal-title" class="rb-availability__cal-title">{{ $calendar['title'] }}</h2>
     <div class="rb-availability__cal-nav">

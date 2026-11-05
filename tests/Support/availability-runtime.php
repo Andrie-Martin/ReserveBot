@@ -7,16 +7,16 @@ function availabilityCases(): array
 {
     $cases=[];
     foreach (['rep','lab_staff','admin'] as $role) {
-        foreach (['normal','search','invalid-time','none-free','started','closed','outside-term','invalid-date','empty','boundary','long'] as $state) {
+        foreach (['normal','search','invalid-time','none-free','started','closed','outside-term','invalid-date','empty','boundary','long','long-events'] as $state) {
             $cases['rooms-'.$role.'-'.$state]=['rooms', $role, $state];
         }
     }
-    foreach (['normal','empty','no-section','long','feedback','unconnected','ended'] as $state) $cases['home-rep-'.$state]=['home','rep',$state];
+    foreach (['normal','empty','no-section','long','feedback','unconnected','ended','priority'] as $state) $cases['home-rep-'.$state]=['home','rep',$state];
     foreach (['lab_staff','admin'] as $role) $cases['home-'.$role]=['home',$role,'normal'];
     return $cases;
 }
 
-function availabilityRender(array $case): string
+function availabilityRender(array $case, ?callable $transform = null): string
 {
     [$page,$role,$state]=$case;
     $today=Carbon\CarbonImmutable::parse('2026-11-04 09:05:00','Asia/Manila');
@@ -40,10 +40,23 @@ function availabilityRender(array $case): string
                 $meetings[]=['class'=>$c,'date'=>$date,'start'=>$date->addHours($state==='ended'?7:10),'end'=>$date->addHours($state==='ended'?8:12),'state'=>$status,'check'=>null];
             }
         }
+        $classRows=[$class];
+        if ($state==='priority') {
+            // Supplied records deliberately unordered: all today's states, future
+            // waiting/freed and answered meetings, plus an ended waiting record.
+            $meetings=[];$classRows=[];
+            foreach ([['waiting',0],['f2f',0],['online',0],['freed',0],['booked',0],['waiting',1],['freed',2],['f2f',3],['online',4],['waiting',-1]] as $i=>[$status,$offset]) {
+                $date=$today->startOfDay()->addDays($offset);
+                $c=clone $class;$c->id=100+$i;$c->course=(object)['code'=>'SAMPLE '.$i,'title'=>'Example priority fixture '.$i];
+                $meetings[]=['class'=>$c,'date'=>$date,'start'=>$date->addHours(10)->addMinutes($i*10),'end'=>$date->addHours(12)->addMinutes($i*10),'state'=>$status,'check'=>null];
+                $classRows[]=$c;
+            }
+            $meetings=array_reverse($meetings);
+        }
         return view('home',[
             'title'=>'Home','user'=>$user,'intro'=>$role==='rep'?'Book rooms and equipment for your block, and check which rooms are free.':'Example staff introduction.',
             'stat'=>$role==='rep'?null:['value'=>3,'label'=>'Example current reservations'],
-            'classes'=>$role==='rep'?collect($state==='empty'?[]:[$class]):null,'meetings'=>$meetings,
+            'classes'=>$role==='rep'?collect($state==='empty'?[]:$classRows):null,'meetings'=>$meetings,
             'ready'=>$role==='rep'?[
                 ['label'=>'See which rooms are free','url'=>route('rooms')],
                 ['label'=>'Book a room or equipment','url'=>route('book')],
@@ -65,12 +78,19 @@ function availabilityRender(array $case): string
         'url'=>$status?route('bookings.show',100+$i):null,'schedule_id'=>21+$i,'booked_elsewhere'=>false,
     ];
     $items=[$item($staff?'booking':'class',null,0),$item($staff?'booking':'class','Confirmed',1),$item('booking','Pending',2),$item('booking','InUse',3)];
+    if ($state==='long-events') {
+        foreach ($items as &$event) {
+            $event['tip']=str_repeat('Example authorized booking description; projector, microphones, extension cables and laboratory equipment. ',12);
+            $event['title'].=' — '.str_repeat('Example long purpose ',10);
+        }
+        unset($event);
+    }
     if (!$staff) {$items[0]['bookUrl']=route('book',['for'=>'class','session'=>'21_'.$date->toDateString()]);$items[1]['url']=null;}
     if ($state==='empty') $items=[];
     $weeks=[];$start=$date->startOfMonth()->startOfWeek(Carbon\CarbonInterface::SUNDAY);
     for ($i=0;$i<35;$i++) {
         $d=$start->addDays($i);$pick=$d->gte($today->startOfDay())&&$d->lte($last)&&!$d->isSunday();
-        $weeks[intdiv($i,7)][]=['date'=>$d,'inMonth'=>$d->month===11,'state'=>$d->lt($today->startOfDay())?'past':($d->gt($last)?'later':($d->isSunday()?'closed':'open')),'isToday'=>$d->isSameDay($today),'isSelected'=>$d->isSameDay($date),'items'=>$state==='empty'?[]:($d->day%3===0?$items:array_slice($items,0,1)),'url'=>$pick?$dayUrl($d):null];
+        $weeks[intdiv($i,7)][]=['date'=>$d,'inMonth'=>$d->month===11,'state'=>$d->lt($today->startOfDay())?'past':($d->gt($last)?'later':($d->isSunday()?'closed':'open')),'isToday'=>$d->isSameDay($today),'isSelected'=>$d->isSameDay($date),'items'=>$state==='empty'?[]:(($d->day%3===0 || ($state==='long-events' && $d->day===5))?$items:array_slice($items,0,1)),'url'=>$pick?$dayUrl($d):null];
     }
     $busy=[['kind'=>'class','start'=>660,'end'=>720,'label'=>$staff?'Example class · other section':'Your class · CMPE 451','status'=>'Confirmed','mine'=>!$staff,'detail'=>$staff?['Instructor: Example Instructor','Room booked by Example booker']:['Example Engineering Laboratory']],['kind'=>'booking','start'=>780,'end'=>840,'label'=>$staff?'Booked by Example booker':'Booked by other block','status'=>'Pending','mine'=>false,'detail'=>$staff?['Purpose: Example laboratory']:[]]];
     $rows=[];
@@ -80,14 +100,15 @@ function availabilityRender(array $case): string
         $match=$search?($state!=='none-free'&&$i===0):null;
         $rows[]=['room'=>$r,'free'=>$free,'busy'=>$type==='free'?[]:$busy,'allDay'=>$type==='blocked'?'Example maintenance':null,'match'=>$match,'clash'=>$match===false?$busy[0]:null,'bookUrl'=>!$staff&&$free&&$match!==false?route('book',['for'=>'other','date'=>$date->toDateString()]+$keep+['room'=>$r->id]):null];
     }
-    return view('rooms.index',[
+    $data=[
         'department'=>$department,'staffView'=>$staff,'canBook'=>!$staff,'date'=>$date,'lastDay'=>$last,
         'calendar'=>['title'=>'November 2026','weeks'=>$weeks,'prevUrl'=>null,'nextUrl'=>$state==='boundary'?null:$dayUrl($last)],
         'todayUrl'=>route('rooms',$keep).'#day','prevUrl'=>$state==='boundary'?null:$dayUrl($date->subDay()),'nextUrl'=>$state==='boundary'?null:$dayUrl($date->addDay()),
         'dateError'=>$state==='invalid-date'?'That date doesn’t look right. Showing today instead.':null,'isOpen'=>$isOpen,'inTerm'=>$state!=='outside-term',
         'dayItems'=>$isOpen?$items:[],'slots'=>App\Support\TimeSlots::slots(450,1260,30),'step'=>30,'now'=>$date->isToday()?545:null,
         'search'=>$search,'searchError'=>$state==='invalid-time'?'Pick an end time that is after the start time.':null,'roomList'=>collect($state==='empty'?[]:$rows),
-    ])->render();
+    ];
+    return view('rooms.index', $transform ? $transform($data) : $data)->render();
 }
 
 function availabilityContracts(): int
@@ -111,7 +132,7 @@ function availabilityContracts(): int
         }elseif($role==='rep'){
             foreach(['rooms','book','bookings.mine']as$route)$check($x->query('//main//a[@href="'.route($route).'"]')->length===1,"$name shortcut $route");
             $forms=$x->query('//main//form[contains(@action,"/classes/")]');
-            $expected=in_array($state,['empty','no-section'],true)?0:($state==='ended'?3:4);
+            $expected=in_array($state,['empty','no-section'],true)?0:($state==='priority'?8:($state==='ended'?3:4));
             $check($forms->length===$expected,"$name meeting suppression");
             foreach($forms as $form){$check($x->query('.//button[@name="answer" and @value="f2f"]',$form)->length===1,"$name f2f");$check($x->query('.//button[@name="answer" and @value="online"]',$form)->length===1,"$name online");}
         }

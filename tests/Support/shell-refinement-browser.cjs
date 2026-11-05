@@ -23,6 +23,10 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
   const page=await context.newPage(); page.on('pageerror',e=>errors.push(e.message));
   const settle=()=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   const visit=async(version,fixture)=>{assetVersion=version;await page.goto(`http://${version}.test/${fixture}.html`);await page.evaluate(()=>document.fonts.ready);await settle();};
+  const reveal=async locator=>{
+   const ancestors=locator.locator('xpath=ancestor::details');
+   for(let i=0;i<await ancestors.count();i++){const d=ancestors.nth(i);if(!await d.evaluate(e=>e.open))await d.locator(':scope > summary').click();}
+  };
   const fixtures=['availability/home-rep-long','availability/rooms-rep-long','availability/rooms-lab_staff-normal','availability/rooms-admin-search','layout/long','layout/guest','layout/onboarding','layout/hidden','layout/unconnected'];
   for(const [width,height]of sizes)for(const fixture of fixtures)for(const text of [100,125,200]){
    await page.setViewportSize({width,height});await visit('after',fixture);
@@ -47,13 +51,14 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
     // Native focus must reveal controls in the panel, not move the document.
     const lastControl=page.locator('main a, main button:not([disabled]), main input:not([type=hidden]), main select').last();
     if(await lastControl.count()){
-     await panel.evaluate(e=>e.scrollTop=0);await lastControl.focus();await settle();
+     await reveal(lastControl);await panel.evaluate(e=>e.scrollTop=0);await lastControl.focus();await settle();
      const control=await lastControl.boundingBox(),bounds=await panel.boundingBox();
      assert.ok(control.y>=bounds.y-1&&control.y+control.height<=bounds.y+bounds.height+1,'final focused control reachable '+JSON.stringify({fixture,width,height,text,control,bounds}));assert.equal(await page.evaluate(()=>scrollY),0);
     }
     const record=page.locator('.rb-availability__room-row, .rb-dashboard__classes tbody tr').last();
     if(await record.count()){
      // The last room may precede a taller adjacent calendar; target its actual document position.
+     await reveal(record);
      const end=await record.evaluate(e=>e.getBoundingClientRect().bottom);
      await panel.evaluate((e,bottom)=>e.scrollTop+=bottom-e.getBoundingClientRect().bottom+8,end);await settle();
      const r=await record.boundingBox(),p=await panel.boundingBox();assert.ok(r.y+r.height<=p.y+p.height+1&&r.y+r.height>p.y,'last record reachable '+JSON.stringify({fixture,width,height,text,r,p}));
@@ -70,7 +75,7 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
    } else if(await sidebar.count()) {
     if(await page.locator('.rb-shell--rep').count()){
      const last=page.locator('main a, main button:not([disabled]), main input:not([type=hidden]), main select').last();
-     if(await last.count()){await last.focus();await settle();const b=await last.boundingBox(),nav=await sidebar.boundingBox();assert.ok(b.y+b.height<=nav.y+1,'mobile focus clear of bottom navigation');}
+     if(await last.count()){await reveal(last);await last.focus();await settle();const b=await last.boundingBox(),nav=await sidebar.boundingBox();assert.ok(b.y+b.height<=nav.y+1,'mobile focus clear of bottom navigation');}
     }else{await page.locator('#rb-menu-toggle').click();await sidebar.locator('a').last().focus();assert.ok(await sidebar.locator('a').last().isVisible());await page.keyboard.press('Escape');assert.equal(await page.locator(':focus').getAttribute('id'),'rb-menu-toggle');}
    }
   }
