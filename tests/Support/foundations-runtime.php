@@ -139,5 +139,13 @@ function foundationsContracts(): int
     $check(str_contains(foundationsBooking(false), 'book-form step1'), 'Existing booking step one failed to render');
     $check(str_contains(foundationsBooking(true), 'book-form step2'), 'Existing booking step two failed to render');
 
+    $disclosure = Illuminate\Support\Facades\Blade::render('<x-ui.disclosure :summary="$label" :open="true" id="sample-disclosure" class="caller-class" aria-label="Example details">{{ $content }}</x-ui.disclosure>', ['label' => '<script>label</script>', 'content' => '<b>sample</b>']);
+    $dx = foundationsDocument($disclosure);
+    $check($dx->query('//details[@id="sample-disclosure" and @open and @aria-label="Example details"]')->length === 1, 'Disclosure forwards native/ARIA attributes and open state');
+    $check($dx->query('//details[contains(@class,"rb-disclosure") and contains(@class,"caller-class")]/summary')->length === 1, 'Disclosure preserves caller class and native summary');
+    $check($dx->query('//script|//b')->length === 0 && str_contains($disclosure, '&lt;b&gt;sample&lt;/b&gt;'), 'Disclosure escapes caller content and summary');
+    $closed = Illuminate\Support\Facades\Blade::render('<x-ui.disclosure summary="Closed">Sample</x-ui.disclosure>');
+    $check(foundationsDocument($closed)->query('//details[not(@open)]')->length === 1, 'Disclosure is closed by default');
+
     return $checks;
 }

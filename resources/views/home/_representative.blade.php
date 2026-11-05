@@ -1,7 +1,7 @@
 @use('App\Services\ClassChecks')
 @use('App\Support\TimeSlots')
 <div class="rb-dashboard rb-ui">
-<x-ui.card class="rb-dashboard__intro">
+<header class="rb-dashboard__intro">
   <h1>Welcome, {{ $user->name }}</h1>
   <p class="muted">
     {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
@@ -12,7 +12,18 @@
     <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
   @endif
 
-</x-ui.card>
+</header>
+  @if (! empty($ready))
+    <x-ui.card class="rb-dashboard__shortcuts">
+    <h2>Ready to use</h2>
+    <div class="rb-dashboard__links">
+      @foreach ($ready as $link)
+        <x-ui.link-button variant="secondary" :href="$link['url']">{{ $link['label'] }} →</x-ui.link-button>
+      @endforeach
+    </div>
+    </x-ui.card>
+  @endif
+
 <div class="rb-dashboard__grid">
 <div class="rb-dashboard__schedule">
   @if (! empty($meetings))
@@ -26,23 +37,36 @@
       <p class="error" role="alert">{{ session('problem') }}</p>
     @endif
     <p class="hint meet-hint">We email you a day, 5 hours and 1 hour before each class. <strong>Online</strong> frees the room for others, and so does no answer by the 5-hour email.</p>
-    <ul class="mlist meet-list">
-      @foreach ($meetings as $m)
-        @php $freed = in_array($m['state'], ['online', 'freed'], true); @endphp
-        <li @class(['freed' => $freed])>
-          <span class="mlist-when">{{ $m['start']->isToday() ? 'Today' : ($m['start']->isTomorrow() ? 'Tomorrow' : $m['start']->format('D, M j')) }} · {{ TimeSlots::span($m['start']->hour * 60 + $m['start']->minute, $m['end']->hour * 60 + $m['end']->minute) }}</span>
-          <span class="mlist-what">{{ $m['class']->course?->code ?? 'Class' }} · {{ $m['class']->room->name }}</span>
-          <span class="st {{ ClassChecks::BADGES[$m['state']] }}">{{ ClassChecks::LABELS[$m['state']] }}</span>
-          @include('classes._answer', ['m' => $m, 'route' => 'classes.answer'])
-        </li>
-      @endforeach
-    </ul>
+    @php
+      // Presentation grouping only; classes._answer remains the authority for controls.
+      [$attention, $otherMeetings] = collect($meetings)->sortBy(fn ($meeting) => $meeting['start']->getTimestamp())
+        ->partition(fn ($meeting) => $meeting['start']->isToday()
+          || (! $meeting['end']->isPast() && in_array($meeting['state'], ['waiting', 'freed'], true)));
+    @endphp
+    @if ($attention->isNotEmpty())
+      <h3>Unanswered and today's meetings ({{ $attention->count() }})</h3>
+      <ul class="mlist meet-list" data-meetings="attention">
+        @foreach ($attention as $m)
+          @include('home._meeting')
+        @endforeach
+      </ul>
+    @endif
+    @if ($otherMeetings->isNotEmpty())
+      <x-ui.disclosure :summary="'Other upcoming meetings ('.$otherMeetings->count().')'" class="rb-dashboard__other">
+        <ul class="mlist meet-list" data-meetings="other">
+          @foreach ($otherMeetings as $m)
+            @include('home._meeting')
+          @endforeach
+        </ul>
+      </x-ui.disclosure>
+    @endif
     </x-ui.card>
   @endif
 
   @if ($classes !== null)
     <x-ui.card class="rb-dashboard__classes">
     <h2>Your block's classes this semester</h2>
+    <x-ui.disclosure :summary="'Complete timetable ('.$classes->count().' classes)'" class="rb-dashboard__timetable">
     @if ($classes->isEmpty())
       <p class="muted">No classes found for your block this semester.</p>
     @else
@@ -65,21 +89,11 @@
       </table>
       </x-ui.table-container>
     @endif
+    </x-ui.disclosure>
     </x-ui.card>
   @endif
 
 </div>
-  @if (! empty($ready))
-    <x-ui.card class="rb-dashboard__shortcuts">
-    <h2>Ready to use</h2>
-    <div class="rb-dashboard__links">
-      @foreach ($ready as $link)
-        <x-ui.link-button variant="secondary" :href="$link['url']">{{ $link['label'] }} →</x-ui.link-button>
-      @endforeach
-    </div>
-    </x-ui.card>
-  @endif
-
   @if (! empty($comingNext))
     <h2>Coming in the next phases</h2>
     <ul>

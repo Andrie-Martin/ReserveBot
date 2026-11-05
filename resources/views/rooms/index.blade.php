@@ -19,7 +19,15 @@
 @endphp
 
 <div class="rb-availability rb-ui">
+  <div class="rb-availability__cal-intro">
+    <h1>Free rooms</h1>
+    <p class="rb-availability__muted">{{ $department->name }} · Pick a day, up to {{ $lastDay->format('F j') }}, to see which rooms are free.</p>
+  </div>
+
   @include('rooms._calendar')
   @include('rooms._day')
+  @if ($isOpen)
+    @include('rooms._results')
+  @endif
 </div>
 @endsection

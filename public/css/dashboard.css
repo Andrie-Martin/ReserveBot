@@ -1,14 +1,15 @@
 /* Representative content only. The shared shell and class-answer controls stay unchanged. */
-.rb-dashboard { display: grid; gap: var(--rb-space-8); min-width: 0; }
+.rb-dashboard { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-4); min-width: 0; }
 .rb-dashboard h1 { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-h1); line-height: var(--rb-leading-heading); }
 .rb-dashboard h2 { margin: 0 0 var(--rb-space-4); font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); }
 .rb-dashboard p { line-height: var(--rb-leading-body); }
-.rb-dashboard__intro { padding: var(--rb-space-8); background: var(--rb-color-maroon); color: var(--rb-color-white); border-color: var(--rb-color-maroon); }
-.rb-dashboard__intro .muted { color: var(--rb-color-white); }
+.rb-dashboard__intro { min-width: 0; overflow-wrap: anywhere; padding: 0; color: var(--rb-text-primary); }
+.rb-dashboard__intro .muted { color: var(--rb-text-muted); }
+.rb-dashboard__intro p { margin: var(--rb-space-1) 0; }
 .rb-dashboard__intro p:last-child { margin-bottom: 0; }
-.rb-dashboard__grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); gap: var(--rb-space-6); align-items: start; }
-.rb-dashboard__schedule, .rb-dashboard__links { display: grid; gap: var(--rb-space-6); min-width: 0; }
-.rb-dashboard__links .rb-button { justify-content: flex-start; text-align: left; padding: var(--rb-space-4); }
+.rb-dashboard__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-6); align-items: start; }
+.rb-dashboard__schedule, .rb-dashboard__links { display: grid; gap: var(--rb-space-4); min-width: 0; }
+.rb-dashboard__links .rb-button { justify-content: flex-start; text-align: left; padding: var(--rb-space-2) var(--rb-space-4); }
 .rb-dashboard__shortcuts { background: var(--rb-surface-panel); }
 .rb-dashboard .rb-card { border-color: var(--rb-border-warm); }
 .rb-dashboard .rb-table-container table { min-width: 34rem; }
@@ -21,13 +22,21 @@
 .rb-dashboard__meetings .error { color: var(--rb-danger-text); }
 @media (max-width: 70rem) {
   .rb-dashboard__grid { grid-template-columns: minmax(0, 1fr); }
-  .rb-dashboard__shortcuts { grid-row: 1; }
 }
 @media (max-width: 40rem) {
   .rb-dashboard { gap: var(--rb-space-4); }
-  .rb-dashboard__intro { padding: var(--rb-space-6); }
+  .rb-dashboard__intro { min-width: 0; overflow-wrap: anywhere; padding: 0; }
   .rb-dashboard h1 { font-size: var(--rb-text-h2); }
 }
 /* Keep short schedule facts readable; longer course/instructor text may wrap. */
 .rb-dashboard .rb-table-container th { white-space: nowrap; }
 .rb-dashboard .rb-table-container td:nth-child(-n+3) { white-space: nowrap; overflow-wrap: normal; }
+
+.rb-dashboard__shortcuts { padding: var(--rb-space-4); }
+.rb-dashboard__links { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rb-space-2); }
+.rb-dashboard h3 { font-size: var(--rb-text-h3); margin: var(--rb-space-4) 0 var(--rb-space-2); }
+.rb-dashboard__meetings .mlist { border: 0; border-radius: 0; }
+.rb-dashboard__meetings .mlist > li { padding: var(--rb-space-2) 0; }
+.rb-dashboard__other { margin-top: var(--rb-space-4); }
+.rb-dashboard__classes .rb-table-container { border: 0; border-radius: 0; }
+@media (max-width: 50rem) { .rb-dashboard__links { grid-template-columns: minmax(0, 1fr); } }

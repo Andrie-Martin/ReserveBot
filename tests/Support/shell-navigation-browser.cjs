@@ -72,7 +72,7 @@ const root=path.resolve(process.argv[3]),assets=path.resolve(__dirname,'../../pu
   // Native details and horizontal calendar/table scrolling stay local and reachable.
   await visit('/rooms');const summary=page.locator('main summary').first();await summary.focus();await page.keyboard.press('Enter');assert.ok(await summary.evaluate(e=>e.parentElement.open));await page.keyboard.press('Space');assert.ok(!await summary.evaluate(e=>e.parentElement.open));
   await page.setViewportSize({width:320,height:640});await visit('/rooms');const calendar=page.locator('.rb-availability__cal-wrap');await calendar.focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(150);assert.ok(await calendar.evaluate(e=>e.scrollLeft>0));assert.equal(await panel().evaluate(e=>getComputedStyle(e).overflowY),'visible');
-  await visit('/rep');const table=page.locator('.rb-table-container');await table.focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(150);assert.ok(await table.evaluate(e=>e.scrollLeft>0));
+  await visit('/rep');await page.locator('.rb-dashboard__timetable > summary').click();const table=page.locator('.rb-table-container');await table.focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(150);assert.ok(await table.evaluate(e=>e.scrollLeft>0));
   checks.push('native disclosure keyboard activation; horizontal calendar/table scrolling; mobile natural scrolling');
   // Height-mode focus transition: menu state and CSS must agree at the measured boundary.
   await page.setViewportSize({width:1438,height:638});await visit('/layout/admin.html');await page.locator('nav a').last().focus();

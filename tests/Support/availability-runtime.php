@@ -11,7 +11,7 @@ function availabilityCases(): array
             $cases['rooms-'.$role.'-'.$state]=['rooms', $role, $state];
         }
     }
-    foreach (['normal','empty','no-section','long','feedback','unconnected','ended'] as $state) $cases['home-rep-'.$state]=['home','rep',$state];
+    foreach (['normal','empty','no-section','long','feedback','unconnected','ended','priority'] as $state) $cases['home-rep-'.$state]=['home','rep',$state];
     foreach (['lab_staff','admin'] as $role) $cases['home-'.$role]=['home',$role,'normal'];
     return $cases;
 }
@@ -40,10 +40,23 @@ function availabilityRender(array $case): string
                 $meetings[]=['class'=>$c,'date'=>$date,'start'=>$date->addHours($state==='ended'?7:10),'end'=>$date->addHours($state==='ended'?8:12),'state'=>$status,'check'=>null];
             }
         }
+        $classRows=[$class];
+        if ($state==='priority') {
+            // Supplied records deliberately unordered: all today's states, future
+            // waiting/freed and answered meetings, plus an ended waiting record.
+            $meetings=[];$classRows=[];
+            foreach ([['waiting',0],['f2f',0],['online',0],['freed',0],['booked',0],['waiting',1],['freed',2],['f2f',3],['online',4],['waiting',-1]] as $i=>[$status,$offset]) {
+                $date=$today->startOfDay()->addDays($offset);
+                $c=clone $class;$c->id=100+$i;$c->course=(object)['code'=>'SAMPLE '.$i,'title'=>'Example priority fixture '.$i];
+                $meetings[]=['class'=>$c,'date'=>$date,'start'=>$date->addHours(10)->addMinutes($i*10),'end'=>$date->addHours(12)->addMinutes($i*10),'state'=>$status,'check'=>null];
+                $classRows[]=$c;
+            }
+            $meetings=array_reverse($meetings);
+        }
         return view('home',[
             'title'=>'Home','user'=>$user,'intro'=>$role==='rep'?'Book rooms and equipment for your block, and check which rooms are free.':'Example staff introduction.',
             'stat'=>$role==='rep'?null:['value'=>3,'label'=>'Example current reservations'],
-            'classes'=>$role==='rep'?collect($state==='empty'?[]:[$class]):null,'meetings'=>$meetings,
+            'classes'=>$role==='rep'?collect($state==='empty'?[]:$classRows):null,'meetings'=>$meetings,
             'ready'=>$role==='rep'?[
                 ['label'=>'See which rooms are free','url'=>route('rooms')],
                 ['label'=>'Book a room or equipment','url'=>route('book')],
@@ -111,7 +124,7 @@ function availabilityContracts(): int
         }elseif($role==='rep'){
             foreach(['rooms','book','bookings.mine']as$route)$check($x->query('//main//a[@href="'.route($route).'"]')->length===1,"$name shortcut $route");
             $forms=$x->query('//main//form[contains(@action,"/classes/")]');
-            $expected=in_array($state,['empty','no-section'],true)?0:($state==='ended'?3:4);
+            $expected=in_array($state,['empty','no-section'],true)?0:($state==='priority'?8:($state==='ended'?3:4));
             $check($forms->length===$expected,"$name meeting suppression");
             foreach($forms as $form){$check($x->query('.//button[@name="answer" and @value="f2f"]',$form)->length===1,"$name f2f");$check($x->query('.//button[@name="answer" and @value="online"]',$form)->length===1,"$name online");}
         }
