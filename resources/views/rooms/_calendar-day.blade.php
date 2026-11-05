@@ -40,6 +40,6 @@
                   </div>
                 @endif
                 @if ($items)
-                  <a class="rb-availability__event-count" href="#events-{{ $day['date']->toDateString() }}">{{ count($items) }} {{ count($items) === 1 ? 'event' : 'events' }}<span class="sr-only"> on {{ $day['date']->format('F j') }}; view details below calendar</span></a>
+                  <a class="rb-availability__event-count" href="#events-{{ $day['date']->toDateString() }}">{{ count($items) }} {{ count($items) === 1 ? 'event' : 'events' }}<span class="sr-only"> on {{ $day['date']->format('F j') }}</span></a>
                 @endif
               </td>

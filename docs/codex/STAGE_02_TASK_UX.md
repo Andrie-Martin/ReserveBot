@@ -1,6 +1,6 @@
 # Stage 2 — task-focused UX refinement
 
-Initial Stage 2 baseline: `c4c40b5` (merged shell correction), branch `feat/frontend-task-ux`. The initial implementation below was subsequently committed locally as `7662632`. Its results remain historical evidence. The [Free Rooms follow-up correction](#free-rooms-follow-up-correction) at the end supersedes the original availability placement and in-cell disclosure design. Only the follow-up is currently uncommitted; no Stage 3/4, Phase 05, PR, push, merge or deployment.
+Initial Stage 2 baseline: `c4c40b5` (merged shell correction), branch `feat/frontend-task-ux`. The initial implementation below was subsequently committed locally as `7662632`. Its results remain historical evidence. The [Free Rooms follow-up correction](#free-rooms-follow-up-correction) at the end supersedes the original availability placement and in-cell disclosure design. That correction was committed locally as `39450c0`; the [contextual event panel correction](#contextual-event-panel-correction) below is the current uncommitted work; no Stage 3/4, Phase 05, PR, push, merge or deployment.
 
 ## Source-verified findings and implementation
 
@@ -305,3 +305,102 @@ The existing Stage 2 suite also captured committed-baseline/current screenshots 
 These are isolated rendering and Chromium tests over explicit synthetic records, including long authorized-description fixtures. They are not a live reproduction of the user's private bookings or proof of backend privacy/authorization. No production/dev database or HTTP workflow tests ran. PHPUnit remains unavailable in the container (file availability checked). Actual browser-toolbar zoom, physical-device, screen-reader and other-browser testing were not performed; root-text enlargement and native keyboard/no-JS behavior were.
 
 No deviation from the approved follow-up scope. Native fragment links avoid adding JavaScript state. Calendar/agenda are secondary content, not hidden or removed. Both Docker files retain SHA-256 values recorded earlier in this report. The original `7662632` commit remains unchanged, and all follow-up work stays uncommitted for review. No PR, push, merge, deployment or subsequent phase.
+
+## Contextual event panel correction
+
+Baseline **`39450c0`**, branch **`feat/frontend-task-ux`**. The previous correction is committed; this follow-up remains uncommitted. It addresses the user's observed jump to a collapsed disclosure after clicking a calendar event count. Earlier report sections describe their historical implementations and evidence, not this interaction.
+
+### Verified structure and solution
+
+Previously `_calendar-day` linked to a closed `details` element in `_calendar-details`, positioned after both the calendar and selected-day agenda. Native fragment navigation consequently scrolled to the end of that section and still required summary activation. CSS alone could not reliably provide immediate contextual selection and focus while preserving a native fallback.
+
+`rooms.index` now composes calendar, contextual event panel, then the separate selected-day agenda. The calendar and panel share the two desktop columns; on mobile the panel follows the calendar. The agenda occupies the full width below them. It still calls the original `_agenda` partial with `$dayItems`; its booking/detail links are not replaced with calendar records. The event panel still renders `$calendar['weeks'][…]['items']` through the original `_calendar-events` partial. Both partials are unchanged.
+
+Source authority remains `routes/web.php:52/71`, `AvailabilityController.php:29/57/82` and `RoomAvailability.php:158`. They own authentication, date/search rules, permitted booking links, and role-filtered records. The templates/script do not query, fetch, reconstruct permission rules, combine the calendar and agenda datasets, or invent data.
+
+A small deferred `public/js/availability.js` loads only from the rooms view through its existing head stack. It enhances count links to accessible button semantics (`role=button`, `aria-controls`, `aria-expanded`), supports native Enter and explicit Space activation, and shows exactly one existing server-rendered group. Selecting a date opens its native disclosure immediately and focuses the summary using ordinary browser focus. A polite status message identifies the selected date. Native collapse updates the triggering control's expanded state. There are no scroll offsets, `scrollTo` calls, history mutations, fetches, frameworks, overlays or dependencies in this script.
+
+Ordinary selection changes only panel state; it does not navigate or add history entries. Original link `href` values remain available for no-JS/modified activation and bookmarks. On direct event-fragment loads or native hash/history changes, the matching event group is revealed. Date/month/Today/search links, `#day` and the shared shell's existing Back/Forward/restoration implementation remain untouched.
+
+Without JavaScript every per-date disclosure is open in the server HTML. One native event-count link therefore navigates directly to readable details without a second activation. This fallback can be long; it deliberately retains all information and avoids a script-dependent hidden interface. With JavaScript, an initial prompt occupies the panel until a date is selected. Long details use natural content scrolling; they cannot change calendar table-row heights.
+
+### Functional parity matrix
+
+| Contract at `39450c0` | Current behavior | Evidence |
+|---|---|---|
+| Search-first date, native GET controls, room rows and free intervals | Unchanged | Rendering, exact form/record/link comparisons, initial laptop geometry |
+| Calendar dates/counts/status/current/closed/out-of-range markers | Same records and native date URLs | Existing availability comparison and rendering contracts |
+| Event-count activation | Bottom fragment jump + second click → immediate contextual panel with JS | Pointer, Enter, Space, consecutive dates and no-downward-jump measurements |
+| Complete calendar event details | Same per-date ordered event list, only selected group exposed with JS | Full baseline/current record arrays for each role, including long descriptions/equipment |
+| Selected-day agenda | Same independent `$dayItems` and original action links, now below calendar/panel pair | Unchanged `_agenda`; original text/link parity |
+| No JS | Count link reaches an already-open date group | All three roles, two dates, one native click per date |
+| Mobile/touch | Panel follows calendar; normal focus makes selected details reachable | Touch-enabled Chromium tap, panel/focus geometry |
+| Screen-reader/keyboard semantics | Controlled-region relationship, expanded state, native summary focus, polite announcement | DOM/keyboard assertions and source review; no actual screen-reader certification |
+| Calendar table sizing | Event content stays outside cells | Equal calendar/card/every-row height across consecutive selections and text sizes |
+| URLs/history/shell | Native navigation unchanged; local selections add no history entries | Same URL/history length across selection; original shell `#day`, Back/Forward/reload tests; direct event bookmark test |
+| Authorization/privacy/backend | Unchanged source and role-specific supplied data | Protected-file comparison; HTTP/security workflows not rerun |
+
+The obsolete screen-reader suffix “view details below calendar” was removed from event-count labels, since the desktop details are now adjacent. The availability information comparison normalizes **only that obsolete suffix inside event-count controls**. Every actual event description, status, time, record, form and original application URL remains compared. Existing Stage 2 and correction tests now activate the count control instead of trying to focus a hidden date summary; no-JS assertions expect the deliberately open fallback. Multiple-date testing now verifies replacement of the contextual selection rather than simultaneous expanded panels.
+
+### Changed files
+
+| File | Purpose |
+|---|---|
+| `public/js/availability.js` (new) | Minimal page-only contextual selection, keyboard/ARIA state, native fragment compatibility |
+| `public/css/availability.css` | Adjacent panel placement, separate full-width agenda, hidden-group enforcement and selected count styling |
+| `resources/views/rooms/index.blade.php` | Load deferred script and compose distinct calendar/panel/agenda |
+| `resources/views/rooms/_calendar-details.blade.php` | Open native fallback, initial enhancement prompt and status announcement |
+| `resources/views/rooms/_calendar-day.blade.php` | Remove obsolete placement instruction from accessible count name; native href unchanged |
+| `tests/Support/availability-browser.cjs` | Narrow normalization of obsolete event-count helper text |
+| `tests/Support/task-ux-browser.cjs` | Test enhanced count activation and open no-JS fallback |
+| `tests/Support/rooms-correction-browser.cjs` | Consecutive selection, unchanged row heights, no extra history/jump, focus, desktop/mobile geometry, touch and fallback |
+| `docs/frontend/DESIGN_SYSTEM.md` | Current panel/progressive-enhancement contract |
+| `docs/frontend/SCREEN_INVENTORY.md` | Current S11 interaction/placement |
+| `docs/codex/STAGE_02_TASK_UX.md` | This correction and evidence |
+
+No login, dashboard, backend, route, database, dependency, Docker or shared-shell source changes. Existing search, room-row, selected-day agenda and event-list partials remain byte-identical to baseline. No subsequent stage, commit, push or PR.
+
+### Executed verification and geometry
+
+Evidence root **`/tmp/rb-calendar-panel`**. Baseline is a tracked archive of `39450c0`; current snapshot excludes environment and local Docker files. The existing temporary/container rendering harness disables database connections/uses its no-PDO recorder. Browser requests are fulfilled from isolated HTML/assets; test submissions are intercepted. Nothing was sent to the application or database.
+
+All commands from the prior correction were run with `/tmp/rb-calendar-panel` substituted for its evidence root. Results:
+
+| Suite | Actual result |
+|---|---|
+| Foundations/layout/auth/availability renderers | PASS: 63 / 279 / 1,318 / 2,137 assertions |
+| Foundations browser | PASS: nine conditional states plus native controls, fonts, focus and enlargement |
+| Layout browser | PASS: 72 role/state/width cases and original menu/focus/no-JS checks |
+| Auth browser | PASS: 60 fixtures / 420 responsive combinations |
+| Availability browser | PASS: 46 fixtures / 276 responsive combinations, original data/form/link/disclosure parity |
+| Shell geometry | PASS: 351 cases / 324 stationary measurements |
+| Shell navigation | PASS: nine groups covering `#day`, native GET/date navigation, Back/Forward/reload/restoration, focus/validation and fallback |
+| Existing Stage 2 suite | PASS: 306 responsive combinations |
+| Updated room correction suite | PASS: 99 role/viewport/text combinations, plus touch, direct bookmark and no-JS checks |
+| Syntax/whitespace | PASS: new/changed JS syntax and `git diff --check` |
+
+The 99-case matrix retains representative/staff/admin, the required laptop/desktop/tablet/mobile sizes and short-height boundaries, and 100/125/200% root text. Exact event arrays are compared against baseline per role. Table/card/row heights remain identical before and after selection. The existing shell suite separately verifies fixed masthead/header/sidebar geometry and sole main-panel scrolling.
+
+At **1438×638**, normal admin fixture, DPR 2:
+
+- Search controls: y=350.5 to 394.5px; first room row: y=512.5 to 574.5px. Initial panel scrollTop=0; document height=638px and document scrollTop=0.
+- Calendar rectangle after navigating to the calendar section: x=300, y=130.5, width=537, height=737px.
+- Selected contextual panel: x=853, y=130.5, width=537px. Selected-day agenda is below both columns, width=1,090px.
+- Clicking November 3: panel scrollTop **743 → 743px**. Clicking November 5: **743 → 743px**. URL and history length are unchanged by either selection.
+- Calendar table remains 567px tall; row heights remain 34.5, 96, 122, 122, 96, 96px even with the long-description fixture selected. The right-side content's natural height changes independently.
+- Touch-enabled mobile at 390×844: calendar bottom=338.5px, contextual panel top=354.5px after native focus scrolling; selected summary lies at y=400–444px and is reachable. These viewport coordinates reflect the actual focused state, not a scroll-position script.
+
+### Screenshots and limitations
+
+- [Contextual details after consecutive date selections](/tmp/rb-calendar-panel/correction-calendar-multiple-open-1438x638.png) (the inherited filename says “multiple-open”; the image shows the latest selected date).
+- [November 3 contextual details](/tmp/rb-calendar-panel/correction-expanded-detail-1438x638.png).
+- [Initial search-first layout](/tmp/rb-calendar-panel/correction-initial-admin-1438x638.png).
+- [Calendar with initial selection prompt](/tmp/rb-calendar-panel/correction-calendar-closed-1438x638.png).
+- [Mobile layout](/tmp/rb-calendar-panel/correction-mobile-390x844.png) and [selected details after touch activation](/tmp/rb-calendar-panel/contextual-mobile-selected-390x844.png).
+- [Complete selection/geometry results](/tmp/rb-calendar-panel/rooms-correction-results.json), [shell geometry](/tmp/rb-calendar-panel/shell-results.json), [native navigation](/tmp/rb-calendar-panel/navigation-results.json).
+
+Desktop contextual screenshots were visually inspected. The existing Stage 2 suite also supplies baseline/current screenshots using the correct per-snapshot assets. Evidence is temporary under `/tmp` and uncommitted.
+
+These are synthetic authorized-data fixtures and Chromium checks, not live private-booking reproduction or backend privacy/security certification. No database/HTTP workflow suite, screen reader, physical device or other browser was used. Touch is browser-emulated; 125/200% means root-text enlargement, not browser-toolbar zoom. Native focus may scroll to reveal a selected summary, especially on mobile or when selecting lower calendar rows; no custom scroll positioning is introduced. Local selection intentionally creates no Back/Forward entry, while all original navigation keeps native URLs/history and the unchanged shell restoration behavior. Long descriptions and the no-JS all-open fallback remain naturally scrollable.
+
+Final integrity check: **302 tracked files** outside the explicit change allowlist are byte-identical to `39450c0`, including backend, routes, database, dependencies, shell, login/dashboard and original event/agenda/search/room partials. Both Docker hashes match their recorded starting values. [Integrity result](/tmp/rb-calendar-panel/integrity.json).

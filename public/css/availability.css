@@ -129,7 +129,8 @@
 /* Availability first; calendar details never participate in table row sizing. */
 .rb-availability__day-head { margin-bottom: 0; }
 .rb-availability__secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); align-items: start; min-width: 0; scroll-margin-top: var(--rb-space-4); }
-.rb-availability__calendar-details { grid-column: 1 / -1; min-width: 0; }
+.rb-availability__calendar-details { min-width: 0; }
+.rb-availability__agenda-card { grid-column: 1 / -1; }
 .rb-availability__calendar-events { font-size: var(--rb-text-body); scroll-margin-top: var(--rb-space-4); }
 .rb-availability__calendar-events > summary { padding: var(--rb-space-2) 0; }
 .rb-availability__event-count { color: var(--rb-color-maroon); display: flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1); font-size: var(--rb-text-caption); }
@@ -140,3 +141,7 @@
 @media (max-width: 64rem) {
  .rb-availability__secondary { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Progressive contextual panel: fallback event lists remain open and linked. */
+.rb-availability__calendar-details [hidden] { display: none; }
+.rb-availability__event-count[aria-expanded="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }

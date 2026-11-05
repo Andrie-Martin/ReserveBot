@@ -47,7 +47,7 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
   }else if(fixture.endsWith('rooms-rep-normal')){
    const r=await page.locator('.rb-availability__results-section').boundingBox(),outer=await page.locator('.rb-availability').boundingBox();assert.ok(Math.abs(r.width-outer.width)<=1,'full-width results');
    assert.equal(await page.locator('.rb-availability__room-row').count(),4);assert.equal(await page.locator('.rb-availability__free-chip:visible').count(),4);
-   const summary=page.locator('.rb-availability__calendar-events > summary').filter({hasText:'4 events'}).first();await summary.focus();await page.keyboard.press('Enter');assert.equal(await summary.locator('..').locator('li').count(),4);assert.ok(await summary.locator('..').locator('li').last().isVisible());await page.keyboard.press('Space');assert.equal(await summary.evaluate(e=>e.parentElement.open),false);
+   await page.locator('.rb-availability__event-count').filter({hasText:'4 events'}).first().click();const summary=page.locator('.rb-availability__calendar-events:not([hidden]) > summary');assert.equal(await summary.locator('..').locator('li').count(),4);assert.ok(await summary.locator('..').locator('li').last().isVisible());await page.keyboard.press('Space');assert.equal(await summary.evaluate(e=>e.parentElement.open),false);
   }
   if(width===1438&&height===638){await visit(fixture);await page.evaluate(n=>document.documentElement.style.fontSize=n+'%',text);await settle();measurements.push({fixture,text,...await geometry()});}
   responsive++;
@@ -57,7 +57,7 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
  await n.goto('http://after.test/availability/home-rep-priority.html');
  for(const selector of ['.rb-dashboard__other > summary','.rb-dashboard__timetable > summary']){await n.locator(selector).focus();await n.keyboard.press('Enter');assert.ok(await n.locator(selector).evaluate(e=>e.parentElement.open));}
  assert.equal(await n.locator('main form[action*="/classes/"]:visible').count(),8);assert.equal(await n.locator('.rb-dashboard__classes tbody tr:visible').count(),10);
- await n.goto('http://after.test/availability/rooms-rep-normal.html');const detail=n.locator('.rb-availability__calendar-events').filter({hasText:'4 events'}).first();await detail.locator('summary').click();assert.equal(await detail.locator('li:visible').count(),4);await nojs.close();
+ await n.goto('http://after.test/availability/rooms-rep-normal.html');const detail=n.locator('.rb-availability__calendar-events').filter({hasText:'4 events'}).first();assert.ok(await detail.evaluate(e=>e.open));assert.equal(await detail.locator('li:visible').count(),4);await nojs.close();
  // Identical fixture/viewport screenshots, with each version's own CSS, JS and fonts.
  for(const version of ['before','after']){
   const c=await browser.newContext({deviceScaleFactor:2});await c.route('**/*',serve(version));const p=await c.newPage();

@@ -7,6 +7,7 @@
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/availability.css') }}?v={{ filemtime(public_path('css/availability.css')) }}">
+<script src="{{ asset('js/availability.js') }}?v={{ filemtime(public_path('js/availability.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -30,12 +31,12 @@
   @endif
   <section class="rb-availability__secondary" id="calendar-and-agenda" aria-label="Calendar and selected-day agenda">
     @include('rooms._calendar')
+    @include('rooms._calendar-details')
     @if ($isOpen)
       <section class="rb-card rb-availability__agenda-card" aria-label="Selected-day agenda">
         @include('rooms._agenda')
       </section>
     @endif
-    @include('rooms._calendar-details')
   </section>
 </div>
 @endsection

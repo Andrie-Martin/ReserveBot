@@ -29,7 +29,7 @@ const widths=[320,390,768,1024,1280,1440];
  let states=0;const cases=fs.readdirSync(current).filter(f=>f.endsWith('.html')).map(f=>f.slice(0,-5));
  for(const name of cases){
   await visit(name,true);const old=await contracts();
-  const info=await page.locator('main').evaluate(el=>{const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,out=[];while(n=w.nextNode()){const s=n.textContent.replace(/\s+/g,' ').trim();if(s)out.push(s);}return out;});
+  const info=await page.locator('main').evaluate(el=>{const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,out=[];while(n=w.nextNode()){const s=n.textContent.replace(/\s+/g,' ').trim();if(s)out.push(n.parentElement.closest('.rb-availability__event-count')?s.replace('; view details below calendar',''):s);}return out;});
   const staffMain=await page.locator('main').innerHTML();
   await visit(name);const currentContract=await contracts();
   // DOM order changes intentionally. Compare complete multisets, retaining duplicates.
