@@ -22,7 +22,7 @@ const widths=[320,390,768,1024,1280,1440];
  const contracts=()=>page.evaluate(()=>({
   forms:[...document.forms].map(f=>({action:f.action,method:f.method,enctype:f.enctype,fields:[...f.elements].map(e=>({tag:e.tagName,name:e.name,id:e.id,type:e.type,value:e.value,required:e.required,disabled:e.disabled,options:e.tagName==='SELECT'?[...e.options].map(o=>[o.value,o.textContent.trim(),o.selected,o.disabled]):null})),data:[...new FormData(f)]})),
   links:[...document.querySelectorAll('a:not(.rb-availability__event-count):not([href="#calendar-and-agenda"])')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })(),a.getAttribute('aria-current'),a.getAttribute('aria-label')]),
-  records:[...document.querySelectorAll('.rb-dashboard .mlist > li, .rb-dashboard tbody tr, .rb-availability__room-row')].map(e=>e.textContent.replace(/\s+/g,' ').trim()),
+  records:[...document.querySelectorAll('.rb-dashboard .mlist > li, .rb-dashboard tbody tr, .rb-availability__room-row')].map(e=>{if(!e.classList.contains('rb-availability__room-row'))return e.textContent.replace(/\s+/g,' ').trim();const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let n,parts=[];while(n=w.nextNode()){const text=n.textContent.replace(/\s+/g,' ').trim();if(text)parts.push(text);}return parts.sort();}),
   titles:[...document.querySelectorAll('main [title]')].map(e=>e.title),
   disclosures:[...document.querySelectorAll('main details')].map(e=>e.textContent.replace(/\s+/g,' ').trim())
  }));

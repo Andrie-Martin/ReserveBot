@@ -404,3 +404,135 @@ Desktop contextual screenshots were visually inspected. The existing Stage 2 sui
 These are synthetic authorized-data fixtures and Chromium checks, not live private-booking reproduction or backend privacy/security certification. No database/HTTP workflow suite, screen reader, physical device or other browser was used. Touch is browser-emulated; 125/200% means root-text enlargement, not browser-toolbar zoom. Native focus may scroll to reveal a selected summary, especially on mobile or when selecting lower calendar rows; no custom scroll positioning is introduced. Local selection intentionally creates no Back/Forward entry, while all original navigation keeps native URLs/history and the unchanged shell restoration behavior. Long descriptions and the no-JS all-open fallback remain naturally scrollable.
 
 Final integrity check: **302 tracked files** outside the explicit change allowlist are byte-identical to `39450c0`, including backend, routes, database, dependencies, shell, login/dashboard and original event/agenda/search/room partials. Both Docker hashes match their recorded starting values. [Integrity result](/tmp/rb-calendar-panel/integrity.json).
+
+## Stage 2 room availability timeline
+
+Approved brief: room availability timeline, baseline **`5a50af1`**, branch **`feat/frontend-task-ux`**. This section supersedes the earlier room-list presentation descriptions only. Implementation remains uncommitted. It does not begin another stage or Phase 05.
+
+### Source trace and architecture
+
+The current route chain remains `routes/web.php:52` (auth/auth.session/account), `:71` (`GET /rooms`) → `AvailabilityController::index` (`app/Http/Controllers/AvailabilityController.php:29`). The controller supplies selectable slots (`:41`), active rooms ordered by name (`:48`), role-worded busy records (`:49`), free ranges and match/clash/all-day state (`:57`), and permitted Book URLs (`:66`). `GET /book` remains representative-only and email-gated (`routes/web.php:74`). `RoomAvailability::busy` (`app/Services/RoomAvailability.php:47`, privacy wording `:128`) and `TimeSlots::freeRanges` (`app/Support/TimeSlots.php:29`) are unchanged. Search (`AvailabilityController.php:229`) tests busy overlaps independently of elapsed-slot suppression; `started` remains a separate warning (`:265`). No frontend inference replaces these rules.
+
+`rooms._results` derives one axis from **first supplied slot** to **last supplied slot + supplied step**. It validates integer, ordered uniform slots and positive duration within a day. The label is **Selectable time window**. For supplied `[from, to]`, `x-ui.availability-track` renders:
+
+```text
+left  = 100 × (from − axisStart) / (axisEnd − axisStart)
+width = 100 × (to − from)       / (axisEnd − axisStart)
+```
+
+The component validates integer, positive, ordered, nonoverlapping, in-window ranges before rendering any graph for a room; adjacent supplied intervals are retained separately. It neither merges, clamps nor recomputes intervals. Empty/invalid axes omit the board/graphs and use textual rows. A malformed room range collection suppresses its entire graph; format-safe integer pairs retain the original `TimeSlots::span` text, and unformattable values receive “Availability time unavailable.” Existing valid inputs render identical interval boundaries.
+
+Green means the server reports free time. Neutral means not reported free; it can include elapsed slots, partial-slot conflicts and pending reservations. It never claims physical occupancy. A visible legend explains this and that booking rules/final validation still apply. Exact times remain visible by default, while decorative bands are `aria-hidden` and not interactive. No new JavaScript, token palette, dependency or production route is needed.
+
+### Functional Parity Matrix
+
+| Existing capability / condition | Before | After / regression evidence |
+|---|---|---|
+| Active rooms, order and capacity | Original ordered room list | Same ordered loop and supplied names/capacities; aligned identity column, sticky within horizontal board |
+| Every free interval and boundary | Visible chips | Same visible `TimeSlots::span` text plus proportional bands; no collapsed-only exact times |
+| No free time / fully blocked reason | Visible room text | Identical supplied explanation; neutral graph where valid, never an inferred occupancy label |
+| Busy classes/bookings, statuses, reasons and authorized details | Native per-room disclosure | Same loop/conditions/text in native disclosure; expanded content spans row, no fixed height |
+| Representative-only Book action | Existing caller-provided URL beside identity | Same native link, accessible room name and exact URL in aligned action column; absent when original caller omits it |
+| GET search, date/from/to, selected options and Clear | Native form and original URLs | Search partial byte-identical; complete form/FormData/link contracts checked |
+| Match/clash and already-started warning | Original feedback independent of free ranges | Same feedback; a past match never creates a green interval |
+| Invalid time/date, closed/outside-term day, no match, empty rooms | Existing messages and conditionals | Preserved, included in existing availability fixtures |
+| Calendar selected date/count/panel, agenda and permissions | Existing contextual selection with native fallback | Calendar/agenda partials and script byte-identical; panel, counts, all authorized records and role conditions checked |
+| Native `#day`, date URLs, Back/Forward and shell | Existing URL/history/focus and main-panel scrolling | No shell/navigation/JS edits; existing shell/navigation suites retained |
+| Mobile / keyboard / no JS | Text rows and native controls | One horizontal timeline region, sticky identity, visible focus, native disclosures/Book links; exact text and all room data retained |
+
+The existing availability record comparison now compares a complete per-room multiset of text nodes because moving the Book link to its own column intentionally changes text order. Duplicates remain counted. Full forms, links, titles, original disclosure strings and all original information remain asserted. The new timeline suite separately compares **ordered** room name, capacity, exact interval text, Book URL/label, match/clash and busy-detail records against the baseline. No old fixture or assertion about business behavior was removed.
+
+### Changed-file inventory
+
+| File | Purpose |
+|---|---|
+| `resources/views/components/ui/availability-track.blade.php` (new) | Reusable decorative graph with supplied-data validation and exact percentage geometry |
+| `resources/views/rooms/_results.blade.php` | Shared slot axis, legend and single accessible scroll region |
+| `resources/views/rooms/_room.blade.php` | Compose graph with existing text; align Book and native details; safe malformed-text handling |
+| `public/css/availability.css` | Scoped board/track geometry, sticky identity, natural row height, focus and responsive horizontal scrolling |
+| `tests/Support/availability-runtime.php` | Optional fixture transform, leaving existing 46 cases unchanged |
+| `tests/Support/render-timeline.php` (new) | Isolated coherent TimeSlots fixtures, separate adjacent-range and malformed-input cases |
+| `tests/Support/timeline-browser.cjs` (new) | Pixel geometry, ordered parity, fallback, role, keyboard, no-JS and responsive checks; before/after evidence |
+| `tests/Support/availability-browser.cjs` | Account for approved Book relocation while comparing all original content |
+| `docs/frontend/DESIGN_SYSTEM.md` | Timeline semantics, component contract and explicit implementation defaults |
+| `docs/frontend/SCREEN_INVENTORY.md` | S11 presentation/interaction placement update |
+| `docs/codex/STAGE_02_TASK_UX.md` | This implementation report, parity matrix, commands, results and limits |
+
+No backend, route, model, migration, service, authentication, dashboard, foundation, shell, calendar JavaScript or dependency file is modified. The local Docker changes predate this task and are excluded from this inventory.
+
+### Fixture method and reproduction
+
+Evidence root: `/tmp/rb-timeline`. The baseline is an archive of `5a50af1`; current files are copied to `after`, excluding `.env` and both local Docker files. Both isolated snapshots reuse `/var/www/html/vendor` from the existing `reservebot-app-1` container. The harness disables database connections/uses its no-PDO recorder and temporary compiled views with array session/cache/mail. All Chromium requests and native submissions are fulfilled/intercepted locally, never sent to the application.
+
+Use the existing reproduction commands above with `/tmp/rb-timeline` substituted as the evidence root. Additional commands:
+
+```text
+php /tmp/rb-timeline/after/tests/Support/render-timeline.php /tmp/rb-timeline/after-timeline
+php /tmp/rb-timeline/before/tests/Support/render-timeline.php /tmp/rb-timeline/before-timeline --baseline
+node tests/Support/rooms-correction-browser.cjs /home/james/projects/ticketing/node_modules/playwright-core /tmp/rb-timeline
+node tests/Support/timeline-browser.cjs /home/james/projects/ticketing/node_modules/playwright-core /tmp/rb-timeline
+```
+
+Run PHP commands inside the existing container, then copy generated fixture directories to the host before browser checks. Copy only the current `availability-runtime.php` and `render-timeline.php` test helpers to the baseline snapshot; baseline application assets/templates remain unchanged.
+
+The new fixtures use `TimeSlots::freeRanges` with opens=450, closes=1270, step=30 and now=545. The exact axis is **450–1260**, not the configured closing minute 1270. An unrestricted room reports **570–1260**. An off-grid class **500–610** plus pending **780–840**, confirmed **900–960** and in-use **1020–1080** restrictions produces **630–780, 840–900, 960–1020, 1080–1260**. Fully blocked and all-day class rooms have no free intervals. Separate adjacent-range fixtures deliberately supply unmerged adjacent ranges to verify preservation; they are not represented as native freeRanges output. A started search uses **450–480** and retains later free ranges independently. Empty slots, zero step, reversed slot bounds, reversed/nonnumeric/out-of-axis/overlapping ranges and a non-array collection exercise safe fallback. Existing arbitrary-content fixtures remain separate.
+
+### Executed verification
+
+| Suite | Observed result |
+|---|---|
+| Foundations/layout/auth/availability renderers | PASS: 63 / 279 / 1,318 / 2,137 assertions; availability rerun after final markup change |
+| Foundations browser | PASS: conditional forms, native controls/FormData, fonts, focus, contrast and enlargement |
+| Layout browser | PASS: 72 role/state/width cases and existing focus/menu/fallback checks |
+| Auth browser | PASS: 60 fixtures / 420 responsive combinations |
+| Availability browser | PASS: 46 fixtures / 276 responsive combinations; original form/link/information/disclosure parity |
+| Shell geometry | PASS: 351 cases / 324 stationary sidebar measurements |
+| Shell navigation | PASS: nine groups covering native fragments/GET/date/history, restoration, focus, keyboard and no-JS |
+| Existing Stage 2 suite | PASS: 306 responsive combinations |
+| Contextual-calendar/room correction | PASS: 99 role/viewport/text combinations plus touch, bookmark, history and no-JS |
+| New timeline suite | PASS: 21 fixtures, 72 role/viewport/text combinations, 2,316 band-position/width comparisons, ordered baseline parity, invalid-input fallbacks, native controls and no-JS |
+| Syntax/whitespace | PASS: PHP syntax for changed fixture helpers, JS syntax for timeline browser, `git diff --check` |
+
+The new matrix is all three roles × eight required sizes × 100/125/200% root text: **1438×638, 1440×900, 1366×768, 1280×720, 1024×600, 768×1024, 390×844, 320×640**. Existing suites additionally retain their boundary/long-content/short-height cases. Pixel comparisons allow less than one CSS pixel for layout rounding. The first full room must fit initially at 1438×638 for all roles at normal text size. Focused Book links must be fully within the board and not covered by the identity area at every size/text combination; mobile tests also use actual Tab navigation and arrow-key scrolling. Native Enter/Space opens/closes busy disclosures. No-JS fixtures cover all roles. Every recorded browser request remains local.
+
+The viewport-only mobile draft exposed sticky identity overlap and partially clipped keyboard targets at enlarged text. The final CSS responds to **board width** with a 50rem container threshold: narrow/enlarged boards put sticky identity and native actions on their own rows around the aligned time track. This preserves the desktop four-column layout and lets mobile actions remain readable while the timeline scrolls. No JavaScript focus workaround was introduced. Axis spacing was also reduced after screenshot inspection so the first room is fully visible in the initial laptop viewport.
+
+### Geometry at 1438×638
+
+Coherent representative fixture, normal root text, DPR 2:
+
+| Measurement | Actual CSS pixels |
+|---|---|
+| Document width / height | 1,438 / 638; no document scrolling in stationary desktop mode |
+| Main scroll panel | x=252, y=107, width=1,186, height=531 |
+| Board | x=300, y=533.5, width=1,090; all rows grow in the existing main panel |
+| Shared time coordinates | x=484 through 1,182; width=698 for every track and the axis |
+| Identity column | 176 wide |
+| First room | y=584.5 through 637.5; 53 high, entirely visible initially |
+| Ordinary collapsed rows | 51–53 high (all 12 fixture rooms); no fixed height |
+| Track height | 10 |
+| First free range 570–1260 | x=587.40625, width=594.578125; equals the 120-minute offset / 690-minute duration within an 810-minute axis, within rounding tolerance |
+
+Staff/admin first rows are 51px high and end at y=635.5; all three roles share the same x coordinates. The matched baseline's repeating four row types measured **77 / 114 / 60 / 109px**, compared with **53 / 53 / 51 / 53px** after. Expanded disclosures, long names/descriptions, search messages and enlarged text deliberately exceed these ordinary-row heights. No row clips content to meet a density target. At normal 390px width the board is 358px wide with a 400px time coordinate system; it scrolls as one region, while identities and native controls stay within its visible width.
+
+### Before/after evidence
+
+Each image uses its own snapshot's assets and actual container/native scroll position; none is a restyled mockup. Samples are explicitly synthetic test data.
+
+| View | Before | After |
+|---|---|---|
+| Initial laptop viewport | [Before](/tmp/rb-timeline/timeline-before-initial-1438x638.png) | [After](/tmp/rb-timeline/timeline-after-initial-1438x638.png) |
+| First rows | [Before](/tmp/rb-timeline/timeline-before-first-1438x638.png) | [After](/tmp/rb-timeline/timeline-after-first-1438x638.png) |
+| Middle of list | [Before](/tmp/rb-timeline/timeline-before-middle-1438x638.png) | [After](/tmp/rb-timeline/timeline-after-middle-1438x638.png) |
+| Expanded schedule | [Before](/tmp/rb-timeline/timeline-before-expanded-1438x638.png) | [After](/tmp/rb-timeline/timeline-after-expanded-1438x638.png) |
+| Mobile 390×844 | [Before](/tmp/rb-timeline/timeline-before-mobile-390x844.png) | [After](/tmp/rb-timeline/timeline-after-mobile-390x844.png) |
+
+Baseline first rows and current initial/first/expanded/mobile screenshots were visually inspected. Machine-readable evidence: [timeline geometry/results](/tmp/rb-timeline/timeline-results.json), [baseline/current row heights](/tmp/rb-timeline/row-metrics.json), [calendar results](/tmp/rb-timeline/rooms-correction-results.json), [shell geometry](/tmp/rb-timeline/shell-results.json), [navigation results](/tmp/rb-timeline/navigation-results.json), [integrity manifest](/tmp/rb-timeline/integrity.json). Evidence under `/tmp` is temporary and is not committed.
+
+### Limits, integrity and scope
+
+These are isolated Laravel rendering and Chromium fixture checks, **not authenticated HTTP workflows or database/privacy/security certification**. Existing service/controller privacy logic is unchanged and the authorized role-specific fixture text is preserved, but no live private booking or email flow was reproduced. PHPUnit is absent from the existing container vendor; no dependency was installed and no database-reset suite was run. Screen-reader testing, physical-device testing, Firefox/WebKit and browser-toolbar zoom were not performed. Root-text enlargement and emulated touch are explicitly distinguished from those checks. Container-query/scrolling behavior is verified in the available Chromium only. Horizontal panning is intentional when the time axis cannot fit; on narrow boards it is required to see the entire axis, not to find native actions.
+
+No feature was removed, no availability rule was inferred, and no behavior-scope deviation is introduced. The optional search-range overlay was omitted. Responsive stacking of identity/actions and the decorative track component are presentation choices within the approved brief. New visual dimensions are implementation defaults, not measurements from live Figma.
+
+Integrity comparison against `5a50af1`: **305 tracked files outside the explicit change allowlist are byte-identical**, including backend, routes, dependencies, legacy/foundation styles, shell, auth/dashboard and calendar/agenda/search source. `public/js/availability.js` is unchanged. `docker-compose.yml` remains SHA-256 `ab8f57755ba295dc937cffd7b5c0b746a5b21a0397612d2e6ecb14bfa67b62e8`; `docker-compose.yml.save` remains `45a1e6e6f347925d60b2898ed08efe15953e7b669345b7b67781a13883dbcf79`. Nothing is staged; HEAD and branch are unchanged. No commit, push, merge, deployment, production route or PR was created.

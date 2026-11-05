@@ -16,7 +16,7 @@ function availabilityCases(): array
     return $cases;
 }
 
-function availabilityRender(array $case): string
+function availabilityRender(array $case, ?callable $transform = null): string
 {
     [$page,$role,$state]=$case;
     $today=Carbon\CarbonImmutable::parse('2026-11-04 09:05:00','Asia/Manila');
@@ -100,14 +100,15 @@ function availabilityRender(array $case): string
         $match=$search?($state!=='none-free'&&$i===0):null;
         $rows[]=['room'=>$r,'free'=>$free,'busy'=>$type==='free'?[]:$busy,'allDay'=>$type==='blocked'?'Example maintenance':null,'match'=>$match,'clash'=>$match===false?$busy[0]:null,'bookUrl'=>!$staff&&$free&&$match!==false?route('book',['for'=>'other','date'=>$date->toDateString()]+$keep+['room'=>$r->id]):null];
     }
-    return view('rooms.index',[
+    $data=[
         'department'=>$department,'staffView'=>$staff,'canBook'=>!$staff,'date'=>$date,'lastDay'=>$last,
         'calendar'=>['title'=>'November 2026','weeks'=>$weeks,'prevUrl'=>null,'nextUrl'=>$state==='boundary'?null:$dayUrl($last)],
         'todayUrl'=>route('rooms',$keep).'#day','prevUrl'=>$state==='boundary'?null:$dayUrl($date->subDay()),'nextUrl'=>$state==='boundary'?null:$dayUrl($date->addDay()),
         'dateError'=>$state==='invalid-date'?'That date doesn’t look right. Showing today instead.':null,'isOpen'=>$isOpen,'inTerm'=>$state!=='outside-term',
         'dayItems'=>$isOpen?$items:[],'slots'=>App\Support\TimeSlots::slots(450,1260,30),'step'=>30,'now'=>$date->isToday()?545:null,
         'search'=>$search,'searchError'=>$state==='invalid-time'?'Pick an end time that is after the start time.':null,'roomList'=>collect($state==='empty'?[]:$rows),
-    ])->render();
+    ];
+    return view('rooms.index', $transform ? $transform($data) : $data)->render();
 }
 
 function availabilityContracts(): int
