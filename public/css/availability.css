@@ -1,5 +1,5 @@
 /* Page-owned styles. Server data and URLs remain the source of every state/action. */
-.rb-availability { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); align-items: start; min-width: 0; }
+.rb-availability { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-4); align-items: start; min-width: 0; }
 .rb-availability .rb-card { border-color: var(--rb-border-warm); padding: var(--rb-space-4); }
 .rb-availability h1 { font-size: var(--rb-text-h1); line-height: var(--rb-leading-heading); margin: 0 0 var(--rb-space-2); }
 .rb-availability h2 { font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); margin: 0; }
@@ -125,3 +125,18 @@
 
 .rb-availability__short { display: inline; }
 .rb-availability__long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+/* Availability first; calendar details never participate in table row sizing. */
+.rb-availability__day-head { margin-bottom: 0; }
+.rb-availability__secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); align-items: start; min-width: 0; scroll-margin-top: var(--rb-space-4); }
+.rb-availability__calendar-details { grid-column: 1 / -1; min-width: 0; }
+.rb-availability__calendar-events { font-size: var(--rb-text-body); scroll-margin-top: var(--rb-space-4); }
+.rb-availability__calendar-events > summary { padding: var(--rb-space-2) 0; }
+.rb-availability__event-count { color: var(--rb-color-maroon); display: flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1); font-size: var(--rb-text-caption); }
+.rb-availability__event-list li { padding: var(--rb-space-2) 0; }
+@media (min-width: 64.001rem) {
+ .rb-availability__finder-label { flex-basis: auto; }
+}
+@media (max-width: 64rem) {
+ .rb-availability__secondary { grid-template-columns: minmax(0, 1fr); }
+}

@@ -7,7 +7,7 @@ function availabilityCases(): array
 {
     $cases=[];
     foreach (['rep','lab_staff','admin'] as $role) {
-        foreach (['normal','search','invalid-time','none-free','started','closed','outside-term','invalid-date','empty','boundary','long'] as $state) {
+        foreach (['normal','search','invalid-time','none-free','started','closed','outside-term','invalid-date','empty','boundary','long','long-events'] as $state) {
             $cases['rooms-'.$role.'-'.$state]=['rooms', $role, $state];
         }
     }
@@ -78,12 +78,19 @@ function availabilityRender(array $case): string
         'url'=>$status?route('bookings.show',100+$i):null,'schedule_id'=>21+$i,'booked_elsewhere'=>false,
     ];
     $items=[$item($staff?'booking':'class',null,0),$item($staff?'booking':'class','Confirmed',1),$item('booking','Pending',2),$item('booking','InUse',3)];
+    if ($state==='long-events') {
+        foreach ($items as &$event) {
+            $event['tip']=str_repeat('Example authorized booking description; projector, microphones, extension cables and laboratory equipment. ',12);
+            $event['title'].=' — '.str_repeat('Example long purpose ',10);
+        }
+        unset($event);
+    }
     if (!$staff) {$items[0]['bookUrl']=route('book',['for'=>'class','session'=>'21_'.$date->toDateString()]);$items[1]['url']=null;}
     if ($state==='empty') $items=[];
     $weeks=[];$start=$date->startOfMonth()->startOfWeek(Carbon\CarbonInterface::SUNDAY);
     for ($i=0;$i<35;$i++) {
         $d=$start->addDays($i);$pick=$d->gte($today->startOfDay())&&$d->lte($last)&&!$d->isSunday();
-        $weeks[intdiv($i,7)][]=['date'=>$d,'inMonth'=>$d->month===11,'state'=>$d->lt($today->startOfDay())?'past':($d->gt($last)?'later':($d->isSunday()?'closed':'open')),'isToday'=>$d->isSameDay($today),'isSelected'=>$d->isSameDay($date),'items'=>$state==='empty'?[]:($d->day%3===0?$items:array_slice($items,0,1)),'url'=>$pick?$dayUrl($d):null];
+        $weeks[intdiv($i,7)][]=['date'=>$d,'inMonth'=>$d->month===11,'state'=>$d->lt($today->startOfDay())?'past':($d->gt($last)?'later':($d->isSunday()?'closed':'open')),'isToday'=>$d->isSameDay($today),'isSelected'=>$d->isSameDay($date),'items'=>$state==='empty'?[]:(($d->day%3===0 || ($state==='long-events' && $d->day===5))?$items:array_slice($items,0,1)),'url'=>$pick?$dayUrl($d):null];
     }
     $busy=[['kind'=>'class','start'=>660,'end'=>720,'label'=>$staff?'Example class · other section':'Your class · CMPE 451','status'=>'Confirmed','mine'=>!$staff,'detail'=>$staff?['Instructor: Example Instructor','Room booked by Example booker']:['Example Engineering Laboratory']],['kind'=>'booking','start'=>780,'end'=>840,'label'=>$staff?'Booked by Example booker':'Booked by other block','status'=>'Pending','mine'=>false,'detail'=>$staff?['Purpose: Example laboratory']:[]]];
     $rows=[];

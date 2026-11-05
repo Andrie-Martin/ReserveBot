@@ -24,10 +24,18 @@
     <p class="rb-availability__muted">{{ $department->name }} · Pick a day, up to {{ $lastDay->format('F j') }}, to see which rooms are free.</p>
   </div>
 
-  @include('rooms._calendar')
   @include('rooms._day')
   @if ($isOpen)
     @include('rooms._results')
   @endif
+  <section class="rb-availability__secondary" id="calendar-and-agenda" aria-label="Calendar and selected-day agenda">
+    @include('rooms._calendar')
+    @if ($isOpen)
+      <section class="rb-card rb-availability__agenda-card" aria-label="Selected-day agenda">
+        @include('rooms._agenda')
+      </section>
+    @endif
+    @include('rooms._calendar-details')
+  </section>
 </div>
 @endsection

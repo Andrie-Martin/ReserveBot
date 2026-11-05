@@ -1,6 +1,6 @@
 # Stage 2 — task-focused UX refinement
 
-Base: `c4c40b5` (merged shell correction), branch `feat/frontend-task-ux`. Scope: login, representative dashboard, room availability. All implementation remains uncommitted for review. No Stage 3/4, Phase 05, PR, push, merge or deployment.
+Initial Stage 2 baseline: `c4c40b5` (merged shell correction), branch `feat/frontend-task-ux`. The initial implementation below was subsequently committed locally as `7662632`. Its results remain historical evidence. The [Free Rooms follow-up correction](#free-rooms-follow-up-correction) at the end supersedes the original availability placement and in-cell disclosure design. Only the follow-up is currently uncommitted; no Stage 3/4, Phase 05, PR, push, merge or deployment.
 
 ## Source-verified findings and implementation
 
@@ -179,3 +179,129 @@ No HTTP workflow/database test was necessary for these presentation changes or e
 Chromium only. No real browser-toolbar zoom (125/200% root-text enlargement was tested), physical-device, Safari/Firefox, screen-reader or live-Figma inspection claim. Native exact panel-history restoration without JavaScript remains browser-dependent as documented by the unchanged shell. Expanded calendar details grow their table row naturally; narrow calendars and timetables use the existing horizontal region scrolling. Supporting login copy, enlarged/error states and long records may require natural scrolling. Today/unanswered records remain undisclosed, but arbitrarily many records cannot all fit in one viewport.
 
 No scope deviation into backend or later stages. Original introductory copy is retained below the form; free intervals remain visible rather than adding unnecessary extra disclosures. Native calendar event disclosures are the accessibility adaptation required by the brief. Manual QA remains assigned to the user's two groupmates after the complete frontend redesign. Work stops after Stage 2 verification and stays uncommitted.
+
+## Free Rooms follow-up correction
+
+Baseline: **`766263276feeb68a421663dfc7fbdab4856974e6`**, branch **`feat/frontend-task-ux`**. The original Stage 2 commit is preserved. This correction addresses the user-observed Computer Engineering admin layout without reading or modifying live application data.
+
+### Correction and current information architecture
+
+The previous full-event disclosures were children of calendar table cells. Long descriptions/equipment expanded those rows, and the room search came after the calendar/agenda. Both were presentation problems; `AvailabilityController::index` (`:29`, room mapping `:57`, role-aware class links `:82`) and `RoomAvailability` still supply all data, rules, statuses and permitted URLs through the unchanged protected `/rooms` route (`routes/web.php:71`, auth/auth.session/account group at `:52`).
+
+The current page order is:
+
+1. Page heading, selected date and original previous/next-day navigation.
+2. The unchanged native time-search form and feedback.
+3. The unchanged compact, full-width room results.
+4. Calendar and selected-day agenda as secondary content, reached directly through a native “Calendar and agenda” fragment link beside the date controls.
+5. Full-width event details by date, outside the calendar table.
+
+Each calendar cell retains its original date link, indicators, states, preview text and event count. The event-count link targets a unique `events-YYYY-MM-DD` disclosure below the calendar. Native summary activation reveals the same full event list, including time, room/equipment details, description, status and class-check information. There is no JavaScript, overlay, modal, clipping, fixed-height detail panel, duplicate search form or extra permission calculation. Expanding multiple dates affects only the separate detail area. The selected-day agenda and every existing month/Today/date URL remain intact.
+
+The calendar and agenda remain in two columns above 64rem and stack below it. Search label and controls share a row on sufficiently wide screens; narrow/enlarged layouts wrap naturally. Every free interval stays visible, and original busy-schedule disclosures and permitted Book links remain unchanged.
+
+### Follow-up functional parity matrix
+
+| Contract from `7662632` | Corrected placement/behavior | Evidence |
+|---|---|---|
+| Selected date, day navigation and `#day` | First task section, same ID and supplied URLs | Exact original links/ARIA parity, direct fragment/reload/day-navigation tests |
+| Native GET `date/from/to`, options, validation, Clear, feedback | Immediately after selected date, before calendar/agenda | Complete forms/options/FormData parity, intercepted GET, all-role rendering |
+| Every room/capacity/free interval/status/clash/action | Same `_results`, `_room`, `_search` content; now first primary results | Exact record/form/link comparison; source byte identity |
+| Month arrows, Today, date links, horizon/closed/past/current states | Secondary calendar with direct shortcut | Exact original link/tooltip/text comparison; boundary states |
+| Calendar full event details and counts | Same event content in full-width per-date disclosures outside table | Full event arrays compared by date against baseline, including order and duplicate counts for rep/staff/admin |
+| Calendar count controls | In-cell disclosure replaced by native link to unique external disclosure | Every new count link resolves to exactly one disclosure/summary; no table contains a `details` element |
+| Selected-day agenda and authorized action links | Same `_agenda`, moved after primary results beside calendar | Original information/link parity and unchanged source |
+| Keyboard/touch/no-JS | Native anchors and summaries, visible focus, natural detail flow | One/two-date Enter activation, no-JS all-role checks, focus geometry |
+| History and scrolling | Existing stationary shell unchanged; native fragment entries added | Existing shell Back/Forward/reload/`#day` checks plus new fragment Back/Forward tests |
+| Login/dashboard, backend, privacy and database behavior | Unchanged | 301 tracked-file byte comparisons plus original regression suites; no live HTTP/security certification |
+
+The existing link multiset comparison excludes **only** the newly added `.rb-availability__event-count` links and `#calendar-and-agenda` shortcut. Every original link remains subject to exact comparison. The targeted suite separately verifies all new destinations, keyboard activation and native history. Every original disclosure's normalized content remains present. Role-specific event arrays are compared against their own baseline; no cross-role data is introduced.
+
+### Follow-up changed-file inventory
+
+| File | Change |
+|---|---|
+| `resources/views/rooms/index.blade.php` | Availability-first composition and named secondary section |
+| `resources/views/rooms/_day.blade.php` | Direct calendar/agenda shortcut; move agenda out of first task section |
+| `resources/views/rooms/_calendar-day.blade.php` | Replace table-cell disclosure with counted native target link |
+| `resources/views/rooms/_calendar-details.blade.php` (new) | Full-width per-date disclosures, composing the unchanged event-list partial |
+| `public/css/availability.css` | Single primary column, secondary grid, inline desktop search label, scoped count links and naturally sized external details |
+| `tests/Support/availability-runtime.php` | Three role-specific long-event fixtures, including November 3 and 5 descriptions/equipment |
+| `tests/Support/availability-browser.cjs` | Preserve exact old-link comparison while identifying the two new fragment-link categories |
+| `tests/Support/rooms-correction-browser.cjs` (new) | Event parity, one/multiple expansion geometry, initial visibility, focus/history/no-JS, screenshots |
+| `docs/frontend/DESIGN_SYSTEM.md` | Replace superseded calendar/search placement and disclosure guidance |
+| `docs/frontend/SCREEN_INVENTORY.md` | Update S11 presentation placement |
+| `docs/codex/STAGE_02_TASK_UX.md` | Historical baseline clarification and this correction report |
+
+No changes to login/dashboard code, room-row/search/agenda/event-content partials, shared disclosure component, shell CSS/JS/layouts, backend/routes/database, dependencies, Docker configuration or reference PNGs. The pre-existing Docker modifications are not part of this inventory.
+
+### Executed verification
+
+Evidence root: **`/tmp/rb-rooms-correction`**, separate from initial Stage 2 evidence. `before` is a tracked archive of `7662632`; `after` is the corrected source snapshot. Identical richer test fixture data is used on both sides; baseline application sources are untouched. Existing container dependencies are reused through a vendor symlink. No `.env` copy, application HTTP requests, service restart, database connection/mutation, migration, seed, install or mail operation.
+
+Commands follow the initial report's reproduction procedure, replacing `/tmp/rb-task-ux` with `/tmp/rb-rooms-correction`. All four `render-*.php --check` commands and all seven existing browser scripts were executed. Additionally:
+
+```text
+node tests/Support/rooms-correction-browser.cjs /home/james/projects/ticketing/node_modules/playwright-core /tmp/rb-rooms-correction
+```
+
+| Suite | Observed result |
+|---|---|
+| Foundations/layout/auth/availability rendering | PASS — 63 / 279 / 1,318 / 2,137 assertions |
+| Foundations browser | PASS — nine legacy conditional states, native controls, fonts/focus/enlargement |
+| Layout browser | PASS — 72 role/state/width cases and existing keyboard/no-JS/geometry checks |
+| Auth browser | PASS — 60 fixtures / 420 responsive states |
+| Availability browser | PASS — 46 fixtures / 276 responsive states; exact original record/form/link/disclosure parity |
+| Shell geometry | PASS — 351 cases / 324 stationary measurements |
+| Shell navigation | PASS — nine groups, including native GET/day navigation, `#day`, Back/Forward/reload/restoration, focus/validation, no-JS and mobile |
+| Existing Stage 2 targeted suite | PASS — 306 combinations; login/dashboard successes retained |
+| New correction suite | PASS — 99 combinations; 3 roles × 11 viewports × 3 text sizes, each opening one then two long-event dates |
+| Syntax and whitespace | PASS — changed PHP/CJS syntax and `git diff --check` |
+| Protected-source integrity | PASS — 301 tracked files outside the change allowlist byte-identical to `7662632`; both Docker hashes unchanged |
+
+Correction viewports: 1438×638 (DPR 2), 1440×900, 1366×768, 1280×720, 1024×600, 768×1024, 390×844, 375×812, 320×640 and 1438×631/632; each at 100%, 125% and 200% root text. Existing suites retain additional boundary, invalid/closed/started/no-match/empty/long, privacy-presentation and navigation cases. The final color-only adjustment sets count links to the existing maroon token; the targeted suite was rerun afterward.
+
+### Measured laptop geometry
+
+At **1438×638 CSS pixels**, normal fixture at 100% text, all three roles:
+
+| Element | Top | Height | Bottom |
+|---|---:|---:|---:|
+| Search form | 334.5px | 76px | 410.5px |
+| Start/end/select and Find rooms controls | 350.5px | 44px | 394.5px |
+| First room row — admin/staff | 512.5px | 62px | 574.5px |
+| First room row — representative (Book action) | 512.5px | 77px | 589.5px |
+| Main content viewport | 107px | 531px | 638px |
+
+Initial content-panel scrollTop=0, document scrollTop=0, document dimensions=1438×638. Search and the complete first room row fit without scrolling in these normal fixtures. Enlarged text and exceptional states remain scrollable rather than being clipped to meet the normal-state target.
+
+Admin long-description/equipment fixture:
+
+| Measurement | All closed | November 3 open | November 3 + 5 open |
+|---|---:|---:|---:|
+| Calendar table height | 567px | 567px | 567px |
+| Calendar card height | 737px | 737px | 737px |
+| Header row height | 34.5px | 34.5px | 34.5px |
+| Week row heights | 96, 122, 122, 96, 96px | Identical | Identical |
+
+All calendar/card/row-height equality checks also pass at every tested role/viewport/text combination. Keyboard focus on the outside detail summaries scrolls only the content panel in desktop mode; the observed admin offsets after opening November 3 and November 5 are 1,655px and 3,145px. Document scrollTop remains 0 and document height 638px. Detail bodies use visible/natural overflow; page width never exceeds viewport width. Long descriptions can increase detail-section height, but cannot participate in table layout.
+
+### Screenshots and machine-readable evidence
+
+The new suite captures the actual stationary shell and scroll position without restyling it for screenshots:
+
+- [Initial admin Free Rooms page](/tmp/rb-rooms-correction/correction-initial-admin-1438x638.png).
+- [Search controls and first room rows](/tmp/rb-rooms-correction/correction-search-rooms-1438x638.png).
+- [Calendar, details closed](/tmp/rb-rooms-correction/correction-calendar-closed-1438x638.png).
+- [Calendar with November 3 and 5 expanded outside it](/tmp/rb-rooms-correction/correction-calendar-multiple-open-1438x638.png).
+- [Full-width expanded event details](/tmp/rb-rooms-correction/correction-expanded-detail-1438x638.png).
+- [Mobile layout](/tmp/rb-rooms-correction/correction-mobile-390x844.png).
+- [Measured geometry and complete correction results](/tmp/rb-rooms-correction/rooms-correction-results.json), [shell results](/tmp/rb-rooms-correction/shell-results.json), [navigation results](/tmp/rb-rooms-correction/navigation-results.json), [integrity](/tmp/rb-rooms-correction/integrity.json).
+
+The existing Stage 2 suite also captured committed-baseline/current screenshots with each snapshot's own assets at 1438×638, 1440×900 and 390×844. Initial admin, calendar and full-detail captures were visually inspected. Expanded detail content is below the calendar; the separate detail screenshot demonstrates its full-width layout. `/tmp` evidence is temporary and uncommitted.
+
+### Limits and handoff
+
+These are isolated rendering and Chromium tests over explicit synthetic records, including long authorized-description fixtures. They are not a live reproduction of the user's private bookings or proof of backend privacy/authorization. No production/dev database or HTTP workflow tests ran. PHPUnit remains unavailable in the container (file availability checked). Actual browser-toolbar zoom, physical-device, screen-reader and other-browser testing were not performed; root-text enlargement and native keyboard/no-JS behavior were.
+
+No deviation from the approved follow-up scope. Native fragment links avoid adding JavaScript state. Calendar/agenda are secondary content, not hidden or removed. Both Docker files retain SHA-256 values recorded earlier in this report. The original `7662632` commit remains unchanged, and all follow-up work stays uncommitted for review. No PR, push, merge, deployment or subsequent phase.

@@ -21,7 +21,7 @@ const widths=[320,390,768,1024,1280,1440];
  const visit=async(name,old=false)=>{await page.goto('http://reservebot.test/'+(old?'before/':'')+name+'.html');await page.evaluate(()=>document.fonts.ready);};
  const contracts=()=>page.evaluate(()=>({
   forms:[...document.forms].map(f=>({action:f.action,method:f.method,enctype:f.enctype,fields:[...f.elements].map(e=>({tag:e.tagName,name:e.name,id:e.id,type:e.type,value:e.value,required:e.required,disabled:e.disabled,options:e.tagName==='SELECT'?[...e.options].map(o=>[o.value,o.textContent.trim(),o.selected,o.disabled]):null})),data:[...new FormData(f)]})),
-  links:[...document.querySelectorAll('a')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })(),a.getAttribute('aria-current'),a.getAttribute('aria-label')]),
+  links:[...document.querySelectorAll('a:not(.rb-availability__event-count):not([href="#calendar-and-agenda"])')].map(a=>[a.getAttribute('href'),(()=>{ const copy=a.cloneNode(true); copy.querySelectorAll('.rb-nav-item__tile, .rb-nav-item__icon').forEach(el=>el.remove()); return copy.textContent.replace(/\s+/g,' ').trim(); })(),a.getAttribute('aria-current'),a.getAttribute('aria-label')]),
   records:[...document.querySelectorAll('.rb-dashboard .mlist > li, .rb-dashboard tbody tr, .rb-availability__room-row')].map(e=>e.textContent.replace(/\s+/g,' ').trim()),
   titles:[...document.querySelectorAll('main [title]')].map(e=>e.title),
   disclosures:[...document.querySelectorAll('main details')].map(e=>e.textContent.replace(/\s+/g,' ').trim())

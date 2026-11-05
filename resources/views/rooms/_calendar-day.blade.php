@@ -40,9 +40,6 @@
                   </div>
                 @endif
                 @if ($items)
-                  <x-ui.disclosure class="rb-availability__calendar-events">
-                    <x-slot:summary>{{ count($items) }} {{ count($items) === 1 ? 'event' : 'events' }}<span class="sr-only"> on {{ $day['date']->format('F j') }}</span></x-slot:summary>
-                    @include('rooms._calendar-events')
-                  </x-ui.disclosure>
+                  <a class="rb-availability__event-count" href="#events-{{ $day['date']->toDateString() }}">{{ count($items) }} {{ count($items) === 1 ? 'event' : 'events' }}<span class="sr-only"> on {{ $day['date']->format('F j') }}; view details below calendar</span></a>
                 @endif
               </td>

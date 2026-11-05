@@ -6,6 +6,7 @@
       <h2 id="day-title">{{ $date->format('l, F j') }}@if ($date->isToday()) <span class="rb-availability__todaytag">Today</span>@endif</h2>
     </div>
     <div class="rb-availability__daynav">
+      <x-ui.link-button variant="secondary" href="#calendar-and-agenda">Calendar and agenda</x-ui.link-button>
       @if ($prevUrl)
         <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$prevUrl">‹ Previous day</x-ui.link-button>
       @else
@@ -30,8 +31,6 @@
       <p class="rb-availability__notice">This day is outside the semester, so there are no classes. Only bookings are shown.</p>
     @endunless
 
-    {{-- What the viewer has on this day (the calendar only fits three) --}}
-    @include('rooms._agenda')
 
   @endif
 </section>
