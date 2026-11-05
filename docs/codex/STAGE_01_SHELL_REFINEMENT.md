@@ -1,5 +1,7 @@
 # Stage 1 — shared shell refinement
 
+**Historical report:** Stage 1 was merged in `f693cea`. Its sticky/document-scrolling architecture is superseded by the approved [application-shell scrolling correction](SHELL_SCROLLING_ARCHITECTURE.md). The original results below remain evidence of that earlier implementation, not the current scrolling contract.
+
 Base: `008479a`, branch `fix/frontend-shell-refinement`. Scope: approved Stage 1 only. Work remains uncommitted. No Stage 2–4, theme functionality or Phase 05 implementation.
 
 ## Root causes and correction

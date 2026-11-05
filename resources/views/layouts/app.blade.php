@@ -50,7 +50,7 @@
   @if ($workspace)
     @include('layouts.partials.navigation')
   @endif
-  <div class="rb-shell__content">
+  <div class="rb-shell__content" @if ($workspace) role="region" aria-label="Page content" tabindex="0" @endif>
     @if ($workspace && ! $me->hasConnectedEmail() && ! request()->routeIs('account'))
       @include('layouts.partials.email-notice')
     @endif

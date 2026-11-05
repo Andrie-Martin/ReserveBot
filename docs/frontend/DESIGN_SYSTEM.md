@@ -180,7 +180,7 @@ Export-only statistics, room classifications and sample bookings are omitted; al
 
 ## Stage 1 — shared shell refinement
 
-Approved Stage 1 refines only the shared shell, before the separate task-UX, visual-consistency and theme stages. No live Figma measurement is claimed.
+Approved Stage 1 refines only the shared shell, before the separate task-UX, visual-consistency and theme stages. No live Figma measurement is claimed. The scrolling behavior recorded below is historical and is superseded by the application-shell correction in the following section.
 
 - Desktop navigation remains at the existing 80rem breakpoint. The sidebar is sticky, independently aligned, viewport-limited and vertically scrollable only when its contents overflow. Its advisory uses available space below navigation. Main content keeps document scrolling.
 - `layout.js` measures the remaining visible normal-flow header height (including wrapped names), updates `--rb-sidebar-height` on resize/scroll via animation-frame scheduling, and observes header/masthead resizing. The CSS fallback remains sticky with a viewport height when JavaScript is absent. At extreme text enlargement/short heights, natural document scrolling reveals navigation beneath a tall header; content is not clipped to force an above-fold fit.
@@ -190,3 +190,16 @@ Approved Stage 1 refines only the shared shell, before the separate task-UX, vis
 - Prototype labels are removed from the masthead/header. The header describes the reservation system; the existing login unofficial-site disclaimer remains. No official endorsement or new university mark is introduced.
 
 See [Stage 1 implementation and verification](../codex/STAGE_01_SHELL_REFINEMENT.md). Page content, tokens, legacy CSS, fonts and Phase 05 remain outside this change.
+
+
+## Desktop application-shell scrolling correction
+
+The authenticated workspace now uses a viewport-height CSS Grid with `auto auto minmax(0, 1fr)` rows. The masthead/header and sidebar remain stationary; `.rb-shell__content` is the single main vertical scroll area, including the existing email notice. `<main>` retains natural height. The sidebar scrolls independently only when its contents overflow; the advisory stays near its bottom when space permits. Positioned containment keeps absolute accessibility text within the correct scroll area. The desktop root overflow rule is scoped to the workspace with `:has()`; no legacy conditional selectors change.
+
+Desktop mode requires both **80rem width and 39.5rem height** (1280×632 CSS pixels at the default browser size). CSS and `layout.js` use the same condition. The primary 1438×638 viewport retains desktop mode. Below either threshold, the existing responsive menu/bottom navigation and natural document scrolling apply. Guests, onboarding and hidden-user errors always retain natural document scrolling.
+
+The height boundary was measured: 200% long-name text produced a 473px header region and a 150px wrapped page action. Together with 8px focus clearance, these require 631px; the boundary rounds to 632px. The initial 608px candidate, sufficient for a 92px navigation row with compact padding, failed the larger page-action check and was rejected. Desktop sidebar padding is reduced at heights up to 48rem; no page-content styling changes. 631/632/633px boundary tests verify actual layout and focus behavior.
+
+The header-dependent sidebar height variable, header observers and document-scroll sizing listeners are removed. Existing mobile menu/focus and bottom-bar measurement remain. A measured Chromium history limitation required a separate enhancement: same- and cross-document Back/Forward did not reliably restore an element scroll container. `layout.js` records only URL and panel coordinates in a namespaced property of the existing history entry, preserving other state. It restores coordinates on traversal/reload, leaves native links/fragments/query parameters and `history.scrollRestoration` unchanged, and does not add a router, storage dependency or server state. Scroll writes are debounced and flushed before native navigation. No-JS forms, fragment navigation, disclosures and keyboard scrolling remain usable; exact panel-position restoration without JS remains browser-dependent.
+
+The workspace content wrapper is a named keyboard-focusable region; the existing `#rb-main` skip-link target and all page IDs remain. See [implementation, measurements and verification](../codex/SHELL_SCROLLING_ARCHITECTURE.md). Stage 2–4 and Phase 05 remain out of scope.
