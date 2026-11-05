@@ -45,15 +45,20 @@
 .rb-skip-link { position: fixed; top: var(--rb-space-2); left: var(--rb-space-2); transform: translateY(-200%); z-index: 20; padding: var(--rb-space-2) var(--rb-space-4); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font-family: var(--rb-font-family); }
 .rb-skip-link:focus { transform: none; }
 .rb-brand:focus-visible, .rb-nav-item:focus-visible, .rb-account__link:focus-visible, .rb-skip-link:focus-visible, .rb-shell__main:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
-@media (min-width: 80rem) {
-  /* Independent of the main grid row; only an overflowing navigation scrolls. */
-  .rb-sidebar { position: sticky; top: 0; align-self: start; box-sizing: border-box; height: var(--rb-sidebar-height, 100vh); max-height: 100dvh; min-height: 0; overflow-y: auto; }
+@media (min-width: 80rem) and (min-height: 39.5rem) {
+  .rb-layout-document:has(> .rb-shell--workspace) { height: 100%; overflow: hidden; }
+  /* The two automatic header rows stay outside both independent scroll areas.
+     minmax(0, 1fr) and min-height: 0 stop page content expanding the grid. */
+  .rb-shell--workspace { position: relative; height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; grid-template-rows: auto auto minmax(0, 1fr); }
+  .rb-shell--workspace .rb-shell__content { position: relative; min-height: 0; overflow-y: auto; scroll-padding-block: var(--rb-space-2); }
+  .rb-sidebar { min-height: 0; overflow-y: auto; box-sizing: border-box; }
   .rb-sidebar > * { flex-shrink: 0; }
+  .rb-shell__content:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: calc(-1 * var(--rb-focus-width)); }
   .rb-shell--guest .rb-header { min-height: 5.625rem; padding-inline: var(--rb-shell-gutter); background: var(--rb-surface-canvas); }
   .rb-shell--guest .rb-masthead { padding-inline: var(--rb-shell-gutter); }
   .rb-shell--guest .rb-brand__monogram { width: 3rem; height: 3rem; }
 }
-@media (max-width: 79.999rem) {
+@media (max-width: 79.999rem), (max-height: 39.499rem) {
   .rb-shell--workspace { display: block; }
   .rb-masthead { padding: var(--rb-space-1) var(--rb-space-4); min-height: 1.6875rem; gap: var(--rb-space-2); }
   .rb-masthead__full { display: none; }
@@ -81,4 +86,11 @@
   .rb-shell--rep .rb-nav-item--active { background: var(--rb-surface-panel); box-shadow: inset 0 3px var(--rb-color-maroon); }
   .rb-shell--rep .rb-nav-item__mobile { display: inline; }
   .rb-shell--rep .rb-shell__content :focus { scroll-margin-bottom: var(--rb-bottom-space, calc(7rem + env(safe-area-inset-bottom))); }
+}
+
+/* Measured at 200% text: a 473px wrapped header plus the tallest 150px
+   action and 8px focus clearance require the 632px boundary. Sidebar padding
+   is compact here so its 92px navigation rows also remain reachable. */
+@media (min-width: 80rem) and (min-height: 39.5rem) and (max-height: 48rem) {
+  .rb-sidebar { padding-block: var(--rb-space-2); gap: var(--rb-space-4); }
 }

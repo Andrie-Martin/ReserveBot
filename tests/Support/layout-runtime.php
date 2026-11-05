@@ -84,6 +84,7 @@ function layoutContracts(): int
             $html = layoutRender($role, ['waiting' => $waiting, 'name' => '<script>unsafe</script>']);
             $x = foundationsDocument($html);
             $check($x->query('//nav[@aria-label="Main"]//a')->length === $links, $role.' menu count');
+            $check($x->query('//div[@class="rb-shell__content" and @role="region" and @aria-label="Page content" and @tabindex="0"]')->length === ($role === 'guest' ? 0 : 1), 'Workspace has one named keyboard-accessible content region');
             $check($x->query('//nav[@aria-label="Main"]//svg[@aria-hidden="true" and @focusable="false"]')->length === $links, $role.' decorative local icons');
             $check(! str_contains($html, 'rb-nav-item__tile'), 'No placeholder navigation tiles');
             $check(! str_contains($html, 'ReserveBot · Concept') && ! str_contains($html, 'Unofficial design concept'), 'No prototype shell branding');
@@ -122,6 +123,7 @@ function layoutContracts(): int
             $x = foundationsDocument(layoutRender($role, $options + ['connected' => false]));
             $check(count(layoutConnection()->queries) === 0, 'Reduced shell must never count');
             $check($x->query('//nav')->length === 0, 'Reduced shell must hide workspace');
+            $check($x->query('//div[@class="rb-shell__content" and @tabindex]')->length === 0, 'Reduced shell retains natural content flow');
             $check($x->query('//a[@href="'.route('account').'"]')->length === 0, 'Reduced shell account link');
             $check($x->query('//form[@action="'.route('email.resend').'"]')->length === 0, 'Reduced shell email notice');
             $check($x->query('//form[@action="'.route('logout').'"]')->length === (isset($options['hideUser']) ? 0 : 1), 'Reduced shell logout');

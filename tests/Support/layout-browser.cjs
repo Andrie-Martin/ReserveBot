@@ -56,7 +56,7 @@ const publicDir = path.resolve(__dirname, '../../public');
         if (state === 'rep') {
           assert.equal(await page.locator('nav a').count(), 4);
           const position = await page.locator('.rb-sidebar').evaluate(el => getComputedStyle(el).position);
-          assert.equal(position, mobile ? 'fixed' : 'sticky');
+          assert.equal(position, mobile ? 'fixed' : 'static');
           await page.locator('#layout-form button').focus();
           await page.keyboard.press('Tab');
           assert.equal(await page.locator(':focus').getAttribute('id'), 'layout-last');
