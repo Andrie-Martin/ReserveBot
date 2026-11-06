@@ -53,5 +53,5 @@
         </div>
       @endif
     </div>
-    <div><x-ui.button type="submit">Save</x-ui.button></div>
+    <div class="rb-account-actions"><x-ui.button type="submit">Save</x-ui.button></div>
   </form>
