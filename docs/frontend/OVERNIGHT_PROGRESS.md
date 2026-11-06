@@ -183,7 +183,7 @@ Branch `feat/frontend-design-10-integration-qa`, stacked on `feat/frontend-desig
 
 | Part | Commit | Summary |
 |---|---|---|
-| 10A | HASH10A | One CSS fix found by the cross-screen colour scan (plain inline links and `.req-link` on booking-system pages were still legacy violet), `tests/Support/legacy-colour-scan.cjs`, `docs/frontend/QA_HANDOFF.md` (human QA checklist, limitations, how to re-run) |
+| 10A | `121fe47` | One CSS fix found by the cross-screen colour scan (plain inline links and `.req-link` on booking-system pages were still legacy violet), `tests/Support/legacy-colour-scan.cjs`, `docs/frontend/QA_HANDOFF.md` (human QA checklist, limitations, how to re-run) |
 
 Verification on the final tree (fixtures re-exported from the working tree in a throwaway container):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 PASS.
