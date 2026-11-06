@@ -1,8 +1,13 @@
   <div class="rb-account-photo">
-    <x-avatar :user="$user" size="lg" />
+    <h2 class="rb-heading rb-heading--h2">Profile photo</h2>
+    <div class="rb-account-photo__head">
+      <x-avatar :user="$user" size="lg" />
+      <div class="rb-account-photo__identity">
+        <p class="rb-account-photo__name">{{ $user->name }}</p>
+        <p class="rb-description">{{ $user->roleLabel() }} · {{ $user->department->name }}</p>
+      </div>
+    </div>
     <div class="rb-account-photo__content">
-      <p class="rb-account-photo__name">{{ $user->name }}</p>
-      <p class="rb-description">{{ $user->roleLabel() }} · {{ $user->department->name }}</p>
       <x-ui.error-summary :bag="$errors->getBag('photo')" />
       <div class="rb-account-photo__forms">
         <form method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">

@@ -1,14 +1,18 @@
 @extends('layouts.app')
 
 @section('title', 'Forgot your password?')
+@section('main-class', 'rb-auth-main--login')
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v={{ filemtime(public_path('css/auth.css')) }}">
 @endpush
 
 @section('content')
-<x-ui.auth-card>
+<div class="rb-auth-login rb-ui">
+<section class="rb-auth-login__content" aria-labelledby="forgot-heading">
+<x-ui.auth-card class="rb-auth-login__card">
   <x-slot:heading>
-    <h1 class="rb-heading rb-heading--h1">Forgot your password?</h1>
+    <p class="rb-auth-eyebrow">Account recovery</p>
+    <h1 id="forgot-heading" class="rb-heading rb-heading--h2">Forgot your password?</h1>
     <p class="rb-description">Type your account’s email. We’ll send it a link to pick a new password.</p>
   </x-slot:heading>
   @if (session('status'))
@@ -26,4 +30,7 @@
     <p class="rb-description">No email coming? Your department’s admin can set a new password for you.</p>
   </x-slot:footer>
 </x-ui.auth-card>
+</section>
+@include('auth._aside')
+</div>
 @endsection

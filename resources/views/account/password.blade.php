@@ -8,9 +8,9 @@
 
 @section('content')
 <section class="rb-account-page rb-ui rb-stack" aria-labelledby="account-heading">
-  <h1 id="account-heading" class="rb-heading rb-heading--h1">My account</h1>
+  @include('account._hero', ['description' => 'Change the password for your current account.'])
   @include('account._tabs')
-  <x-ui.card class="rb-stack">
+  <x-ui.card class="rb-stack rb-account-password-card">
     <h2 class="rb-heading rb-heading--h2">Change your password</h2>
     <form method="post" action="{{ route('password.change') }}" class="rb-stack rb-account-password">
       @csrf
@@ -25,9 +25,9 @@
 <x-ui.field field-id="password_confirmation" label="Type the new password again" :error="$errors->getBag('default')->first('password_confirmation')">
   <x-ui.input type="password" name="password_confirmation" autocomplete="new-password" maxlength="64" required />
 </x-ui.field>
-      <div><x-ui.button type="submit">Change password</x-ui.button></div>
+      <div class="rb-account-actions"><x-ui.button type="submit">Change password</x-ui.button></div>
     </form>
-    <p class="rb-description">Any other device logged in to your account is logged out when you change it. Forgot your current password? Log out and use “Forgot your password?”, or ask your admin.</p>
+    <p class="rb-description rb-account-fineprint">Any other device logged in to your account is logged out when you change it. Forgot your current password? Log out and use “Forgot your password?”, or ask your admin.</p>
   </x-ui.card>
 </section>
 @endsection

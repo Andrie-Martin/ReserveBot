@@ -1,4 +1,5 @@
 <x-ui.alert :tone="$user->hasConnectedEmail() ? 'success' : 'warning'" class="rb-account-email rb-stack">
+  <h2 class="rb-heading rb-heading--h3">Email connection</h2>
   @if ($user->hasConnectedEmail())
     <p><x-ui.badge label="Connected" tone="success" /> Your email {{ $user->email }} is connected{{ $user->email_verified_at ? ' since '.$user->email_verified_at->format('F j, Y') : '' }}.</p>
   @else

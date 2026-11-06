@@ -40,7 +40,12 @@ const widths = [320, 375, 390, 768, 1024, 1280, 1440];
   for (const name of cases) {
    await visit(name,true); const baseline=await contracts();
    const information=await page.locator('main p').allTextContents();
-   await visit(name); assert.deepEqual(await contracts(),baseline,name+' complete native form/link parity');
+   // My Account only: sections intentionally moved to Information, Email connection, Photo, so whole forms may change
+   // position. Forms are compared as a sorted multiset of their full contracts (a missing, altered or duplicated form
+   // still fails); links, and every other fixture, stay strictly ordered.
+   const comparable=(c,unordered)=>unordered?{...c,forms:c.forms.map(f=>JSON.stringify(f)).sort()}:c;
+   const unordered=name.startsWith('account-');
+   await visit(name); assert.deepEqual(comparable(await contracts(),unordered),comparable(baseline,unordered),name+' complete native form/link parity');
    const mainText=(await page.locator('main').textContent()).replace(/\s+/g,' ').trim();
    for (const paragraph of information) {
     const text=paragraph.replace(/\s+/g,' ').trim();
@@ -114,6 +119,34 @@ const widths = [320, 375, 390, 768, 1024, 1280, 1440];
   await visit('login'); await page.locator('main a').focus();
   assert.equal(await page.locator(':focus').evaluate(e=>getComputedStyle(e).outlineStyle),'solid');
   // No-JS still has all native forms; CSS-only responsive composition.
+  // My Account: DOM order = keyboard focus order = visual order: Information, Email connection (when it has controls), Photo.
+  const sectionProbe=()=>page.evaluate(()=>{
+   const section=e=>e.closest('.rb-account-info-card')?'info':e.closest('.rb-account-email')?'email':e.closest('.rb-account-photo-card')?'photo':e.closest('.rb-account-tabs')?'tabs':'other';
+   const controls=[...document.querySelectorAll('main a[href], main button, main input:not([type=hidden]), main select, main textarea')].filter(e=>e.getBoundingClientRect().width>0&&e.tabIndex>=0);
+   const box=sel=>{const r=document.querySelector(sel).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top+scrollY};};
+   const cards=[...document.querySelector('.rb-account-layout').children].map(e=>e.classList.contains('rb-account-info-card')?'info':e.classList.contains('rb-account-email')?'email':e.classList.contains('rb-account-photo-card')?'photo':'other');
+   return {cards,sections:controls.map(section),names:controls.map(e=>e.name||e.textContent.trim()),boxes:{info:box('.rb-account-info-card'),email:box('.rb-account-email'),photo:box('.rb-account-photo-card')}};
+  });
+  let accountOrder=0;
+  for (const name of cases.filter(n=>n.startsWith('account-'))) {
+   for (const [width,height] of [[1438,638],[390,844],[320,640]]) {
+    await page.setViewportSize({width,height}); await visit(name);
+    const p=await sectionProbe(), label=name+' '+width+'x'+height;
+    assert.deepEqual(p.cards,['info','email','photo'],label+' section DOM order');
+    const sequence=p.sections.filter((v,i,a)=>a.indexOf(v)===i);
+    assert.deepEqual(sequence,['tabs','info',...(p.sections.includes('email')?['email']:[]),'photo'],label+' control sections are contiguous and ordered');
+    assert.ok(!p.sections.includes('other'),label+' every control belongs to a known section');
+    await page.locator('.rb-account-tabs a').first().focus();
+    const real=[]; for (let i=1;i<p.names.length;i++) { await page.keyboard.press('Tab'); real.push(await page.evaluate(()=>document.activeElement.name||document.activeElement.textContent.trim())); }
+    assert.deepEqual(real,p.names.slice(1),label+' real Tab sequence equals the DOM order');
+    const {info,email,photo}=p.boxes;
+    assert.ok(info.top<email.top,label+' email below information');
+    if (width>=1024) { assert.ok(Math.abs(info.left-email.left)<2&&photo.left>info.right-1&&photo.top<=info.top+2,label+' desktop columns: information and email left, photo right'); }
+    else { assert.ok(email.top<photo.top&&Math.abs(info.left-photo.left)<2,label+' stacked order: information, email, photo'); }
+    accountOrder++;
+   }
+  }
+  assert.ok(accountOrder>=9,'account order was exercised');
   const nojs=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:900}});
   await nojs.route('**/*',route=>{
    const url=new URL(route.request().url()), rel=url.pathname.slice(1);
@@ -125,7 +158,7 @@ const widths = [320, 375, 390, 768, 1024, 1280, 1440];
   assert.ok(await n.locator('form[action$="email-link"] button').isVisible());
   assert.ok(await n.locator('input[name=name]').isVisible()); await nojs.close();
   assert.deepEqual(errors,[]);
-  const result={result:'PASS',cases:cases.length,responsiveStates:states,widths,nativeSubmissions:submissions.length,checks:['before/after complete form/link parity and all original paragraph information','named bags','sensitive old input excluded','keyboard/native validation','separate multipart/remove forms','200% text','320 CSS px reflow equivalent','short viewport bottom clearance','no-JS'],limits:['fixture-only: no controller/session/database security proof','Chromium only','not actual browser UI zoom or screen-reader testing']};
+  const result={result:'PASS',cases:cases.length,responsiveStates:states,widths,nativeSubmissions:submissions.length,checks:['before/after complete form/link parity and all original paragraph information (My Account forms compared order-insensitively)','My Account DOM, keyboard focus and visual order: Information, Email connection, Photo','named bags','sensitive old input excluded','keyboard/native validation','separate multipart/remove forms','200% text','320 CSS px reflow equivalent','short viewport bottom clearance','no-JS'],limits:['fixture-only: no controller/session/database security proof','Chromium only','not actual browser UI zoom or screen-reader testing']};
   fs.writeFileSync(path.join(current,'auth-browser-results.json'),JSON.stringify(result,null,2)); console.log(JSON.stringify(result,null,2));
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

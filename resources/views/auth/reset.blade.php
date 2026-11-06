@@ -2,13 +2,16 @@
 @use('App\Support\AccountFields')
 
 @section('title', 'Pick a new password')
+@section('main-class', 'rb-auth-main--login')
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v={{ filemtime(public_path('css/auth.css')) }}">
 @endpush
 
 @section('content')
-<x-ui.auth-card>
-  <x-slot:heading><h1 class="rb-heading rb-heading--h1">Pick a new password</h1><p class="rb-description">For your ReserveBot account.</p></x-slot:heading>
+<div class="rb-auth-login rb-ui">
+<section class="rb-auth-login__content" aria-labelledby="reset-heading">
+<x-ui.auth-card class="rb-auth-login__card">
+  <x-slot:heading><p class="rb-auth-eyebrow">Password reset</p><h1 id="reset-heading" class="rb-heading rb-heading--h2">Pick a new password</h1><p class="rb-description">For your ReserveBot account.</p></x-slot:heading>
   <x-ui.error-summary :bag="$errors->getBag('default')" />
   <form method="post" action="{{ route('password.update') }}" class="rb-stack rb-auth-form">
     @csrf
@@ -25,4 +28,7 @@
     <x-ui.button type="submit">Save my new password</x-ui.button>
   </form>
 </x-ui.auth-card>
+</section>
+@include('auth._aside')
+</div>
 @endsection

@@ -11,6 +11,7 @@
   <section class="rb-auth-login__content" aria-labelledby="login-heading">
     <x-ui.auth-card class="rb-auth-login__card">
       <x-slot:heading>
+        <p class="rb-auth-eyebrow">Authorized access</p>
         <h1 id="login-heading" class="rb-heading rb-heading--h2">Log in to ReserveBot</h1>
         <p class="rb-description">Use your department-assigned account. Book rooms and equipment for your class.</p>
       </x-slot:heading>
@@ -27,15 +28,13 @@
 </x-ui.field>
         <x-ui.button type="submit">Log in</x-ui.button>
       </form>
-      <x-slot:footer><a href="{{ route('password.request') }}">Forgot your password?</a></x-slot:footer>
+      <x-slot:footer>
+        <a href="{{ route('password.request') }}">Forgot your password?</a>
+        <p class="rb-auth-fineprint">No public registration. Your admin creates or manages accounts.</p>
+      </x-slot:footer>
     </x-ui.auth-card>
     <p class="rb-auth-disclaimer">Unofficial student design · Not an official PUP website</p>
-    <div class="rb-auth-login__intro">
-      <p class="rb-auth-eyebrow">CEA reservation portal</p>
-      <p class="rb-description">Reserve classrooms, laboratory spaces, and equipment through one straightforward departmental workflow.</p>
-      <p class="rb-description">Make room for your next big idea.</p>
-    </div>
   </section>
-  <div class="rb-auth-login__art" aria-hidden="true">@include('auth._illustration')</div>
+  @include('auth._aside')
 </div>
 @endsection

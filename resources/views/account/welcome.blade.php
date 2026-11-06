@@ -7,8 +7,8 @@
 @endpush
 
 @section('content')
-<x-ui.auth-card>
-  <x-slot:heading><h1 class="rb-heading rb-heading--h1">Hi, {{ $user->name }}!</h1><p class="rb-description">Your admin gave you a starting password. Pick your own before you continue; the starting one stops working.</p></x-slot:heading>
+<x-ui.auth-card class="rb-auth-card--panel">
+  <x-slot:heading><p class="rb-auth-eyebrow">Required first-login setup</p><h1 class="rb-heading rb-heading--h1">Hi, {{ $user->name }}!</h1><p class="rb-description">Your admin gave you a starting password. Pick your own before you continue; the starting one stops working.</p></x-slot:heading>
   <x-ui.error-summary :bag="$errors->getBag('default')" />
   <form method="post" action="{{ route('welcome.save') }}" class="rb-stack rb-auth-form">
     @csrf

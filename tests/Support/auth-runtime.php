@@ -98,6 +98,16 @@ function authContracts(): int
             $check($x->query('//input[@name="school_id" and @required]')->length === (int)($role === 'rep'), "$name school required");
             $check($x->query('//input[@name="_method" and @value="DELETE"]')->length === (int)!empty($case[2]['photo']), "$name remove condition");
             $check($x->query('//main//form[contains(@action,"email-link")]')->length === (int)!(($case[2]['connected'] ?? true)), "$name resend condition");
+            // Document order is keyboard order: information, email connection (when shown), photo upload, photo removal (when a photo exists).
+            $order = [];
+            foreach ($x->query('//main//form') as $form) {
+                $action = $form->getAttribute('action');
+                $order[] = str_ends_with($action, '/account') ? 'info'
+                    : (str_contains($action, 'email-link') ? 'email'
+                    : (str_ends_with($action, '/account/photo') ? ($x->query('.//input[@name="_method"]', $form)->length ? 'remove' : 'upload') : 'other'));
+            }
+            $expected = ['info', ...(($case[2]['connected'] ?? true) ? [] : ['email']), 'upload', ...(empty($case[2]['photo']) ? [] : ['remove'])];
+            $check($order === $expected, "$name form order ".implode(',', $order)." expected ".implode(',', $expected));
         }
         if (str_starts_with($name, 'welcome-')) {
             $ask = in_array($case[1], ['rep', 'lab_staff']) && !isset($case[2]['school']);

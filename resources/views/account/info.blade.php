@@ -7,10 +7,13 @@
 
 @section('content')
 <section class="rb-account-page rb-ui rb-stack" aria-labelledby="account-heading">
-  <h1 id="account-heading" class="rb-heading rb-heading--h1">My account</h1>
+  @include('account._hero', ['description' => 'Update your own information, profile photo, and email connection.'])
   @include('account._tabs')
-  <x-ui.card>@include('account._photo')</x-ui.card>
-  @include('account._email-state')
-  <x-ui.card class="rb-stack">@include('account._information-form')</x-ui.card>
+  {{-- DOM order is the focus order and the visual order: information, email connection, then photo. --}}
+  <div class="rb-account-layout">
+    <x-ui.card class="rb-stack rb-account-info-card">@include('account._information-form')</x-ui.card>
+    @include('account._email-state')
+    <x-ui.card class="rb-account-photo-card">@include('account._photo')</x-ui.card>
+  </div>
 </section>
 @endsection
