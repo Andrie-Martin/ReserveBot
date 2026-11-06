@@ -18,7 +18,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | complete, local, NOT merged |
 | `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | complete, local, NOT merged |
 | `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
-| `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | in progress, local |
+| `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete, local, NOT merged |
+| `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -134,3 +135,22 @@ Verification (final tree):
 Real defects found by the new test and fixed in CSS only: native date/time inputs showed no focus ring when the picker button took focus (`:focus-within` added); five-column equipment and four-column room tables overflowed at 200% text on phones (stacked as labelled rows below 40rem, table semantics kept in markup).
 
 Notes: the shared `manage/_tabs` partial is restyled only inside `.rb-manage`; the Timetable pages (Phase 08) still use the legacy styling until they opt in. The room-table class `rooms-table` was added for the phone layout. NOT RUN: PHPUnit, authenticated live app, real room/stock changes.
+
+## Phase 08 — Timetables (overview, in use, draft, edit row, check and replace)
+
+Branch `feat/frontend-design-08-timetable`, stacked on `feat/frontend-design-07-rooms-equipment` @ `9aed410`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 08A | `749c7f9` | `public/css/timetable.css` (new, `.rb-tt`, loaded after booking.css and manage.css) + wrappers/classes/kicker in `manage/timetable`, `timetable_rows`, `timetable_row`, `timetable_check`. In-use / draft / attention cards, two-ways cards, backups list, day tabs and week picker, row tables (labelled phone layout), week grid, row form, check-and-replace sections. No form, field, link, version field, `formaction` or action URL changed. The shared partials (`_timetable_*`) are untouched. |
+| 08B | HASH08B | Verification tooling: `timetable-runtime.php`, `render-timetable.php`, `timetable-browser.cjs` (34 database-free states: overview empty/in use/draft/problems/clashes/backups/long, in-use day/week/block, draft day/week/fix/warnings/undo/errors/long, row edit class/blocked/problems/errors/long, check ok/problems/mostly/empty/same/bookings/errors/long) |
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692 PASS.
+- Ordered structural parity vs the pre-change views: 34 documents, 0 structure and 0 paragraph mismatches.
+- timetable-browser: 272 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 (no overflow, no clipped controls); 4620 keyboard stops with visible focus; control-text contrast >= 3:1 on every state; the CSS-only class/blocked switch still hides the class fields; intercepted submissions (never sent) carry exact targets and field names: upload (multipart `file`), start, discard, restore (with and without a draft), add / update / delete row, undo, semester (`formaction` to `/manage/timetable/semester` with `version`) and replace (`version`, term fields); Replace stays disabled while rows have problems; form/field/link parity with baseline.
+- manage-browser (Phase 07) re-run against the shared `manage.css`: PASS.
+
+Real defect found by the new contrast guard and fixed in CSS only: the primary "Check and replace" link in the draft header rendered maroon text on a maroon button (a link rule outranked the button rule).
+
+Notes: no live data was touched; draft, check and apply logic come from fixtures only. NOT RUN: PHPUnit, authenticated live app, real upload/replace.
