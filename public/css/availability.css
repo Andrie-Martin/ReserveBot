@@ -1,6 +1,6 @@
 /* Page-owned styles. Server data and URLs remain the source of every state/action. */
 .rb-availability { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-4); align-items: start; min-width: 0; }
-.rb-availability .rb-card { border-color: var(--rb-border-warm); padding: var(--rb-space-4); }
+.rb-availability .rb-card { padding: var(--rb-panel-padding); }
 .rb-availability h1 { font-size: var(--rb-text-h1); line-height: var(--rb-leading-heading); margin: 0 0 var(--rb-space-2); }
 .rb-availability h2 { font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); margin: 0; }
 .rb-availability h3 { font-size: var(--rb-text-h3); margin: 0 0 var(--rb-space-4); }
@@ -12,13 +12,14 @@
 .rb-availability__cal-bar, .rb-availability__day-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--rb-space-4); margin-bottom: var(--rb-space-6); }
 .rb-availability__cal-nav, .rb-availability__daynav { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); align-items: center; }
 .rb-availability__btn-ghost, .rb-availability__cal-arrow, .rb-availability__btn-book, .rb-availability__agenda-link, .rb-availability__quiet {
- display: inline-flex; align-items: center; justify-content: center; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); color: var(--rb-color-maroon); background: var(--rb-surface-panel); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; max-width: 100%; overflow-wrap: anywhere;
+ display: inline-flex; align-items: center; justify-content: center; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); color: var(--rb-color-maroon); background: var(--rb-surface-panel); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; max-width: 100%; overflow-wrap: anywhere;
 }
 .rb-availability__cal-arrow { min-width: var(--rb-control-height); }
 .rb-availability a:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+.rb-availability .rb-button--primary:hover { background: var(--rb-action-primary-hover); color: var(--rb-action-primary-text); }
 .rb-availability a:focus-visible, .rb-availability button:focus-visible, .rb-availability select:focus-visible, .rb-availability summary:focus-visible, .rb-availability__cal-wrap:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-availability__off { color: var(--rb-text-muted); border-style: dashed; }
-.rb-availability__cal-wrap { position: relative; max-width: 100%; overflow-x: auto; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); }
+.rb-availability__cal-wrap { position: relative; max-width: 100%; overflow-x: auto; border: 1px solid transparent; border-radius: 0; }
 .rb-availability__calendar { width: 100%; min-width: 28rem; table-layout: fixed; border-collapse: collapse; margin: 0; }
 .rb-availability__calendar th { background: var(--rb-color-canvas); color: var(--rb-text-muted); padding: var(--rb-space-2) var(--rb-space-1); font-size: var(--rb-text-caption); text-align: center; border: 0; }
 .rb-availability__calendar td { padding: 0; border: 1px solid var(--rb-border-warm); vertical-align: top; }
@@ -49,6 +50,7 @@
 .rb-availability__day-card { scroll-margin-top: var(--rb-space-4); }
 .rb-availability__eyebrow { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); margin: 0 0 var(--rb-space-2); }
 .rb-availability__todaytag, .rb-availability__st { display: inline-block; padding: var(--rb-space-1) var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-success-bg); color: var(--rb-success-text); font-size: var(--rb-text-caption); white-space: normal; }
+.rb-availability__todaytag { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
 .rb-availability__st-pending { background: var(--rb-warning-bg); color: var(--rb-warning-text); }
 .rb-availability__st-freed { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
 .rb-availability__notice, .rb-availability__error, .rb-availability__results { padding: var(--rb-space-4); border-radius: var(--rb-radius-control); background: var(--rb-color-cream); }
@@ -59,7 +61,7 @@
 .rb-availability__when { font-weight: var(--rb-weight-semibold); font-variant-numeric: tabular-nums; }
 .rb-availability__agenda .rb-availability__when { flex-basis: 100%; }
 .rb-availability__what { min-width: 0; overflow-wrap: anywhere; }
-.rb-availability__finder { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); margin: var(--rb-space-6) 0; padding: var(--rb-space-4); background: var(--rb-color-canvas); border-radius: var(--rb-radius-control); }
+.rb-availability__finder { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); margin: var(--rb-space-6) 0; padding: var(--rb-panel-padding); background: var(--rb-surface-panel); border-radius: var(--rb-radius-card); box-shadow: inset 0 0 0 1px var(--rb-border-panel); }
 .rb-availability__finder-label { flex-basis: 100%; font-weight: var(--rb-weight-semibold); }
 .rb-availability__finder select { width: auto; min-width: 0; flex: 1 1 7rem; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2); font: inherit; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-color-white); color: var(--rb-text-primary); }
 .rb-availability__btn-small { width: auto; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); margin: 0; font: inherit; font-weight: var(--rb-weight-semibold); background: var(--rb-color-maroon); color: var(--rb-color-white); border: 1px solid var(--rb-color-maroon); border-radius: var(--rb-radius-control); }
@@ -147,7 +149,8 @@
 .rb-availability__event-count[aria-expanded="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }
 
 /* One shared horizontal coordinate system; exact interval text remains visible. */
-.rb-availability__board { position: relative; max-width: 100%; overflow-x: auto; container-type: inline-size; }
+/* Paint-only surface: no border/padding alters the shared axis or row geometry. */
+.rb-availability__board { position: relative; max-width: 100%; overflow-x: auto; container-type: inline-size; background: var(--rb-surface-panel); border-radius: var(--rb-radius-card); box-shadow: inset 0 0 0 1px var(--rb-border-panel); }
 .rb-availability__board:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-availability__axis, .rb-availability__board .rb-availability__room-row { display: grid; grid-template-columns: 11rem minmax(25rem, 1fr) 5rem 7rem; gap: var(--rb-space-2); min-width: 50rem; align-items: center; }
 .rb-availability__axis { padding: var(--rb-space-1) 0; font-size: var(--rb-text-small); }
@@ -156,7 +159,7 @@
 .rb-availability__ticks span:first-child { transform: none; }
 .rb-availability__ticks span:last-child { transform: translateX(-100%); }
 .rb-availability__board .rb-availability__room-row { padding: var(--rb-space-1) 0; }
-.rb-availability__board .rb-availability__room-name { display: grid; gap: 0; position: sticky; left: 0; z-index: 1; background: var(--rb-surface-canvas); padding-right: var(--rb-space-2); }
+.rb-availability__board .rb-availability__room-name { display: grid; gap: 0; position: sticky; left: 0; z-index: 1; background: var(--rb-surface-panel); padding-right: var(--rb-space-2); }
 .rb-availability__board .rb-availability__room-name strong { font-size: var(--rb-text-body); }
 .rb-availability__board .rb-availability__room-name > span { font-size: var(--rb-text-caption); }
 .rb-availability-track { position: relative; height: .625rem; background: var(--rb-neutral-bg); outline: 1px solid var(--rb-border-control); }
@@ -175,6 +178,6 @@
  .rb-availability__board .rb-availability__room-actions,
  .rb-availability__axis > strong { position: sticky; left: 0; width: 100cqi; max-width: 100%; box-sizing: border-box; }
  .rb-availability__board .rb-availability__room-name { display: flex; gap: var(--rb-space-2); }
- .rb-availability__board .rb-availability__room-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--rb-space-2); background: var(--rb-surface-canvas); }
+ .rb-availability__board .rb-availability__room-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--rb-space-2); background: var(--rb-surface-panel); }
  .rb-availability__board .rb-availability__room-busy[open] { flex-basis: 100%; }
 }

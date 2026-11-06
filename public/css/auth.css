@@ -2,17 +2,19 @@
 .rb-auth-main--login { max-width: none; margin: 0; padding: 0; }
 .rb-auth-login { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; max-width: 72rem; margin-inline: auto; }
 .rb-auth-login__content { min-width: 0; padding: var(--rb-space-4); width: 100%; max-width: 34rem; margin-inline: auto; }
-.rb-auth-eyebrow { margin: 0 0 var(--rb-space-2); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); text-transform: uppercase; }
+.rb-auth-eyebrow { margin: 0 0 var(--rb-space-2); color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
 .rb-auth-login__intro .rb-heading { line-height: 1.3; }
 .rb-auth-login__intro .rb-heading span { color: var(--rb-color-maroon); }
-.rb-auth-login__intro .rb-description { margin-top: var(--rb-space-2); font-size: var(--rb-text-small); line-height: 1.6; color: var(--rb-text-secondary); }
-.rb-auth-card { max-width: 30rem; margin: var(--rb-space-12) auto; border-color: var(--rb-border-warm); }
+.rb-auth-login__intro .rb-description { margin-top: var(--rb-space-2); font-size: var(--rb-text-small); line-height: var(--rb-leading-body); color: var(--rb-text-muted); }
+.rb-auth-card { max-width: 30rem; margin: var(--rb-space-12) auto; gap: var(--rb-section-gap); }
+.rb-auth-card .rb-heading--h1 { font-size: var(--rb-text-h2); }
 .rb-auth-card__intro .rb-description { font-size: var(--rb-text-small); }
 .rb-auth-card__footer { font-size: var(--rb-text-small); }
 .rb-auth-card__footer a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); }
 .rb-auth-login__card { max-width: none; margin: 0 0 var(--rb-space-4); padding: var(--rb-space-6); }
 .rb-auth-form > .rb-button { width: 100%; }
-.rb-auth-disclaimer { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); text-transform: uppercase; }
+.rb-auth-form { gap: var(--rb-section-gap); }
+.rb-auth-disclaimer { margin: 0; color: var(--rb-text-muted); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-medium); }
 .rb-auth-login__art { display: flex; align-items: flex-start; justify-content: center; padding: var(--rb-space-12) var(--rb-space-6); background: var(--rb-surface-muted); min-width: 0; }
 .rb-auth-illustration { display: block; width: 100%; max-width: 32.5rem; height: auto; }
 .rb-auth-illustration__arch { fill: var(--rb-color-maroon); }
@@ -24,10 +26,11 @@
 .rb-auth-illustration__caption, .rb-auth-illustration__motto { fill: var(--rb-color-white); font-family: var(--rb-font-family); font-weight: var(--rb-weight-semibold); font-size: 12px; }
 .rb-auth-illustration__motto { font-size: 13px; }
 .rb-account-page { max-width: 51.25rem; }
-.rb-account-page .rb-card { border-color: var(--rb-border-warm); }
+.rb-account-page.rb-stack { gap: var(--rb-section-gap); }
 .rb-account-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
 .rb-account-tabs a { padding: var(--rb-space-2) var(--rb-space-4); display: inline-flex; align-items: center; min-height: var(--rb-control-height); text-decoration: none; border-bottom: 3px solid transparent; }
 .rb-account-tabs a[aria-current] { border-bottom-color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+.rb-account-tabs a:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
 .rb-auth-card a, .rb-account-page a { color: var(--rb-color-maroon); }
 .rb-auth-card a:focus-visible, .rb-account-page a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-account-photo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--rb-space-6); }

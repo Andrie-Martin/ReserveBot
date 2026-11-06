@@ -7,11 +7,11 @@
 .rb-dashboard__intro .muted { color: var(--rb-text-muted); }
 .rb-dashboard__intro p { margin: var(--rb-space-1) 0; }
 .rb-dashboard__intro p:last-child { margin-bottom: 0; }
-.rb-dashboard__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-6); align-items: start; }
+.rb-dashboard__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--rb-section-gap); align-items: start; }
 .rb-dashboard__schedule, .rb-dashboard__links { display: grid; gap: var(--rb-space-4); min-width: 0; }
 .rb-dashboard__links .rb-button { justify-content: flex-start; text-align: left; padding: var(--rb-space-2) var(--rb-space-4); }
 .rb-dashboard__shortcuts { background: var(--rb-surface-panel); }
-.rb-dashboard .rb-card { border-color: var(--rb-border-warm); }
+.rb-dashboard .rb-card { padding: var(--rb-panel-padding); }
 .rb-dashboard .rb-table-container table { min-width: 34rem; }
 .rb-dashboard .rb-table-container th { background: var(--rb-color-canvas); }
 .rb-dashboard .rb-table-container td { vertical-align: top; }
@@ -35,8 +35,22 @@
 .rb-dashboard__shortcuts { padding: var(--rb-space-4); }
 .rb-dashboard__links { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rb-space-2); }
 .rb-dashboard h3 { font-size: var(--rb-text-h3); margin: var(--rb-space-4) 0 var(--rb-space-2); }
-.rb-dashboard__meetings .mlist { border: 0; border-radius: 0; }
+.rb-dashboard__meetings .mlist { border: 0; border-radius: 0; overflow: visible; }
 .rb-dashboard__meetings .mlist > li { padding: var(--rb-space-2) 0; }
 .rb-dashboard__other { margin-top: var(--rb-space-4); }
 .rb-dashboard__classes .rb-table-container { border: 0; border-radius: 0; }
 @media (max-width: 50rem) { .rb-dashboard__links { grid-template-columns: minmax(0, 1fr); } }
+
+/* The original answer form stays shared with staff pages; only this migrated
+   dashboard opts its controls into the common button styling in foundations. */
+.rb-dashboard__meetings .hint { color: var(--rb-text-muted); font-size: var(--rb-text-small); }
+.rb-dashboard__meetings .mlist > li { border-color: var(--rb-border-panel); gap: var(--rb-space-2); }
+.rb-dashboard__meetings .mlist > li.freed { background: transparent; }
+.rb-dashboard .answer-buttons { gap: var(--rb-space-2); }
+.rb-dashboard .answer-buttons .btn-mini.on:disabled { background: var(--rb-surface-active); color: var(--rb-color-maroon); border-color: var(--rb-color-maroon); }
+.rb-dashboard__meetings .st { padding: var(--rb-space-1) var(--rb-space-2); font-size: var(--rb-text-caption); line-height: var(--rb-leading-body); white-space: normal; }
+.rb-dashboard__meetings .st-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
+.rb-dashboard__meetings .st-wait, .rb-dashboard__meetings .st-freed { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
+.rb-dashboard__meetings .success, .rb-dashboard__meetings .error { padding: var(--rb-space-4); border: 1px solid currentColor; border-radius: var(--rb-radius-control); font-size: var(--rb-text-small); }
+.rb-dashboard__meetings .success { background: var(--rb-success-bg); }
+.rb-dashboard__meetings .error { background: var(--rb-danger-bg); }
