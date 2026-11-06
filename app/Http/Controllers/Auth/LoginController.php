@@ -19,6 +19,16 @@ class LoginController extends Controller
     public const MAX_FAILURES_PER_IP = 20;              // one IP trying many emails
     public const DECAY_SECONDS = 60;
 
+    /**
+     * Counter key for one typed email from one IP. The email is hashed so the key has a fixed length: the
+     * database cache store cuts keys at 255 characters, and a padded email would push the IP and the
+     * ":timer" suffix off the end and switch the limit off. Hashing also keeps typed addresses out of the cache.
+     */
+    public static function accountKey(string $email, string $ip): string
+    {
+        return 'login|'.hash('sha256', Str::transliterate(Str::lower(trim($email)))).'|'.$ip;
+    }
+
     public function show(): View
     {
         return view('auth.login');
@@ -29,7 +39,7 @@ class LoginController extends Controller
         $email = Str::lower(trim((string) $request->input('email')));
         $password = (string) $request->input('password');
 
-        $accountKey = 'login|'.Str::transliterate($email).'|'.$request->ip();
+        $accountKey = self::accountKey($email, (string) $request->ip());
         $ipKey = 'login-ip|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($accountKey, self::MAX_FAILURES_PER_ACCOUNT_AND_IP)

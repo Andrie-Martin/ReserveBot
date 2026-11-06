@@ -13,7 +13,7 @@ Laravel's native `Illuminate\Support\Facades\RateLimiter`; no new dependency, ro
 
 | Counter | Key | Limit |
 |---|---|---|
-| Per account and IP | `login\|<lower-cased, transliterated email>\|<ip>` | 5 failures per 60 s |
+| Per account and IP | `login\|sha256(<normalized email>)\|<ip>` | 5 failures per 60 s |
 | Per IP | `login-ip\|<ip>` | 20 failures per 60 s |
 
 - Only **failed** attempts are counted (`RateLimiter::hit`). The check runs **before** `Auth::attempt`, so a correct password is also refused while locked.
@@ -70,3 +70,10 @@ New `mariadb:10.11` containers and an environment-overridden dev server only. Th
 - The window is a fixed 60 s counted from the first failure (Laravel's `RateLimiter::hit`), not a long lockout; a determined attacker is slowed to about 5 guesses per minute per account per IP, not stopped. A distributed attack across many IPs against one account is not limited by this change.
 - The cache store must be shared across app instances in production (the default `database` store is; `array` is not).
 - Not covered: throttling on the other auth endpoints (already limited), account-level lockout across IPs, CAPTCHA.
+
+## Follow-up: hashed keys (separate commit)
+
+Assessment: hashing the normalized email is safe and changes no login behaviour (same normalization, same counters, same messages).
+It was also needed. With the production `database` cache store (`cache.key` is `varchar(255)`), a padded email made the raw key longer than 255 characters; the store cut it, removing the IP and the `:timer` suffix, and the per-account limit stopped working (reproduced live: 7 attempts with a 300-character email, never throttled). The key is now `login|sha256(email)|ip` (under 150 characters even for IPv6), built by `LoginController::accountKey()`. After the change the same live check throttles on the 6th attempt, and no cache key contains a typed address.
+
+Tests: `tests/Unit/LoginThrottleKeyTest.php` (fixed short length, IP never cut off, no email in the key, case/space variants share one key, other inputs differ) and `test_a_very_long_email_is_still_throttled`. The array cache used by PHPUnit does not truncate, so the unit test on key length is what guards the regression. Gated suite: 123 tests, 118 passed, 0 failures, 5 skipped.

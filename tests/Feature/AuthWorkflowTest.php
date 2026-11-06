@@ -236,6 +236,15 @@ final class AuthWorkflowTest extends TestCase
         $this->get('/login')->assertOk()->assertDontSee('Too many login attempts');
     }
 
+    public function test_a_very_long_email_is_still_throttled(): void
+    {
+        $long = str_repeat('x', 400).'@example.com';
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($long, 'Wrong123', '203.0.113.50'));
+        }
+        $this->assertThrottled($this->loginAs($long, 'Wrong123', '203.0.113.50'));
+    }
+
     public function test_disabled_session_and_onboarding_gates(): void
     {
         $user = $this->user('rep', ['is_active' => false]);
