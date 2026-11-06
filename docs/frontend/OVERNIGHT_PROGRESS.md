@@ -124,7 +124,7 @@ Branch `feat/frontend-design-07-rooms-equipment`, stacked on `feat/frontend-desi
 | Part | Commit | Summary |
 |---|---|---|
 | 07A | `c06aff7` | `manage.css` extended (tabs as pills, category panels, rename disclosure, rules fieldsets, term forms, over-stock rows, stacked rooms/equipment tables on phones) + wrappers/classes/kicker in the five `manage/*` views. No form, field, link, label or limit changed. |
-| 07B | HASH07B | Verification tooling: `manage-runtime.php`, `render-manage.php`, `manage-browser.cjs` (46 database-free states for lab staff and admin: normal, empty, validation errors, long names, shared/off room, over-stock item) |
+| 07B | `dcd3bbc` | Verification tooling: `manage-runtime.php`, `render-manage.php`, `manage-browser.cjs` (46 database-free states for lab staff and admin: normal, empty, validation errors, long names, shared/off room, over-stock item) |
 
 Verification (final tree):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052 PASS.
