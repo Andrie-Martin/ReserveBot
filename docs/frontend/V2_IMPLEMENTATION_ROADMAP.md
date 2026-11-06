@@ -173,3 +173,11 @@ These examples reflect the uploaded source snapshot; every mutation/form require
 - Added a role kicker, a banner carrying the existing Laravel `$intro` text, icon action tiles that keep the exact link text, card-header dividers, and grid-based meeting rows (date over class; status and the shared answer form on the right).
 - Verified on fixture exports from the working tree: isolated checks (279/63/1335/2137), availability-browser (parity vs pre-change baseline), task-ux, visual-refinement (before=after export; its HTML-parity stage is not applicable to an intentional markup change), shell-navigation, layout, auth browser suites; 696-stop keyboard sweep and 200% text sweep over 8 home states x 4 viewports. NOT RUN: live app, PHPUnit, real class-answer submissions.
 - Next: Phase 03B (Free Rooms) only after review.
+
+## Phase 03B checkpoint — Free Rooms / availability (awaiting visual review)
+- Changed: `resources/views/rooms/index.blade.php` (one kicker line), `public/css/availability.css` (appended Phase 03B block). Controllers, routes, services, `js/availability.js`, all other room partials unchanged.
+- Verified against the TRUE pre-change baseline (exports taken before any edit): availability-browser, task-ux, timeline (72 combinations, 2316 band checks), rooms-correction, foundations, shell-navigation, layout, auth browser suites and isolated checks (279/63/1335/2137).
+- visual-refinement-browser, unmodified, FAILS its HTML-parity stage by design (it asserts CSS-only changes; the only difference is the added kicker line). A scratch variant tolerating only that line and a uniform vertical page shift (board-relative y; x/width/height/scroll exact) PASSES (146 documents).
+- Correction to Phase 03A reporting: that phase's visual-refinement run compared an export with itself, which made the parity stage vacuous. Against the true pre-03A baseline the unmodified suite fails on `availability/home-rep-empty.html` (intentional dashboard markup change); availability-browser against the true baseline was the real guard and passed.
+- A regression found and fixed during 03B: extra vertical space pushed the first room below 638px (timeline-browser) and row padding-right broke the sticky room column; both reverted/tightened.
+- NOT RUN: live app, PHPUnit.
