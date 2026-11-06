@@ -83,3 +83,10 @@
   .rb-dashboard__meetings .mlist > li { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "what" "status" "answer"; row-gap: var(--rb-space-1); }
   .rb-dashboard__meetings .mlist > li > .st { justify-self: start; }
 }
+
+/* Phase 03D-3: header block and card-heading rhythm shared with /rooms (kicker, title, sub-line and card titles
+   use the same sizes and spacing on both pages, so the first card starts at the same offset). */
+.rb-dashboard .rb-dashboard__kicker { margin: 0 0 var(--rb-space-1); }
+@media (min-width: 40.001rem) { .rb-dashboard h1 { font-size: 1.8125rem; } }
+.rb-dashboard__intro .muted { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+.rb-dashboard__shortcuts > h2, .rb-dashboard__meetings > h2, .rb-dashboard__classes > h2 { font-size: 1rem; }

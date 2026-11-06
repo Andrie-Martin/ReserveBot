@@ -272,3 +272,7 @@
 @container (max-width: 36rem) {
   .rb-availability__room-busy li { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Phase 03D-3: the page-intro rule zeroed every paragraph margin, including the kicker's own spacing; restore it so the
+   title block matches /rep exactly. */
+.rb-availability__cal-intro .rb-availability__kicker { margin: 0 0 var(--rb-space-1); }
