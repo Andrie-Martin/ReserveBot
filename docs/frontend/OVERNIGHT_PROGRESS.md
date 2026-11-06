@@ -15,7 +15,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | Branch | Based on | Status |
 |---|---|---|
 | `feat/frontend-design-03-rep-availability` | `dev` @ `7db0f1c` (includes merged Phase 02, PR #12) | complete, local, NOT merged |
-| `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | in progress, local |
+| `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | complete, local, NOT merged |
+| `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -60,7 +61,7 @@ Branch `feat/frontend-design-04-rep-booking`, stacked on `feat/frontend-design-0
 | Part | Commit | Summary |
 |---|---|---|
 | 04A | `f4f58f5` | `public/css/booking.css` (new, page-scoped on `.rb-booking`) + wrappers/classes in `bookings/{create,mine,show}.blade.php`: maroon system replaces the legacy violet; stepper, choice cards, time-summary strip, equipment disclosures, compact primary actions; My bookings as two divided panels with pill badges; detail page as header + facts + action panels + history. No form, field name, link or label changed. |
-| 04B | see `git log` | Verification tooling: `tests/Support/booking-runtime.php`, `render-booking.php`, `booking-browser.cjs` (31 database-free states incl. validation errors, long names, staff views) |
+| 04B | `6cb9c04` | Verification tooling: `tests/Support/booking-runtime.php`, `render-booking.php`, `booking-browser.cjs` (31 database-free states incl. validation errors, long names, staff views) |
 
 Verification (final tree):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536 PASS.
@@ -74,3 +75,24 @@ Deliberate exceptions / notes:
 - The prototype's "Booking rules" side card, "Check free rooms" header button and source-contract strip were NOT added (prototype-only or duplicate of an existing hint link).
 - Staff/admin sections of the shared detail page get the same panel styling here; their states are fixture-covered for parity (`show-lab_staff-*`, `show-admin-*`) and are designed/verified in Phase 05.
 - NOT RUN: PHPUnit, authenticated live app, real booking submission.
+
+## Phase 05 — Lab operations (S09 staff dashboard, S15 Today, S16 Requests, staff actions on S14)
+
+Branch `feat/frontend-design-05-lab-operations`, stacked on `feat/frontend-design-04-rep-booking` @ `6cb9c04`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 05A | `e9e4f2b` | `public/css/operations.css` (new, `.rb-ops`), staff-action and disclosure styles in `booking.css`, staff dashboard on the `/rep` structure (`dashboard.css` now loads for all roles), wrappers/classes in `today/index`, `requests/index`, `home` (non-rep branch). Updated the stale "staff dashboard markup unchanged" guard in `availability-browser.cjs`. |
+| 05B | see `git log` | Verification tooling: `ops-runtime.php`, `render-ops.php`, `ops-browser.cjs` (28 database-free states: Today, Requests, staff actions with validation errors, long names, late/overdue) |
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532 PASS.
+- Ordered structural parity vs the pre-change views for the 28 operations states: 0 mismatches. Staff dashboards: forms, links, titles, records and disclosures identical (availability-browser vs the previous commit AND the original `7db0f1c` PASS). The 8 Representative home documents stay byte-identical (the `@push` block reproduces the original bytes). The only paragraph that disappears is the old `<p class="ready">` wrapper whose entire text was the link labels; the links are unchanged.
+- ops-browser: 224 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 with no overflow or clipped controls; 3028 keyboard stops with a visible focus indicator; intercepted POSTs carry the exact field names (approve, reject+reason, hand-out, no-show with its confirmation kept, returned+note, class answer=online); the move form reopens with old input after a validation error; an ended booking offers no cancel/move box.
+- Neighbouring suites pass: task-ux, timeline, rooms-correction, foundations, layout, auth, shell-navigation (3 runs).
+
+Deliberate exceptions / notes:
+- `availability-browser.cjs`: the earlier scope guard "staff/admin dashboard markup unchanged and dashboard.css not loaded" asserted a Phase 04 scope boundary, not behaviour. It is replaced by "dashboard.css loads exactly once"; every functional comparison remains exact.
+- visual-refinement-browser (HTML byte-parity assumes CSS-only changes): an adapted scratchpad copy skips parity ONLY for Free Rooms, timeline and the two staff dashboard documents; it passes with 87 documents of parity, computed-style parity and 144 timeline comparisons.
+- Admin-specific dashboard content (S10) shares this structure; its role-specific checks belong to Phase 06.
+- NOT RUN: PHPUnit, authenticated live app, real approvals/hand-outs.
