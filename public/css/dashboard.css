@@ -66,7 +66,7 @@
 .rb-dashboard__links .rb-dashboard__action { align-items: center; gap: .75rem; min-height: 4.25rem; padding: var(--rb-space-2) var(--rb-space-4); border-radius: var(--rb-radius-control); font-weight: var(--rb-weight-semibold); }
 .rb-dashboard__action-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--rb-radius-control); background: var(--rb-surface-active); color: var(--rb-color-maroon); }
 .rb-dashboard__action-icon svg { width: 1.25rem; height: 1.25rem; }
-.rb-dashboard__action-label { min-width: 0; overflow-wrap: anywhere; }
+.rb-dashboard__action-label { overflow-wrap: break-word; }
 .rb-dashboard__action-arrow { margin-left: auto; flex: none; }
 /* The card heading already carries the divider. */
 .rb-dashboard__classes > .rb-dashboard__timetable { border-top: 0; }
@@ -98,3 +98,10 @@
 .rb-dashboard--staff .stat strong { margin-right: var(--rb-space-1); font-size: var(--rb-text-h2); color: var(--rb-color-maroon); }
 .rb-dashboard__next > h2 { margin-bottom: var(--rb-space-2); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); font-size: 1rem; letter-spacing: -.02em; }
 .rb-dashboard__next ul { margin: 0; padding-left: 1.25rem; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+
+/* QA F-03: shortcut labels wrap by word. `overflow-wrap: anywhere` let the label shrink to ~0 beside the fixed icon and
+   arrow, so enlarged text broke letter by letter. The row now wraps (label drops under the icon when it cannot fit
+   beside it) and the decorative arrow is dropped on narrow screens. */
+.rb-dashboard__links .rb-dashboard__action { flex-wrap: wrap; }
+.rb-dashboard__action-label { flex: 1 1 7rem; min-width: min-content; }
+@media (max-width: 40rem) { .rb-dashboard__action-arrow { display: none; } }

@@ -21,4 +21,17 @@ final class AvailabilityPresentationTest extends TestCase
         $this->assertStringContainsString('rb-availability__event-word', $day);
         $this->assertStringContainsString("'event' : 'events'", $day, 'The word must stay in the DOM for assistive technology.');
     }
+
+    /** QA F-03: shortcut labels must wrap by word at enlarged text, never letter by letter. */
+    public function test_dashboard_shortcut_labels_cannot_shrink_to_nothing(): void
+    {
+        $css = file_get_contents(dirname(__DIR__, 3).'/public/css/dashboard.css');
+        preg_match_all('/\.rb-dashboard__action-label\s*\{([^}]*)\}/', $css, $rules);
+        $this->assertNotEmpty($rules[1]);
+        foreach ($rules[1] as $declarations) {
+            $this->assertStringNotContainsString('anywhere', $declarations);
+            $this->assertDoesNotMatchRegularExpression('/min-width:\s*0\s*[;}]/', $declarations);
+        }
+        $this->assertMatchesRegularExpression('/\.rb-dashboard__action\s*\{[^}]*flex-wrap:\s*wrap/', $css);
+    }
 }
