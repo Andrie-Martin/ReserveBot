@@ -21,6 +21,7 @@
 
 <div class="rb-availability rb-ui">
   <div class="rb-availability__cal-intro">
+    <p class="rb-availability__kicker">Workspace</p>
     <h1>Free rooms</h1>
     <p class="rb-availability__muted">{{ $department->name }} · Pick a day, up to {{ $lastDay->format('F j') }}, to see which rooms are free.</p>
   </div>
