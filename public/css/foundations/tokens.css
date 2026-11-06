@@ -24,6 +24,12 @@
   --rb-action-primary-text: var(--rb-color-white);
   --rb-border-control: #6B7280;
   --rb-border-subtle: #E5E7EB;
+  /* Stage 3: shared presentation aliases; existing palette and geometry retained. */
+  --rb-border-panel: var(--rb-border-warm);
+  --rb-panel-padding: var(--rb-space-4);
+  --rb-section-gap: var(--rb-space-4);
+  --rb-shadow-panel: none;
+  --rb-action-secondary-border: var(--rb-border-control);
   --rb-focus-color: var(--rb-color-maroon);
   --rb-success-text: #166534;
   --rb-success-bg: #DCFCE7;

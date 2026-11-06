@@ -19,9 +19,9 @@
 .rb-account__name { overflow-wrap: anywhere; font-weight: var(--rb-weight-semibold); }
 .rb-account__role { color: var(--rb-text-secondary); font-size: var(--rb-text-caption); }
 .rb-account form { margin: 0; flex-shrink: 0; order: -1; }
-.rb-account .rb-button { border-color: var(--rb-border-warm); }
+.rb-account .rb-button { border-color: var(--rb-action-secondary-border); }
 .rb-sidebar { display: flex; flex-direction: column; gap: var(--rb-space-8); padding: var(--rb-space-8) 1.125rem var(--rb-space-10); background: var(--rb-surface-panel); border-right: 1px solid var(--rb-border-warm); }
-.rb-navigation__heading { display: block; margin: 0 var(--rb-space-1) var(--rb-space-2); text-transform: uppercase; font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); color: var(--rb-text-secondary); }
+.rb-navigation__heading { display: block; margin: 0 var(--rb-space-1) var(--rb-space-2); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); color: var(--rb-text-muted); }
 .rb-navigation__list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--rb-space-2); }
 .rb-navigation__list > li { margin: 0; min-width: 0; }
 .rb-nav-item { display: flex; align-items: center; gap: .75rem; min-height: 2.875rem; padding: var(--rb-space-2) .625rem; border-radius: var(--rb-radius-control); color: var(--rb-text-secondary); text-decoration: none; font: var(--rb-weight-medium) var(--rb-text-small)/var(--rb-leading-body) var(--rb-font-family); overflow-wrap: anywhere; }
@@ -32,7 +32,8 @@
 .rb-nav-item__count { margin-left: auto; padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-color-maroon); color: var(--rb-color-white); }
 .rb-sidebar .rb-workspace-note { margin-top: auto; padding: .75rem; background: var(--rb-surface-canvas); border: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
 .rb-workspace-note p { margin: 0; }
-.rb-workspace-note .rb-workspace-note__title { color: var(--rb-color-maroon); text-transform: uppercase; font-weight: var(--rb-weight-semibold); margin-bottom: var(--rb-space-2); }
+.rb-workspace-note .rb-workspace-note__title { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); margin-bottom: var(--rb-space-2); }
+.rb-account__link:hover { color: var(--rb-color-maroon); text-decoration: underline; text-underline-offset: .25em; }
 .rb-shell__content { min-width: 0; }
 .rb-shell--workspace .rb-shell__main { max-width: none; margin: 0; padding: var(--rb-space-8) var(--rb-shell-gutter) var(--rb-space-12); }
 /* Keep page-owned .narrow/.book-card/.account-card/.tt-card constraints intact.
