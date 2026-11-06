@@ -44,3 +44,14 @@ The current Laravel application is the source of truth for functionality; Figma 
 Produce a before-and-after Functional Parity Matrix identifying where every existing capability will appear. Preserve all capabilities unless the user explicitly approves removal, including form names/values, CSRF, method spoofing, validation/error bags, old input, redirects, sessions, signed links, permissions and role-specific states.
 
 Missing features in Figma are design coverage gaps, never permission to remove functionality. Do not substitute decorative controls, placeholder links or dummy data for working behavior. Define and execute appropriate regression checks; distinguish isolated rendering from authenticated workflow verification and report every unexecuted check. A redesign that removes working functionality fails acceptance.
+
+## Frontend design completion
+
+For frontend redesign tasks, follow
+`docs/frontend/DESIGN_IMPLEMENTATION_CONTRACT.md`.
+
+Visual reference:
+`/home/james/reservebot-design/ReserveBot_Verified_Design/`
+
+The Laravel source remains authoritative for functionality.
+The prototype governs visual presentation only.
