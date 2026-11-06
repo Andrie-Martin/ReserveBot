@@ -112,6 +112,130 @@ final class AuthWorkflowTest extends TestCase
         }
     }
 
+    // ---- QA F-01: login throttling (5 failures/min per email+IP, 20/min per IP) ----
+
+    private function loginAs(string $email, string $password, string $ip = '203.0.113.10'): \Illuminate\Testing\TestResponse
+    {
+        return $this->withServerVariables(['REMOTE_ADDR' => $ip])->from('/login')->post('/login', ['email' => $email, 'password' => $password]);
+    }
+
+    private function assertWrongLogin(\Illuminate\Testing\TestResponse $response): void
+    {
+        $response->assertRedirect('/login')->assertSessionHasErrors(['email' => 'Wrong email or password.']);
+        $this->assertGuest();
+    }
+
+    /** Asserts the throttled reply and returns the message shown to the visitor. */
+    private function assertThrottled(\Illuminate\Testing\TestResponse $response): string
+    {
+        $response->assertRedirect('/login')->assertSessionHasErrors('email');
+        $message = session('errors')->first('email');
+        $this->assertMatchesRegularExpression('/^Too many login attempts\. Please try again in \d+ seconds?\.$/', $message);
+        $this->assertGreaterThan(0, (int) $response->headers->get('Retry-After'));
+        $this->assertGuest();
+
+        return $message;
+    }
+
+    public function test_repeated_failures_are_throttled_and_even_the_right_password_is_blocked_while_locked(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123'));
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123'));
+        // Typing the same address differently (case, spaces) shares the same counter.
+        $this->assertThrottled($this->loginAs(' '.strtoupper($user->email).' ', 'Starting123'));
+    }
+
+    public function test_unknown_accounts_are_throttled_identically_so_nothing_reveals_which_emails_exist(): void
+    {
+        $real = $this->user();
+        $ghost = 'nobody-'.Str::lower(Str::random(10)).'@gmail.com';
+        foreach ([$real->email, $ghost] as $email) {
+            for ($i = 0; $i < 5; $i++) {
+                $this->assertWrongLogin($this->loginAs($email, 'Wrong123', $email === $ghost ? '203.0.113.20' : '203.0.113.21'));
+            }
+        }
+        $realMessage = $this->assertThrottled($this->loginAs($real->email, 'Wrong123', '203.0.113.21'));
+        $ghostMessage = $this->assertThrottled($this->loginAs($ghost, 'Wrong123', '203.0.113.20'));
+        // Same wording and same format for a real and a made-up account (seconds may differ by a tick).
+        $this->assertSame(preg_replace('/\d+/', 'N', $realMessage), preg_replace('/\d+/', 'N', $ghostMessage));
+    }
+
+    public function test_one_locked_account_or_ip_does_not_lock_other_users(): void
+    {
+        $alice = $this->user();
+        $bob = $this->user();
+        for ($i = 0; $i < 6; $i++) {
+            $this->loginAs($alice->email, 'Wrong123', '203.0.113.30');
+        }
+        $this->assertThrottled($this->loginAs($alice->email, 'Starting123', '203.0.113.30'));
+
+        // A different account from the same IP, and the same account from another IP, are unaffected.
+        $this->loginAs($bob->email, 'Starting123', '203.0.113.30')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($bob);
+        $this->post('/logout');
+        $this->loginAs($alice->email, 'Starting123', '203.0.113.31')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($alice);
+    }
+
+    public function test_successful_login_clears_the_failure_count_and_keeps_session_behaviour(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+        $this->withSession(['probe' => 'x']);
+        $oldId = session()->getId();
+        $this->loginAs($user->email, 'Starting123')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotSame($oldId, session()->getId());
+        $this->post('/logout')->assertRedirect('/login');
+        // The counter restarted: four more failures are still plain "wrong password", not throttled.
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+    }
+
+    public function test_login_works_again_after_the_retry_window(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 6; $i++) {
+            $this->loginAs($user->email, 'Wrong123');
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123'));
+        $this->assertLessThanOrEqual(60, (int) $this->loginAs($user->email, 'Starting123')->headers->get('Retry-After'));
+
+        $this->travel(61)->seconds();
+        $this->loginAs($user->email, 'Starting123')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_one_ip_spraying_many_emails_is_throttled_but_other_ips_are_not(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', '203.0.113.40'));
+        }
+        $this->assertThrottled($this->loginAs('fresh-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', '203.0.113.40'));
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', '203.0.113.40'));
+        $this->loginAs($user->email, 'Starting123', '203.0.113.41')->assertRedirect('/rep');
+    }
+
+    public function test_throttled_visitor_sees_the_retry_message_on_the_login_page_and_it_is_shown_once(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($user->email, 'Wrong123');
+        }
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])->followingRedirects()->from('/login')
+            ->post('/login', ['email' => $user->email, 'password' => 'Wrong123'])
+            ->assertOk()->assertSee('Too many login attempts. Please try again in')->assertSee('name="password"', false);
+        $this->get('/login')->assertOk()->assertDontSee('Too many login attempts');
+    }
+
     public function test_disabled_session_and_onboarding_gates(): void
     {
         $user = $this->user('rep', ['is_active' => false]);
