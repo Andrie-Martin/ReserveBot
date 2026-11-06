@@ -83,7 +83,7 @@ Branch `feat/frontend-design-05-lab-operations`, stacked on `feat/frontend-desig
 | Part | Commit | Summary |
 |---|---|---|
 | 05A | `e9e4f2b` | `public/css/operations.css` (new, `.rb-ops`), staff-action and disclosure styles in `booking.css`, staff dashboard on the `/rep` structure (`dashboard.css` now loads for all roles), wrappers/classes in `today/index`, `requests/index`, `home` (non-rep branch). Updated the stale "staff dashboard markup unchanged" guard in `availability-browser.cjs`. |
-| 05B | see `git log` | Verification tooling: `ops-runtime.php`, `render-ops.php`, `ops-browser.cjs` (28 database-free states: Today, Requests, staff actions with validation errors, long names, late/overdue) |
+| 05B | `d1d9934` | Verification tooling: `ops-runtime.php`, `render-ops.php`, `ops-browser.cjs` (28 database-free states: Today, Requests, staff actions with validation errors, long names, late/overdue) |
 
 Verification (final tree):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532 PASS.
