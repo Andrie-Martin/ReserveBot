@@ -119,6 +119,6 @@
     </div>
   @endif
 
-  <p class="hint">The buttons work at any time. A booking shows <strong>Late</strong> when it isn’t picked up {{ $staff->graceMinutes }} minutes after it starts, and <strong>Overdue</strong> when items are still out after it ends.@if ($date->gte(today())) For each room’s full day, see <a href="{{ route('rooms', ['date' => $date->toDateString()]) }}#day">Free rooms</a>.@endif</p>
+  <p class="hint">Hand out and no-show open on the booking’s own day and stay open afterwards. A booking shows <strong>Late</strong> when it isn’t picked up {{ $staff->graceMinutes }} minutes after it starts, and <strong>Overdue</strong> when items are still out after it ends.@if ($date->gte(today())) For each room’s full day, see <a href="{{ route('rooms', ['date' => $date->toDateString()]) }}#day">Free rooms</a>.@endif</p>
 </section>
 @endsection

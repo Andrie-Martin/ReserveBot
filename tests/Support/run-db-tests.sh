@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the whole PHPUnit suite INCLUDING the DB-gated HTTP workflow suites (Auth, Availability, Manage), against a
+# Runs the whole PHPUnit suite INCLUDING the DB-gated HTTP workflow suites (Auth, Availability, Manage, StaffBookingGuard), against a
 # brand-new disposable MariaDB container. It never needs your .env, never uses your application database, and fails
 # closed (exits before migrating or running anything) if the connection it would use is not the throwaway one.
 #
@@ -64,7 +64,8 @@ export APP_ENV=testing APP_DEBUG=false APP_KEY="$APP_KEY_VALUE" \
   CACHE_STORE=array SESSION_DRIVER=array MAIL_MAILER=array QUEUE_CONNECTION=sync \
   RB_AVAILABILITY_HTTP_TESTS=1 RB_AVAILABILITY_TEST_DATABASE="$DB" RB_AVAILABILITY_TEST_HOST=127.0.0.1 \
   RB_AUTH_HTTP_TESTS=1 RB_AUTH_TEST_DATABASE="$DB" \
-  RB_MANAGE_HTTP_TESTS=1 RB_MANAGE_TEST_DATABASE="$DB"
+  RB_MANAGE_HTTP_TESTS=1 RB_MANAGE_TEST_DATABASE="$DB" \
+  RB_STAFF_HTTP_TESTS=1 RB_STAFF_TEST_DATABASE="$DB"
 
 # Fail closed: prove the application will talk to this container and nothing else. Prints no credentials.
 PORT_EXPECTED="$PORT" DB_EXPECTED="$DB" php -r '

@@ -12,8 +12,10 @@ use Carbon\CarbonInterface;
  *   Approved --no-show--> No-show
  *   Approved --cancel or move (with a reason)--> Cancelled, or still Approved at a new room/time
  *
- * Hand out, no-show and returned work at any time, so lab staff can handle any situation.
- * The time only decides the warnings: Late (not picked up after the grace period) and Overdue.
+ * Hand out and no-show open on the booking's own day (app timezone) and stay open afterwards, so staff can
+ * handle early, late and missed pick-ups; they are refused for a booking on a future calendar day (QA F-07).
+ * Returned works whenever a booking is in use. The time otherwise only decides the warnings: Late (not
+ * picked up after the grace period) and Overdue.
  */
 class StaffRules
 {
@@ -22,16 +24,22 @@ class StaffRules
         public readonly CarbonImmutable $now,
     ) {}
 
-    /** Any approved booking, at any time */
-    public function canHandOut(string $status): bool
+    /** True when the booking starts on a calendar day after today, in the app's timezone */
+    public function isFutureDay(CarbonInterface $start): bool
     {
-        return $status === 'Confirmed';
+        return CarbonImmutable::instance($start)->setTimezone($this->now->getTimezone())->startOfDay()->gt($this->now->startOfDay());
     }
 
-    /** Any approved booking, at any time */
-    public function canMarkNoShow(string $status): bool
+    /** An approved booking on today's date or earlier (also early the same day, or late) */
+    public function canHandOut(string $status, CarbonInterface $start): bool
     {
-        return $status === 'Confirmed';
+        return $status === 'Confirmed' && ! $this->isFutureDay($start);
+    }
+
+    /** Same rule as hand-out: a booking that hasn't reached its day can't be a no-show yet */
+    public function canMarkNoShow(string $status, CarbonInterface $start): bool
+    {
+        return $status === 'Confirmed' && ! $this->isFutureDay($start);
     }
 
     /** Approved but not picked up yet, and the grace period after the start is over */

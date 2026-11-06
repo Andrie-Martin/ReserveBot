@@ -69,8 +69,8 @@ class TodayController extends Controller
     public function handOut(Request $request, Reservation $reservation): RedirectResponse
     {
         [$user, $staff] = $this->context($request, $reservation);
-        if (! $staff->canHandOut($reservation->status)) {
-            return back()->with('problem', 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be handed out.');
+        if (! $staff->canHandOut($reservation->status, $reservation->start_time)) {
+            return back()->with('problem', $this->notYetOrWrongStatus($staff, $reservation, 'handed out'));
         }
 
         return $this->result($this->desk->setStatus($reservation, 'Confirmed', 'InUse', $user, 'Key and items handed out'),
@@ -98,8 +98,8 @@ class TodayController extends Controller
     public function noShow(Request $request, Reservation $reservation): RedirectResponse
     {
         [$user, $staff] = $this->context($request, $reservation);
-        if (! $staff->canMarkNoShow($reservation->status)) {
-            return back()->with('problem', 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be a no-show.');
+        if (! $staff->canMarkNoShow($reservation->status, $reservation->start_time)) {
+            return back()->with('problem', $this->notYetOrWrongStatus($staff, $reservation, 'a no-show'));
         }
 
         return $this->result($this->desk->setStatus($reservation, 'Confirmed', 'NoShow', $user,
@@ -185,6 +185,16 @@ class TodayController extends Controller
         $config = DepartmentConfig::forDepartment($user->department);
 
         return [$user, new StaffRules($config->no_show_grace_minutes, CarbonImmutable::now())];
+    }
+
+    /** Why hand-out / no-show was refused: the booking's day hasn't come yet, or its status doesn't allow it */
+    private function notYetOrWrongStatus(StaffRules $staff, Reservation $reservation, string $what): string
+    {
+        if ($reservation->status === 'Confirmed' && $staff->isFutureDay($reservation->start_time)) {
+            return 'Booking #'.$reservation->id.' is on '.$reservation->start_time->format('l, F j').', so it can’t be '.$what.' yet.';
+        }
+
+        return 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be '.$what.'.';
     }
 
     private function result(bool $changed, Reservation $reservation, string $message): RedirectResponse
