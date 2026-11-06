@@ -163,7 +163,7 @@ Branch `feat/frontend-design-09-system-pages`, stacked on `feat/frontend-design-
 | Part | Commit | Summary |
 |---|---|---|
 | 09A | `7958a1a` | `public/css/check.css` (new, `.rb-check`) + classes/stylesheets in `classes/check.blade.php`: card with facts strip, state badge, two outlined answer cards (face-to-face keeps the room, online frees it), picked/current states, phone stacking. Form, `answer` values, POST-only submission and copy are unchanged. |
-| 09B | HASH09B | Verification tooling: `classcheck-runtime.php`, `render-classcheck.php`, `classcheck-browser.cjs` (16 database-free states for guest, rep and lab staff: waiting, face-to-face, online, freed, picked, booked, ended, wrong rep, status, problem, long names) |
+| 09B | `9dfb01e` | Verification tooling: `classcheck-runtime.php`, `render-classcheck.php`, `classcheck-browser.cjs` (16 database-free states for guest, rep and lab staff: waiting, face-to-face, online, freed, picked, booked, ended, wrong rep, status, problem, long names) |
 
 Error pages (403, 404, 413, 419, 429, 500): they already share `errors/message.blade.php` with the Phase 02 auth card and `auth.css`, and are covered by the Phase 02/03 suites (`auth-runtime.php`: each code for guest, rep and admin; 413 and 500 hide the user menu). No change was needed or made; the isolated auth suite (1335 assertions) passes on the final tree.
 
