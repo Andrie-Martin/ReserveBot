@@ -167,3 +167,9 @@ These examples reflect the uploaded source snapshot; every mutation/form require
 - Brand now fills the sidebar column of the header row; topbar shows a "Workspace › page title" crumb plus account chip and the real logout form. Role card (role label only), refined nav/count badge, scoped header avatar, gold masthead separator. Mobile architecture and short-viewport fallback unchanged.
 - Verified: isolated layout (279), foundations (63), auth (1318), availability (2137) checks PASS in a throwaway container with the working tree mounted read-only; fixture screenshots at 1438×638, 390×844, 320×640 (no horizontal overflow). NOT RUN: authenticated pages on the live app, PHPUnit (`artisan test` is absent in the image).
 - Open: department line in role card (needs a loaded relation; the layout harness forbids extra queries), masthead wording ("and Architecture"?), tablet rail intentionally excluded.
+
+## Phase 03A checkpoint — Representative dashboard (awaiting visual review)
+- Changed: `resources/views/home/_representative.blade.php`, `public/css/dashboard.css`. `home/_meeting.blade.php`, `classes/_answer.blade.php`, controllers and routes unchanged.
+- Added a role kicker, a banner carrying the existing Laravel `$intro` text, icon action tiles that keep the exact link text, card-header dividers, and grid-based meeting rows (date over class; status and the shared answer form on the right).
+- Verified on fixture exports from the working tree: isolated checks (279/63/1335/2137), availability-browser (parity vs pre-change baseline), task-ux, visual-refinement (before=after export; its HTML-parity stage is not applicable to an intentional markup change), shell-navigation, layout, auth browser suites; 696-stop keyboard sweep and 200% text sweep over 8 home states x 4 viewports. NOT RUN: live app, PHPUnit, real class-answer submissions.
+- Next: Phase 03B (Free Rooms) only after review.

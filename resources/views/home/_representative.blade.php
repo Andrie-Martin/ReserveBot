@@ -2,23 +2,31 @@
 @use('App\Support\TimeSlots')
 <div class="rb-dashboard rb-ui">
 <header class="rb-dashboard__intro">
+  <p class="rb-dashboard__kicker">{{ $user->roleLabel() }}</p>
   <h1>Welcome, {{ $user->name }}</h1>
   <p class="muted">
     {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
   </p>
-  <p>{{ $intro }}</p>
 
   @if ($stat)
     <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
   @endif
 
 </header>
+<div class="rb-dashboard__banner">
+  <p class="rb-dashboard__banner-kicker">Your workspace</p>
+  <p class="rb-dashboard__banner-text">{{ $intro }}</p>
+</div>
   @if (! empty($ready))
     <x-ui.card class="rb-dashboard__shortcuts">
     <h2>Ready to use</h2>
     <div class="rb-dashboard__links">
       @foreach ($ready as $link)
-        <x-ui.link-button variant="secondary" :href="$link['url']">{{ $link['label'] }} →</x-ui.link-button>
+        @php $icon = $link['url'] === route('book') ? 'book' : ($link['url'] === route('bookings.mine') ? 'bookings' : 'rooms'); @endphp
+        <x-ui.link-button variant="secondary" :href="$link['url']" class="rb-dashboard__action">
+          <span class="rb-dashboard__action-icon"><x-ui.icon :name="$icon" /></span>
+          <span class="rb-dashboard__action-label">{{ $link['label'] }}</span> <span class="rb-dashboard__action-arrow" aria-hidden="true">→</span>
+        </x-ui.link-button>
       @endforeach
     </div>
     </x-ui.card>
