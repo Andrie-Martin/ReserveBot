@@ -1,0 +1,92 @@
+/* Phase 06: management screens (accounts now; rooms, equipment, rules and timetable reuse it). Used together with
+   booking.css, whose intro, buttons, messages, panels and badges these pages share. Page-scoped on .rb-manage;
+   presentation only. The role-based .for-rep / .for-staff switching lives in style.css and is not redefined here. */
+.rb-manage .back { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); }
+.rb-manage .back a, .rb-manage .acct-edit a, .rb-manage .mlist a { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+.rb-manage .manage-card > h2, .rb-manage .rb-booking__panel > h2 { margin-top: 0; }
+.rb-manage .rb-booking__panel > h2 + * { margin-top: 0; }
+.rb-manage .muted.small { margin: var(--rb-space-1) 0 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+
+.rb-manage { min-width: 0; max-width: 100%; }
+.rb-manage :is(p, h2, li, label, legend) { overflow-wrap: anywhere; }
+.rb-manage .rb-booking__panel, .rb-manage .danger-box { min-width: 0; }
+.rb-manage .acct-head { max-width: 100%; }
+.rb-manage .acct-head > div { flex: 1 1 12rem; }
+.rb-manage .acct-head .muted.small { overflow-wrap: anywhere; }
+.rb-manage .mform label.check input[type=radio], .rb-manage .mform .role-pick input[type=radio] { accent-color: var(--rb-color-maroon); }
+
+/* Forms. */
+.rb-manage .mform { display: grid; gap: var(--rb-space-4); margin: 0; min-width: 0; }
+.rb-manage .mform > * { margin: 0; min-width: 0; }
+.rb-manage .mform :is(input:not([type=checkbox], [type=radio], [type=hidden]), select, textarea) { display: block; width: 100%; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); }
+.rb-manage .mform :is(input, select, textarea):focus { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: var(--rb-space-4); margin: 0; }
+.rb-manage .mgrid.one { grid-template-columns: minmax(0, 24rem); }
+.rb-manage .mgrid > div { min-width: 0; }
+.rb-manage label.check { display: flex; align-items: center; gap: var(--rb-space-2); margin: 0; font-size: var(--rb-text-small); font-weight: var(--rb-weight-medium); }
+.rb-manage label.check input { flex: none; width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--rb-color-maroon); }
+.rb-manage .role-pick { display: flex; flex-wrap: wrap; gap: var(--rb-space-2) var(--rb-space-6); margin: 0; padding: 0; border: 0; }
+.rb-manage .role-pick legend { width: 100%; }
+.rb-manage .inline-form { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; }
+.rb-manage .mform .inline-form input { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
+.rb-manage button.btn-small, .rb-manage button.btn-danger { display: inline-flex; align-items: center; justify-content: center; width: auto; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-color-maroon); border-radius: var(--rb-radius-control); background: var(--rb-color-maroon); color: var(--rb-color-white); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; white-space: nowrap; }
+.rb-manage button.btn-small:hover { background: var(--rb-color-deep); border-color: var(--rb-color-deep); }
+.rb-manage .mform button.btn-small { justify-self: start; }
+.rb-manage button.btn-danger { border-color: var(--rb-danger-text); background: var(--rb-danger-text); }
+.rb-manage button.btn-danger:hover { filter: brightness(.9); }
+.rb-manage :is(button.btn-small, button.btn-danger, .add-box > summary):focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .nowrap { white-space: nowrap; }
+@media (max-width: 40rem) { .rb-manage .nowrap { white-space: normal; overflow-wrap: anywhere; } }
+
+/* "+ Add" disclosure. */
+.rb-manage .add-box { margin: 0; }
+.rb-manage .add-box > summary, .rb-manage .add-box[open] > summary { display: inline-flex; width: fit-content; max-width: 100%; padding: var(--rb-space-2) var(--rb-space-4); border: 1px dashed var(--rb-color-maroon); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-bold); }
+.rb-manage .add-box[open] > summary { border-style: solid; background: var(--rb-surface-active); }
+.rb-manage .add-box > summary::before { display: none; }
+.rb-manage .add-box form { margin-top: var(--rb-space-2); padding: 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
+
+/* Tables and chips. */
+.rb-manage .mtable { display: table; width: 100%; margin: 0; border: 0; border-radius: 0; border-collapse: collapse; }
+.rb-manage .mtable th { padding: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); background: var(--rb-surface-canvas); font-size: .75rem; font-weight: var(--rb-weight-bold); text-align: left; color: var(--rb-text-secondary); }
+.rb-manage .mtable td { padding: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); vertical-align: middle; font-size: var(--rb-text-small); }
+.rb-manage .mtable tbody tr:last-child td { border-bottom: 0; }
+.rb-manage .mtable tr.off td { background: transparent; color: var(--rb-text-secondary); }
+.rb-manage .acct-name { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.rb-manage .acct-name > span { min-width: 0; }
+.rb-manage .acct-name strong { font-weight: var(--rb-weight-semibold); overflow-wrap: anywhere; }
+.rb-manage .acct-email { display: block; font-size: .8125rem; color: var(--rb-text-secondary); overflow-wrap: anywhere; }
+.rb-manage .acct-block, .rb-manage td.hide-sm { white-space: nowrap; }
+.rb-manage .acct-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1); }
+.rb-manage td.acct-status { display: table-cell; }
+.rb-manage td.acct-status > * { margin: 0 var(--rb-space-1) var(--rb-space-1) 0; }
+.rb-manage .acct-edit { white-space: nowrap; text-align: right; }
+.rb-manage :is(.tag-ok, .tag-soft, .tag-warn, .tag-shared) { display: inline-flex; align-items: center; margin: 0; padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); }
+.rb-manage .tag-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
+.rb-manage .tag-soft { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
+.rb-manage .tag-shared { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
+.rb-manage .avatar { flex: none; border-radius: var(--rb-radius-control); background: var(--rb-surface-active); }
+.rb-manage .avatar-none { color: var(--rb-color-maroon); }
+
+/* Account detail. */
+.rb-manage .acct-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-4); margin: 0; }
+.rb-manage .acct-head > div { min-width: 0; }
+.rb-manage .acct-head .edit-title { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.rb-manage .acct-head .acct-status { margin-top: var(--rb-space-2); }
+.rb-manage .mlist { margin: 0; padding: 0; border: 0; border-radius: 0; list-style: none; overflow: visible; }
+.rb-manage .mlist li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1) var(--rb-space-4); margin: 0; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: var(--rb-text-small); }
+.rb-manage .mlist li:first-child { border-top: 0; }
+.rb-manage .mlist-when { min-width: 0; font-weight: var(--rb-weight-semibold); }
+.rb-manage .mlist-what { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.rb-manage .danger-box { margin: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid color-mix(in srgb, var(--rb-danger-text) 35%, var(--rb-surface-panel)); border-radius: var(--rb-radius-card); background: color-mix(in srgb, var(--rb-danger-bg) 40%, var(--rb-surface-panel)); }
+.rb-manage .danger-box h2 { margin: 0 0 var(--rb-space-2); font-size: 1rem; letter-spacing: -.02em; }
+.rb-manage .danger-box .hint { margin: 0 0 var(--rb-space-4); }
+.rb-manage .danger-box form { display: block; margin: 0; }
+.rb-manage .notice code { font-size: .8125rem; overflow-wrap: anywhere; }
+
+@media (max-width: 40rem) {
+  .rb-manage .add-box form { padding: var(--rb-space-4); }
+  .rb-manage td.hide-sm, .rb-manage th.hide-sm { display: none; }
+  .rb-manage .mtable th, .rb-manage .mtable td { padding: var(--rb-space-2) var(--rb-space-1); }
+  .rb-manage .mform .inline-form input { flex-basis: 100%; }
+  .rb-manage button.btn-small, .rb-manage button.btn-danger { max-width: 100%; white-space: normal; }
+}

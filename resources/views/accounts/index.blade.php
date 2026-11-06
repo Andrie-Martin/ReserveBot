@@ -4,10 +4,18 @@
 
 @section('title', 'Accounts')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ $admin->roleLabel() }}</p>
   <h1>Accounts</h1>
   <p class="muted">Everyone in {{ $admin->department->name }} who can log in. You make and manage the block rep and lab staff accounts; each person picks their own password the first time they log in.</p>
+  </header>
 
   @if (session('status'))
     <p class="success" role="status">{{ session('status') }}</p>
@@ -19,6 +27,7 @@
     <p class="notice">Emails aren’t sent yet: the site writes them to <code>storage/logs/laravel.log</code> instead (MAIL_MAILER=log). Set up Gmail to really send them: see the README, “Email”.</p>
   @endunless
 
+  <div class="rb-booking__panel">
   <details class="add-box" @if ($errors->getBag('add')->any()) open @endif>
     <summary>+ Add an account</summary>
     <form method="post" action="{{ route('accounts.store') }}" class="mform acct-form">
@@ -36,8 +45,10 @@
       <p class="hint">We email them a link to connect their email. Block reps can book once it’s connected.</p>
     </form>
   </details>
+  </div>
 
   @foreach ($groups as $title => $people)
+    <div class="rb-booking__panel">
     <h2>{{ $title }} <span class="count">{{ $people->count() }}</span></h2>
     @if ($people->isEmpty())
       <p class="empty">None yet.</p>
@@ -95,6 +106,7 @@
         </tbody>
       </table>
     @endif
+    </div>
   @endforeach
 </section>
 @endsection
