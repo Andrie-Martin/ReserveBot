@@ -3,6 +3,10 @@
 
 @section('title', 'Booking #'.$reservation->id)
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+@endpush
+
 @section('content')
 @php
   $start = $reservation->start_time;
@@ -11,7 +15,7 @@
   $booker = $reservation->user;
   $rejectErrors = $errors->getBag('reject'.$reservation->id);
 @endphp
-<section class="card booking-card">
+<section class="card booking-card rb-booking rb-ui">
   @if (session('status'))
     <p class="success" role="status">{{ session('status') }}</p>
   @endif
@@ -19,6 +23,7 @@
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
+  <div class="rb-booking__panel">
   <div class="booking-head">
     <div>
       <p class="eyebrow">Booking #{{ $reservation->id }}</p>
@@ -72,6 +77,7 @@
       <dd>{{ $reservation->status_reason }}</dd>
     @endif
   </dl>
+  </div>
 
   {{-- Lab staff and admins: decide on a request, as it is --}}
   @if ($canReview)
@@ -199,6 +205,7 @@
 
   {{-- Every change lab staff or an admin made, with their reasons (the rep sees this too) --}}
   @if ($history->isNotEmpty())
+    <div class="rb-booking__panel">
     <h2 class="history-title">History</h2>
     <ul class="history">
       @foreach ($history as $log)
@@ -208,6 +215,7 @@
         </li>
       @endforeach
     </ul>
+    </div>
   @endif
 
   <p class="actions">
