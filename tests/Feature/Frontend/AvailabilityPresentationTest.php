@@ -34,4 +34,14 @@ final class AvailabilityPresentationTest extends TestCase
         }
         $this->assertMatchesRegularExpression('/\.rb-dashboard__action\s*\{[^}]*flex-wrap:\s*wrap/', $css);
     }
+
+    /** QA F-04: internal roadmap copy must not be rendered to users. */
+    public function test_home_views_do_not_render_roadmap_copy(): void
+    {
+        $root = dirname(__DIR__, 3).'/resources/views';
+        foreach (['/home.blade.php', '/home/_representative.blade.php', '/home/_meeting.blade.php'] as $view) {
+            $this->assertStringNotContainsString('next phases', file_get_contents($root.$view), $view);
+            $this->assertStringNotContainsString('comingNext', file_get_contents($root.$view), $view);
+        }
+    }
 }

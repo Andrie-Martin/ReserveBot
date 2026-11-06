@@ -101,16 +101,6 @@
     </x-ui.card>
   @endif
 
-  @if (! empty($comingNext))
-    <x-ui.card class="rb-dashboard__next">
-    <h2>Coming in the next phases</h2>
-    <ul>
-      @foreach ($comingNext as $item)
-        <li>{{ $item }}</li>
-      @endforeach
-    </ul>
-    </x-ui.card>
-  @endif
 </section>
 @endif
 @endsection

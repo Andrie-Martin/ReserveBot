@@ -96,8 +96,6 @@
 .card.rb-dashboard--staff { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .rb-dashboard--staff .stat { margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
 .rb-dashboard--staff .stat strong { margin-right: var(--rb-space-1); font-size: var(--rb-text-h2); color: var(--rb-color-maroon); }
-.rb-dashboard__next > h2 { margin-bottom: var(--rb-space-2); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); font-size: 1rem; letter-spacing: -.02em; }
-.rb-dashboard__next ul { margin: 0; padding-left: 1.25rem; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
 
 /* QA F-03: shortcut labels wrap by word. `overflow-wrap: anywhere` let the label shrink to ~0 beside the fixed icon and
    arrow, so enlarged text broke letter by letter. The row now wraps (label drops under the icon when it cannot fit
