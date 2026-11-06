@@ -19,7 +19,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | complete, local, NOT merged |
 | `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
 | `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete, local, NOT merged |
-| `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | in progress, local |
+| `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged |
+| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -154,3 +155,23 @@ Verification (final tree):
 Real defect found by the new contrast guard and fixed in CSS only: the primary "Check and replace" link in the draft header rendered maroon text on a maroon button (a link rule outranked the button rule).
 
 Notes: no live data was touched; draft, check and apply logic come from fixtures only. NOT RUN: PHPUnit, authenticated live app, real upload/replace.
+
+## Phase 09 — Signed class check and the six error pages
+
+Branch `feat/frontend-design-09-system-pages`, stacked on `feat/frontend-design-08-timetable` @ `22c0885`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 09A | `7958a1a` | `public/css/check.css` (new, `.rb-check`) + classes/stylesheets in `classes/check.blade.php`: card with facts strip, state badge, two outlined answer cards (face-to-face keeps the room, online frees it), picked/current states, phone stacking. Form, `answer` values, POST-only submission and copy are unchanged. |
+| 09B | HASH09B | Verification tooling: `classcheck-runtime.php`, `render-classcheck.php`, `classcheck-browser.cjs` (16 database-free states for guest, rep and lab staff: waiting, face-to-face, online, freed, picked, booked, ended, wrong rep, status, problem, long names) |
+
+Error pages (403, 404, 413, 419, 429, 500): they already share `errors/message.blade.php` with the Phase 02 auth card and `auth.css`, and are covered by the Phase 02/03 suites (`auth-runtime.php`: each code for guest, rep and admin; 413 and 500 hide the user menu). No change was needed or made; the isolated auth suite (1335 assertions) passes on the final tree.
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 PASS (answer form only while the class is open, POST only, CSRF, no answering link, status/alert roles).
+- Ordered structural parity vs the pre-change view: 16 documents, 0 mismatches.
+- classcheck-browser: 128 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 (no overflow, no clipped controls); 426 keyboard stops with visible focus; intercepted POSTs carry `answer=f2f` / `answer=online` with the token; ended and booked meetings offer no buttons; GET never answers; form/field/link parity.
+
+Real defects found by the new test and fixed in CSS only: long unbroken course/room/rep names overflowed at 390px; the "Booked as a class session" badge overflowed at 320px with 200% text.
+
+Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
