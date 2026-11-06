@@ -3,6 +3,12 @@
 
 @section('title', 'Check the new timetable')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+@endpush
+
 @section('content')
 @php
   $compare = $check['compare'];
@@ -14,14 +20,18 @@
   $changed = count($compare['changed']);
   $same = count($compare['same']);
 @endphp
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
   <p class="back"><a href="{{ route('manage.timetable') }}">← Timetable</a></p>
+  </header>
 
+  <div class="rb-booking__panel">
   <h2 class="edit-title">Check the new timetable</h2>
   <p class="muted">{{ $draft->sourceLabel() }} · {{ count($draft->rows) }} {{ Str::plural('row', count($draft->rows)) }}. Nothing has changed yet: the timetable in use stays until you press Replace at the bottom.</p>
 
@@ -151,7 +161,10 @@
     @endif
   @endif
 
+  </div>
+
   {{-- 7. The semester, then replace --}}
+  <div class="rb-booking__panel">
   <form method="post" action="{{ route('manage.timetable.apply') }}" class="mform tt-final" id="semester">
     @csrf
     <input type="hidden" name="version" value="{{ $draft->version }}">
@@ -190,5 +203,6 @@
       <p class="tt-other"><a href="{{ route('manage.timetable.draft') }}">Change it on the site</a> · <a href="{{ route('manage.timetable.draft.download') }}">Download it</a> · <a href="{{ route('manage.timetable') }}">Back to Timetable</a></p>
     </div>
   </form>
+  </div>
 </section>
 @endsection

@@ -3,11 +3,22 @@
 
 @section('title', 'Change a row')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
   <p class="back"><a href="{{ $back }}">← New timetable</a></p>
+  </header>
+
+  <div class="rb-booking__panel">
 
   <h2 class="edit-title">{{ $row['type'] === 'Blocked' ? 'Time the room isn’t available' : ($row['code'] ?? 'A class') }}@if ($row['block']) · {{ $row['block'] }}@endif</h2>
   <p class="muted small">{{ $row['day'] ?? '?' }} {{ TimetableRules::span($row) }} · {{ $row['room'] ?? 'no room' }}@if ($row['line']) · row {{ $row['line'] }} of the file @endif · in the new timetable (not in use yet)</p>
@@ -38,5 +49,6 @@
   </form>
 
   @include('manage._timetable_datalists')
+  </div>
 </section>
 @endsection

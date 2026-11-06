@@ -2,9 +2,17 @@
 
 @section('title', 'Timetable')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+@endpush
+
 @section('content')
 @php $inUse = $counts['classes'] + $counts['blocked']; @endphp
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
   @if (session('problem'))
@@ -12,6 +20,7 @@
   @endif
 
   <p class="muted">{{ $department->name }}’s timetable: the classes and blocked times that hold rooms each week. When a new semester starts, or classes move, make a new timetable here. It replaces this one as soon as you save it, and this one is kept as a backup.</p>
+  </header>
 
   {{-- The timetable in use --}}
   <div class="tt-now">
@@ -73,6 +82,7 @@
   @endif
 
   {{-- Two ways to make a new one --}}
+  <div class="rb-booking__panel">
   <h2>{{ $draft ? 'Or start over' : 'Make a new timetable' }}</h2>
   <div class="tt-ways">
     <section class="tt-way">
@@ -109,8 +119,10 @@
   @unless ($canXlsx)
     <p class="notice tt-zip">This computer’s PHP can’t open or make Excel (.xlsx) files yet: its zip extension is off. Downloads are CSV files for now (Excel opens them too), and you can upload CSV files. To turn .xlsx on, see “Timetable” in the README.</p>
   @endunless
+  </div>
 
   {{-- Backups --}}
+  <div class="rb-booking__panel">
   <h2 id="backups">Backups</h2>
   <p class="muted">Each time the timetable is replaced, the one it replaced is saved here. Bringing one back works like a new timetable: you see what changes first, and the timetable in use is saved as a backup too.</p>
   @if ($backups->isEmpty())
@@ -146,5 +158,6 @@
       @endforeach
     </ul>
   @endif
+  </div>
 </section>
 @endsection
