@@ -20,7 +20,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
 | `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete, local, NOT merged |
 | `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged |
-| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | in progress, local |
+| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | complete, local, NOT merged |
+| `feat/frontend-design-10-integration-qa` | `feat/frontend-design-09-system-pages` @ `c30191b` (stacked; contains Phases 03-09) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -175,3 +176,18 @@ Verification (final tree):
 Real defects found by the new test and fixed in CSS only: long unbroken course/room/rep names overflowed at 390px; the "Booked as a class session" badge overflowed at 320px with 200% text.
 
 Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
+
+## Phase 10 — Integration visual consistency and QA (no new feature scope)
+
+Branch `feat/frontend-design-10-integration-qa`, stacked on `feat/frontend-design-09-system-pages` @ `c30191b`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 10A | HASH10A | One CSS fix found by the cross-screen colour scan (plain inline links and `.req-link` on booking-system pages were still legacy violet), `tests/Support/legacy-colour-scan.cjs`, `docs/frontend/QA_HANDOFF.md` (human QA checklist, limitations, how to re-run) |
+
+Verification on the final tree (fixtures re-exported from the working tree in a throwaway container):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 PASS.
+- Browser suites PASS: task-ux, timeline, rooms-correction, layout, auth, shell-navigation, booking, operations, accounts, manage, timetable, class check. foundations-browser PASS against the pre-Phase-04 layout export and reports the documented intentional difference against the current one.
+- Colour scan: no legacy violet remains on any real screen (accounts, manage, timetable, class check, booking, operations, availability, auth, timeline fixtures).
+
+Real defect found and fixed: violet "Details/Cancel or move…" links on Today and the empty-state links on booking pages.
