@@ -98,14 +98,14 @@ Deliberate exceptions / notes:
 - Admin-specific dashboard content (S10) shares this structure; its role-specific checks belong to Phase 06.
 - NOT RUN: PHPUnit, authenticated live app, real approvals/hand-outs.
 
-## Phase 06 — Admin accounts (list S?? and edit)
+## Phase 06 — Admin accounts (list and edit)
 
 Branch `feat/frontend-design-06-admin-accounts`, stacked on `feat/frontend-design-05-lab-operations` @ `204a337`.
 
 | Part | Commit | Summary |
 |---|---|---|
 | 06A | `7885366` | `public/css/manage.css` (new, `.rb-manage`, reused by Phases 07-08) + wrappers/classes/kicker in `accounts/index` and `accounts/edit`. No form, field, link, label or the delete confirmation changed; the `for-rep`/`for-staff` switching in `style.css` is untouched. |
-| 06B | see `git log` | Verification tooling: `accounts-runtime.php`, `render-accounts.php`, `accounts-browser.cjs` (11 database-free states) and this log |
+| 06B | `50dfd37` | Verification tooling: `accounts-runtime.php`, `render-accounts.php`, `accounts-browser.cjs` (11 database-free states) and this log |
 
 Verification (final tree):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288 PASS (password never rendered back, unique ids, labelled controls, CSRF, delete confirmation).
