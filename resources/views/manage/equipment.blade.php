@@ -2,16 +2,24 @@
 
 @section('title', 'Manage equipment')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
 
   <p class="muted">Stock is how many the department has. “Most per booking” is the most one booking can ask for. An item that’s off can’t be booked; bookings already made keep it.</p>
+  </header>
 
   @foreach ($categories as $category)
     @php $renameBag = $errors->getBag('category'.$category->id); @endphp
-    <section class="mcat">
+    <section class="mcat rb-booking__panel">
       <div class="mcat-head">
         <h2>{{ $category->name }} <span class="count">{{ $category->equipment->count() }}</span></h2>
         <details class="rename" @if ($renameBag->any()) open @endif>
@@ -49,7 +57,7 @@
     </section>
   @endforeach
 
-  <div class="add-row">
+  <div class="add-row rb-booking__panel">
     <details class="add-box" @if ($errors->getBag('item')->any()) open @endif>
       <summary>+ Add an item</summary>
       <form method="post" action="{{ route('manage.equipment.store') }}" class="mform">

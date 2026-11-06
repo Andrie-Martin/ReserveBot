@@ -3,18 +3,27 @@
 
 @section('title', 'Booking rules')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
 @php
   $bag = $errors->getBag('rules');
   $days = old('open_days', $config->openDays());
   $value = fn ($field, $current) => old($field, $current);
 @endphp
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
 
   <p class="muted">{{ auth()->user()->department->name }}’s booking rules. New bookings follow them as soon as you save; bookings already made stay as they are.</p>
+  </header>
 
+  <div class="rb-booking__panel">
   <form method="post" action="{{ route('manage.rules.update') }}" class="mform rules-form">
     @csrf
     @method('PUT')
@@ -95,7 +104,9 @@
 
     <button type="submit" class="btn-small">Save rules</button>
   </form>
+  </div>
 
+  <div class="rb-booking__panel">
   <h2>Semester dates</h2>
   <p class="muted">Shared by every department. Classes on the timetable only count between these dates.</p>
   @foreach ($terms as $term)
@@ -118,5 +129,6 @@
       <button type="submit" class="btn-small">Save dates</button>
     </form>
   @endforeach
+  </div>
 </section>
 @endsection

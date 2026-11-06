@@ -3,12 +3,22 @@
 
 @section('title', 'Edit '.$item->name)
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
 
   <p class="back"><a href="{{ route('manage.equipment') }}">‹ All equipment</a></p>
+  </header>
+
+  <div class="rb-booking__panel">
   <h2 class="edit-title">{{ $item->name }}</h2>
 
   <form method="post" action="{{ route('manage.equipment.update', $item) }}" class="mform">
@@ -40,7 +50,9 @@
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $item->is_active)> Can be booked <span class="optional">(untick to turn the item off)</span></label>
     <button type="submit" class="btn-small">Save</button>
   </form>
+  </div>
 
+  <div class="rb-booking__panel">
   <h2>Upcoming bookings with this item <span class="count">{{ $upcoming->count() }}</span></h2>
   @if ($over)
     <p class="error">{{ count($over) }} {{ count($over) === 1 ? 'booking asks' : 'bookings ask' }} for more {{ $item->name }} than you have ({{ $item->total_qty }}) at the same time. Open {{ count($over) === 1 ? 'it' : 'each one' }} to move or cancel it, or raise the stock.</p>
@@ -60,5 +72,6 @@
       @endforeach
     </ul>
   @endif
+  </div>
 </section>
 @endsection

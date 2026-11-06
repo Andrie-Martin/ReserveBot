@@ -3,12 +3,22 @@
 
 @section('title', 'Edit '.$room->name)
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
 
   <p class="back"><a href="{{ route('manage.rooms') }}">‹ All rooms</a></p>
+  </header>
+
+  <div class="rb-booking__panel">
   <h2 class="edit-title">{{ $room->name }}</h2>
   @if ($sharedWith->isNotEmpty())
     <p class="notice">Shared with {{ $sharedWith->join(', ', ' and ') }}: changes here show for them too.</p>
@@ -39,7 +49,9 @@
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $room->is_active)> Can be booked <span class="optional">(untick to turn the room off)</span></label>
     <button type="submit" class="btn-small">Save</button>
   </form>
+  </div>
 
+  <div class="rb-booking__panel">
   <h2>Upcoming bookings in this room <span class="count">{{ $upcoming->count() }}</span></h2>
   @if (! $room->is_active && $upcoming->isNotEmpty())
     <p class="error">This room is off, but these bookings still use it. Open each one to move or cancel it.</p>
@@ -58,5 +70,6 @@
       @endforeach
     </ul>
   @endif
+  </div>
 </section>
 @endsection

@@ -2,14 +2,23 @@
 
 @section('title', 'Manage rooms')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Manage</h1>
   @include('manage._tabs')
 
   <p class="muted">{{ $department->name }}’s rooms. Rooms are shared between departments, so a change shows for every department that uses the room. A room that’s off can’t be booked; bookings already made keep it.</p>
+  </header>
 
-  <table class="mtable">
+  <div class="rb-booking__panel">
+  <table class="mtable rooms-table">
     <thead>
       <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr>
     </thead>
@@ -26,7 +35,9 @@
       @endforeach
     </tbody>
   </table>
+  </div>
 
+  <div class="rb-booking__panel">
   <details class="add-box" @if ($errors->getBag('add')->any()) open @endif>
     <summary>+ Add a room</summary>
     <form method="post" action="{{ route('manage.rooms.store') }}" class="mform">
@@ -54,5 +65,6 @@
       <p class="hint">If another department already has a room with this name, it’s shared with you instead of copied.</p>
     </form>
   </details>
+  </div>
 </section>
 @endsection
