@@ -1,0 +1,84 @@
+/* Phase 05: lab operations (Today, Requests). Used together with booking.css, whose buttons, messages, panels, badges
+   and staff-action styles these pages share. Page-scoped on .rb-ops; presentation only. */
+.rb-ops .avatar { flex: none; border-radius: var(--rb-radius-control); background: var(--rb-surface-active); }
+.rb-ops .avatar-none { color: var(--rb-color-maroon); }
+
+/* Today: header, day navigation and summary chips. */
+.rb-ops .today-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); }
+.rb-ops .today-head > div:first-child { min-width: 0; }
+.rb-ops .today-head h1 { margin: 0 0 var(--rb-space-1); font-size: var(--rb-text-h2); }
+@media (min-width: 40.001rem) { .rb-ops .today-head h1 { font-size: 1.8125rem; } }
+.rb-ops .today-head .muted { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+.rb-ops .daynav { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
+.rb-ops .today-stats { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; padding: 0; list-style: none; }
+.rb-ops .today-stats li { margin: 0; padding: var(--rb-space-1) .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-ops .today-stats strong { color: var(--rb-text-primary); }
+
+/* One booking card (Today). */
+.rb-ops .tcard { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) auto; gap: var(--rb-space-2) var(--rb-space-4); align-items: start; margin: var(--rb-space-2) 0 0; padding: .75rem var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-left: 3px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
+.rb-ops .tcard.st-confirmed { border-left-color: var(--rb-color-maroon); }
+.rb-ops .tcard.st-pending { border-left-color: var(--rb-warning-text); }
+.rb-ops .tcard.st-inuse { border-left-color: var(--rb-success-text); }
+.rb-ops .tcard.alert { border-left-color: var(--rb-danger-text); background: color-mix(in srgb, var(--rb-danger-bg) 35%, var(--rb-surface-panel)); }
+.rb-ops .tcard.st-completed, .rb-ops .tcard.st-noshow, .rb-ops .tcard.st-cancelled, .rb-ops .tcard.st-rejected { background: var(--rb-surface-canvas); }
+.rb-ops .tcard-time { display: grid; justify-items: start; gap: var(--rb-space-1); font-size: var(--rb-text-small); }
+.rb-ops .tcard-main { min-width: 0; overflow-wrap: anywhere; }
+.rb-ops .tcard-main p { margin: 0; }
+.rb-ops .tcard-title { font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-ops .tcard-who { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); margin-top: var(--rb-space-1); font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-ops .tcard-reason, .rb-ops .tcard-items, .rb-ops .tcard-note { margin-top: var(--rb-space-1); font-size: .8125rem; }
+.rb-ops .tcard-items, .rb-ops .tcard-note { color: var(--rb-text-secondary); }
+.rb-ops .tcard-side { display: grid; justify-items: end; gap: var(--rb-space-2); min-width: 0; max-width: 100%; }
+
+/* Today: the department's classes. */
+.rb-ops details.done-list { margin: 0; padding: 0; border: 0; }
+.rb-ops details.done-list > summary { flex-wrap: wrap; align-items: center; gap: var(--rb-space-1) var(--rb-space-2); }
+.rb-ops details.done-list > summary .muted { margin: 0; line-height: var(--rb-leading-body); font-weight: var(--rb-weight-regular); font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-ops .mtable { width: 100%; border-collapse: collapse; margin: var(--rb-space-2) 0; font-size: var(--rb-text-small); }
+.rb-ops .mtable th { padding: var(--rb-space-2) var(--rb-space-2); background: var(--rb-surface-canvas); border-bottom: 1px solid var(--rb-border-warm); font-size: .75rem; font-weight: var(--rb-weight-bold); text-align: left; color: var(--rb-text-secondary); }
+.rb-ops .mtable td { padding: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); vertical-align: middle; }
+.rb-ops .mtable tr.off td { color: var(--rb-text-secondary); }
+.rb-ops .mtable .nowrap { white-space: nowrap; }
+.rb-ops .st { display: inline-flex; align-items: center; gap: var(--rb-space-1); padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); }
+.rb-ops .st::before { content: ''; width: .3125rem; height: .3125rem; border-radius: 50%; background: currentColor; }
+.rb-ops .st-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
+.rb-ops .st-wait, .rb-ops .st-freed { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
+.rb-ops .answer-buttons { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; }
+.rb-ops .answer-buttons .btn-mini { min-height: var(--rb-control-height); padding: var(--rb-space-2); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; }
+.rb-ops .answer-buttons .btn-mini:hover:not(:disabled) { background: var(--rb-surface-active); }
+.rb-ops .answer-buttons .btn-mini:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-ops .answer-buttons .btn-mini.on:disabled { border-style: dashed; border-color: var(--rb-color-maroon); background: var(--rb-surface-active); color: var(--rb-color-maroon); cursor: default; }
+
+/* Requests. */
+.rb-ops .req { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--rb-space-2) var(--rb-space-4); align-items: start; margin: var(--rb-space-2) 0 0; padding: .75rem var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-left: 3px solid var(--rb-warning-text); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
+.rb-ops .req-main { min-width: 0; overflow-wrap: anywhere; }
+.rb-ops .req-main p { margin: 0; }
+.rb-ops .req-when { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1) var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-ops .req-title { margin-top: var(--rb-space-1); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-ops .req-facts { display: grid; grid-template-columns: minmax(0, 5rem) minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); margin: var(--rb-space-2) 0 0; font-size: .8125rem; }
+.rb-ops .req-facts dt { font-weight: var(--rb-weight-bold); color: var(--rb-text-secondary); }
+.rb-ops .req-facts dd { margin: 0; }
+.rb-ops .req-facts .who-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-ops .req-actions { display: grid; justify-items: end; gap: var(--rb-space-2); min-width: 0; max-width: 100%; }
+.rb-ops .req-actions form { margin: 0; min-width: 0; }
+.rb-ops .req-actions .reject { width: 100%; }
+.rb-ops .req-actions .reject > summary { justify-content: flex-end; }
+.rb-ops .req-actions .reject form { display: grid; gap: var(--rb-space-2); margin-top: var(--rb-space-2); min-width: min(18rem, 100%); }
+.rb-ops .req-actions .reject textarea { display: block; width: 100%; min-height: 5rem; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); }
+.rb-ops .decided { margin: 0; padding: 0; list-style: none; }
+.rb-ops .decided li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1) var(--rb-space-2); margin: 0; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-ops .decided li:first-child { border-top: 0; }
+.rb-ops .decided a { color: var(--rb-text-primary); font-weight: var(--rb-weight-semibold); text-decoration: none; }
+.rb-ops .decided a:hover { color: var(--rb-color-maroon); text-decoration: underline; }
+.rb-ops .decided .muted, .rb-ops .decided-why { font-size: .8125rem; color: var(--rb-text-secondary); }
+
+@media (max-width: 40rem) {
+  .rb-ops .tcard, .rb-ops .req { grid-template-columns: minmax(0, 1fr); }
+  .rb-ops .tcard-side, .rb-ops .req-actions { justify-items: start; }
+  .rb-ops .staff-actions { justify-content: flex-start; }
+  .rb-ops .req-actions .reject > summary { justify-content: flex-start; }
+  .rb-ops .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .rb-ops .mtable, .rb-ops .mtable tbody { display: block; }
+  .rb-ops .mtable tr { display: grid; gap: var(--rb-space-1); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-ops .mtable td { padding: 0; border: 0; }
+}

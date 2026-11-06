@@ -3,10 +3,18 @@
 
 @section('title', 'Requests')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/operations.css') }}?v={{ filemtime(public_path('css/operations.css')) }}">
+@endpush
+
 @section('content')
-<section class="card requests-card">
+<section class="card requests-card rb-booking rb-ops rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Requests</h1>
   <p class="muted">Bookings waiting for approval, soonest first. Approving keeps the room and items for the rep; rejecting frees them. Lab staff and admins can both decide.</p>
+  </header>
 
   @if (session('status'))
     <p class="success" role="status">{{ session('status') }}</p>
@@ -15,6 +23,7 @@
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
+  <div class="rb-booking__panel">
   <h2>Waiting <span class="count">{{ $waiting->count() }}</span></h2>
   @forelse ($waiting as $r)
     @php
@@ -62,8 +71,10 @@
   @empty
     <p class="empty">Nothing is waiting for approval.</p>
   @endforelse
+  </div>
 
   @if ($decided->isNotEmpty())
+    <div class="rb-booking__panel">
     <h2>Recently decided</h2>
     <ul class="decided">
       @foreach ($decided as $r)
@@ -77,6 +88,7 @@
         </li>
       @endforeach
     </ul>
+    </div>
   @endif
 </section>
 @endsection
