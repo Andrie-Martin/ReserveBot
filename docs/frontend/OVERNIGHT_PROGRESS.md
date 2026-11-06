@@ -143,7 +143,7 @@ Branch `feat/frontend-design-08-timetable`, stacked on `feat/frontend-design-07-
 | Part | Commit | Summary |
 |---|---|---|
 | 08A | `749c7f9` | `public/css/timetable.css` (new, `.rb-tt`, loaded after booking.css and manage.css) + wrappers/classes/kicker in `manage/timetable`, `timetable_rows`, `timetable_row`, `timetable_check`. In-use / draft / attention cards, two-ways cards, backups list, day tabs and week picker, row tables (labelled phone layout), week grid, row form, check-and-replace sections. No form, field, link, version field, `formaction` or action URL changed. The shared partials (`_timetable_*`) are untouched. |
-| 08B | HASH08B | Verification tooling: `timetable-runtime.php`, `render-timetable.php`, `timetable-browser.cjs` (34 database-free states: overview empty/in use/draft/problems/clashes/backups/long, in-use day/week/block, draft day/week/fix/warnings/undo/errors/long, row edit class/blocked/problems/errors/long, check ok/problems/mostly/empty/same/bookings/errors/long) |
+| 08B | `1b4c4b8` | Verification tooling: `timetable-runtime.php`, `render-timetable.php`, `timetable-browser.cjs` (34 database-free states: overview empty/in use/draft/problems/clashes/backups/long, in-use day/week/block, draft day/week/fix/warnings/undo/errors/long, row edit class/blocked/problems/errors/long, check ok/problems/mostly/empty/same/bookings/errors/long) |
 
 Verification (final tree):
 - Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692 PASS.
