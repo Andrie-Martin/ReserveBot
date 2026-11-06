@@ -149,8 +149,14 @@
 .rb-availability__event-count[aria-expanded="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }
 
 /* One shared horizontal coordinate system; exact interval text remains visible. */
-/* Paint-only surface: no border/padding alters the shared axis or row geometry. */
-.rb-availability__board { position: relative; max-width: 100%; overflow-x: auto; container-type: inline-size; background: var(--rb-surface-panel); border-radius: var(--rb-radius-card); box-shadow: inset 0 0 0 1px var(--rb-border-panel); }
+/* Paint-only surface: no border/padding alters the shared axis or row geometry. The outer border is a
+   non-interactive overlay (a sticky pseudo-element spanning both grid rows) instead of an inset box-shadow:
+   a shadow paints beneath the opaque sticky room-name cells and the scrolling track, which hid and broke the
+   border. The overlay stays above them, pinned to the visible edge while the board scrolls, and takes no space. */
+.rb-availability__board { position: relative; display: grid; max-width: 100%; overflow-x: auto; container-type: inline-size; background: var(--rb-surface-panel); border-radius: var(--rb-radius-card); }
+.rb-availability__board > .rb-availability__axis { grid-area: 1 / 1; }
+.rb-availability__board > .rb-availability__roomlist { grid-area: 2 / 1; }
+.rb-availability__board::after { content: ''; grid-area: 1 / 1 / 3 / 2; position: sticky; left: 0; z-index: 2; box-sizing: border-box; width: 100cqi; border: 1px solid var(--rb-border-panel); border-radius: var(--rb-radius-card); pointer-events: none; }
 .rb-availability__board:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-availability__axis, .rb-availability__board .rb-availability__room-row { display: grid; grid-template-columns: 11rem minmax(25rem, 1fr) 5rem 7rem; gap: var(--rb-space-2); min-width: 50rem; align-items: center; }
 .rb-availability__axis { padding: var(--rb-space-1) 0; font-size: var(--rb-text-small); }
@@ -188,7 +194,7 @@
 .rb-availability h1 { letter-spacing: -.03em; }
 .rb-availability__cal-intro .rb-availability__muted { margin-top: var(--rb-space-1); }
 .rb-availability .rb-availability__eyebrow { margin: 0 0 var(--rb-space-1); font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .09em; text-transform: uppercase; }
-.rb-availability__day-card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); font-size: 1.3125rem; letter-spacing: -.02em; }
+.rb-availability__day-card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); font-size: 1.3125rem; letter-spacing: -.02em; text-wrap: balance; }
 .rb-availability__finder-label { font-size: var(--rb-text-small); }
 .rb-availability__results, .rb-availability__error, .rb-availability__notice { padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid currentColor; font-size: var(--rb-text-small); }
 .rb-availability__notice { border-color: var(--rb-border-warm); }
@@ -200,3 +206,47 @@
 .rb-availability .rb-availability__cal-title, .rb-availability__calendar-details > h2, .rb-availability__dayplan > h3 { font-size: var(--rb-text-h3); letter-spacing: -.02em; }
 .rb-availability__calendar-details > h2, .rb-availability__dayplan > h3 { margin: 0 0 var(--rb-space-4); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); }
 .rb-availability__event-prompt { margin: 0; padding: var(--rb-space-6) var(--rb-space-2); text-align: center; color: var(--rb-text-muted); }
+
+/* Phase 03D: visual fidelity pass against the approved prototype (measured type scale, grouped finder,
+   section header, tiled calendar, empty state, one-line agenda rows). Presentation only: 44px targets,
+   control-border contrast, the shared timeline coordinate system and sticky room labels are unchanged. */
+.rb-availability__cal-intro .rb-availability__muted { font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+@media (min-width: 40.001rem) { .rb-availability h1 { font-size: 1.8125rem; } }
+.rb-availability .rb-availability__day-card { padding: var(--rb-space-4) 1.25rem; }
+.rb-availability a.rb-button, .rb-availability__off { font-size: .8125rem; font-weight: var(--rb-weight-bold); }
+/* Finder: grouped fields with their captions above, compact primary action at the end. */
+.rb-availability .rb-availability__finder { align-items: flex-end; gap: var(--rb-space-2) var(--rb-space-4); padding: .75rem var(--rb-space-4); border-radius: var(--rb-radius-card); }
+.rb-availability__finder-field { display: grid; flex: 1 1 min(11rem, 100%); gap: .375rem; min-width: 0; }
+.rb-availability__finder .rb-availability__finder-label { flex-basis: auto; font-size: .6875rem; font-weight: var(--rb-weight-bold); line-height: 1.2; color: var(--rb-text-primary); }
+.rb-availability__finder-field select { width: 100%; flex: none; font-size: var(--rb-text-small); }
+.rb-availability__finder-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); margin-left: auto; }
+.rb-availability__btn-small { font-size: .8125rem; font-weight: var(--rb-weight-bold); }
+/* Timeline section header: title with its legend, then the board. */
+.rb-availability__section-head { display: grid; gap: .125rem; margin: var(--rb-space-1) 0 var(--rb-space-2); }
+.rb-availability .rb-availability__list-title { margin: 0; }
+.rb-availability__section-head p { margin: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
+.rb-availability__axis > strong:first-child, .rb-availability__axis > div > strong { font-size: var(--rb-text-caption); }
+.rb-availability__board .rb-availability__room-name strong { font-size: var(--rb-text-small); }
+.rb-availability__board .rb-availability__free-chip { font-size: .8125rem; color: var(--rb-success-text); }
+.rb-availability__board .rb-availability__room-row { min-height: 3.25rem; }
+.rb-availability__board .rb-availability__none, .rb-availability__board .rb-availability__matchline, .rb-availability__board .rb-availability__clashline { font-size: .8125rem; }
+/* Calendar: separated rounded day tiles, compact header. The event-count link keeps its 44px target. */
+.rb-availability .rb-availability__cal-title { font-size: 1rem; }
+.rb-availability__calendar { border-collapse: separate; border-spacing: 3px; }
+.rb-availability__calendar td { border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
+.rb-availability .st-past, .rb-availability .st-later, .rb-availability .st-closed, .rb-availability td.rb-availability__out { background: var(--rb-neutral-bg); }
+.rb-availability td.rb-availability__selected { background: var(--rb-surface-active); }
+.rb-availability__calendar th { font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .04em; color: var(--rb-text-secondary); border-radius: var(--rb-radius-control); }
+.rb-availability__cell { min-height: var(--rb-control-height); gap: .125rem; padding: .375rem var(--rb-space-2); }
+.rb-availability__daynum { font-size: .8125rem; font-weight: var(--rb-weight-bold); }
+.rb-availability__event-count { align-items: flex-start; padding: .125rem var(--rb-space-2); font-size: .6875rem; }
+/* Event details: centred empty state. */
+.rb-availability__event-prompt { border: 1px dashed var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); padding: var(--rb-space-6) var(--rb-space-4); font-size: var(--rb-text-small); }
+/* Agenda: one line per entry on wide screens (time, title, status, action), wrapping below. */
+.rb-availability__agenda li { align-items: center; gap: var(--rb-space-2) var(--rb-space-4); padding: .75rem 0; }
+.rb-availability__agenda .rb-availability__when { flex: 0 0 auto; min-width: min(9.5rem, 100%); font-size: var(--rb-text-small); white-space: nowrap; }
+.rb-availability__agenda .rb-availability__what { flex: 1 1 14rem; font-size: var(--rb-text-small); }
+@media (max-width: 40rem) {
+  .rb-availability__finder-field { flex-basis: 100%; }
+  .rb-availability__agenda .rb-availability__when { flex-basis: 100%; white-space: normal; }
+}
