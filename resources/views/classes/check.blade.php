@@ -3,8 +3,13 @@
 
 @section('title', 'Is '.$name.' face-to-face?')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/check.css') }}?v={{ filemtime(public_path('css/check.css')) }}">
+@endpush
+
 @section('content')
-<section class="card narrow check-card">
+<section class="card narrow check-card rb-booking rb-check rb-ui">
   <p class="eyebrow">Face-to-face check</p>
   <h1>{{ $name }}@if ($class->course?->title) <span class="check-title">{{ $class->course->title }}</span>@endif</h1>
   <p class="check-facts">

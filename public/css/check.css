@@ -1,0 +1,32 @@
+/* Phase 09: the signed class-check page that the reminder email buttons open (works without logging in).
+   Page-scoped on .rb-check; used with booking.css for messages and tokens. Presentation only: the answer is still
+   saved only by pressing a button (POST), never by opening the link. */
+.rb-check { --check-info-bg: #DBEAFE; --check-info-text: #1E40AF; }
+.rb-check { min-width: 0; }
+.rb-check :is(p, h1, span, button) { overflow-wrap: anywhere; min-width: 0; }
+.rb-check.card.narrow { max-width: 34rem; margin: var(--rb-space-8) auto; padding: 1.5rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); box-shadow: none; }
+.rb-check .eyebrow { margin: 0; color: var(--rb-color-maroon); font-size: .75rem; font-weight: var(--rb-weight-bold); letter-spacing: .06em; text-transform: uppercase; }
+.rb-check h1 { margin: var(--rb-space-1) 0 0; font-size: 1.625rem; line-height: 1.2; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.rb-check .check-title { display: block; margin-top: var(--rb-space-1); color: var(--rb-text-secondary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-medium); letter-spacing: 0; }
+.rb-check .check-facts { margin: var(--rb-space-4) 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); font-size: var(--rb-text-small); line-height: 1.6; overflow-wrap: anywhere; }
+.rb-check .success, .rb-check .error { margin: 0 0 var(--rb-space-4); }
+.rb-check .check-now { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); margin: 0 0 var(--rb-space-4); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-check .check-now .st { white-space: normal; padding: .125rem var(--rb-space-2); font-size: .75rem; }
+.rb-check .st-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
+.rb-check .st-freed { background: var(--check-info-bg); color: var(--check-info-text); }
+.rb-check .st-wait { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
+.rb-check .check-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); margin: 0 0 var(--rb-space-4); }
+.rb-check .check-choice button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--rb-space-1); width: 100%; min-height: 4.5rem; margin: 0; padding: var(--rb-space-4); border: 2px solid var(--rb-border-control); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: 1rem; font-weight: var(--rb-weight-bold); cursor: pointer; text-align: center; overflow-wrap: anywhere; }
+.rb-check .check-choice button span { color: var(--rb-text-secondary); font-size: .8125rem; font-weight: var(--rb-weight-medium); opacity: 1; }
+.rb-check .check-choice .btn-f2f { border-color: var(--rb-success-text); background: var(--rb-surface-panel); }
+.rb-check .check-choice .btn-online { border-color: var(--check-info-text); background: var(--rb-surface-panel); }
+.rb-check .check-choice .btn-f2f:hover { background: var(--rb-success-bg); }
+.rb-check .check-choice .btn-online:hover { background: var(--check-info-bg); }
+.rb-check .check-choice .current { background: var(--rb-surface-active); }
+.rb-check .check-choice .picked { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-check .check-choice button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-check .hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+@media (max-width: 30rem) {
+  .rb-check.card.narrow { margin: var(--rb-space-4) 0; padding: var(--rb-space-4); }
+  .rb-check .check-choice { grid-template-columns: minmax(0, 1fr); }
+}
