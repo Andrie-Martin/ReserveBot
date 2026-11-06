@@ -89,7 +89,7 @@ final class AvailabilityWorkflowTest extends TestCase
         $this->get('/rep')->assertOk()->assertSee($this->class->course->code)->assertSee('Test instructor')->assertSee(route('rooms'),false)->assertSee(route('book'),false)->assertSee(route('bookings.mine'),false)->assertSee('name="answer"',false);
         $this->rep->update(['section_id'=>null]);
         $this->get('/rep')->assertOk()->assertDontSee('name="answer"',false);
-        foreach(['lab_staff','admin']as$role){$this->signIn($this->user($role));$this->get($role==='admin'?'/admin':'/staff')->assertOk()->assertDontSee('css/dashboard.css',false);}
+        foreach(['lab_staff','admin']as$role){$this->signIn($this->user($role));$this->get($role==='admin'?'/admin':'/staff')->assertOk()->assertSee('css/dashboard.css',false)->assertSee('rb-dashboard__shortcuts',false)->assertDontSee('Coming in the next phases');}
     }
 
     public function test_date_fallback_closed_and_outside_term_states(): void

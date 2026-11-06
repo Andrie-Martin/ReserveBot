@@ -4,6 +4,12 @@ use PHPUnit\Framework\TestCase;
 require_once dirname(__DIR__,2).'/Support/availability-runtime.php';
 final class AvailabilityPresentationTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        \foundationsRelease();
+        parent::tearDown();
+    }
+
     public function test_dashboard_and_availability_presentation_contracts(): void
     {
         foundationsApplication();

@@ -75,7 +75,8 @@ No Node.js or `npm install` needed.
 | Start the website | `php artisan serve` (stop it with `Ctrl+C`) |
 | Rebuild the database from scratch (deletes everything and reloads the test data) | `php artisan migrate:fresh --drop-views --seed` |
 | Check that the website can reach the database | open http://localhost:8000/test-db |
-| Run the automatic tests | `php artisan test` |
+| Run the automatic tests | `php artisan test` (the database-backed login and availability suites are skipped in this run) |
+| Run every test, including those database-backed suites, on a throwaway database | `tests/Support/run-db-tests.sh` (needs Docker; never touches your data) |
 
 If your `reservebot` database still has the Node.js version's tables, clear them once with
 `php artisan db:wipe --drop-views`, then run `php artisan migrate --seed`. (The rebuild
