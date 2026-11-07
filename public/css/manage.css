@@ -55,7 +55,7 @@
 .rb-manage .acct-name > span { min-width: 0; }
 .rb-manage .acct-name strong { font-weight: var(--rb-weight-semibold); overflow-wrap: anywhere; }
 .rb-manage .acct-email { display: block; font-size: .8125rem; color: var(--rb-text-secondary); overflow-wrap: anywhere; }
-.rb-manage .acct-block, .rb-manage td.hide-sm { white-space: nowrap; }
+.rb-manage .acct-table .acct-block, .rb-manage .acct-table td.hide-sm { white-space: nowrap; }
 .rb-manage .acct-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1); }
 .rb-manage td.acct-status { display: table-cell; }
 .rb-manage td.acct-status > * { margin: 0 var(--rb-space-1) var(--rb-space-1) 0; }
@@ -139,14 +139,27 @@
   .rb-manage .mcat .mtable td:nth-child(2)::before { content: "Stock "; color: var(--rb-text-secondary); }
   .rb-manage .mcat .mtable td:nth-child(3)::before { content: "Most per booking "; color: var(--rb-text-secondary); }
   .rb-manage .mcat .mtable td:nth-child(5) { grid-column: 1 / -1; }
+  .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
+  .rb-manage .manage-tabs a { padding-left: .75rem; padding-right: .75rem; }
+}
+
+/* Rooms: a table while its panel is wide; one card per room when it is narrow (phones, or large text on a wide screen).
+   Notes and building names wrap inside their cells; the table element, header cells and data are unchanged. */
+.rb-manage .rb-booking__panel:has(> .rooms-table) { container: rooms / inline-size; }
+.rb-manage .rooms-table td:first-child { min-width: 7rem; }
+.rb-manage .rooms-table td.note { min-width: 12rem; }
+.rb-manage .rooms-table td:nth-child(n+3):not(.note) { white-space: nowrap; }
+@container rooms (max-width: 56rem) {
+  .rb-manage .rooms-table td:first-child, .rb-manage .rooms-table td.note { min-width: 0; }
+  .rb-manage .rooms-table td:nth-child(n+3):not(.note) { white-space: normal; }
   .rb-manage .rooms-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .rb-manage .rooms-table, .rb-manage .rooms-table tbody { display: block; }
-  .rb-manage .rooms-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-manage .rooms-table tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr)); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
   .rb-manage .rooms-table tbody tr:last-child { border-bottom: 0; }
   .rb-manage .rooms-table td { display: block; min-width: 0; padding: 0; border: 0; }
   .rb-manage .rooms-table td:first-child { grid-column: 1 / -1; }
   .rb-manage .rooms-table td:nth-child(3)::before { content: "Seats "; color: var(--rb-text-secondary); }
   .rb-manage .rooms-table td:nth-child(6) { grid-column: 1 / -1; }
-  .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
-  .rb-manage .manage-tabs a { padding-left: .75rem; padding-right: .75rem; }
+  .rb-manage .rooms-table td.note { grid-column: 1 / -1; }
+  .rb-manage .rooms-table td.note:empty { display: none; }
 }
