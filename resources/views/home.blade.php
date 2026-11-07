@@ -4,13 +4,26 @@
 
 @section('title', $title)
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+  @endpush
+
 @section('content')
-<section class="card">
-  <h1>Welcome, {{ $user->name }}</h1>
-  <p class="muted">
-    {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
-  </p>
-  <p>{{ $intro }}</p>
+@if ($user->role === 'rep')
+  @include('home._representative')
+@else
+<section class="card rb-dashboard rb-dashboard--staff rb-ui">
+  <header class="rb-dashboard__intro">
+    <p class="rb-dashboard__kicker">{{ $user->roleLabel() }}</p>
+    <h1>Welcome, {{ $user->name }}</h1>
+    <p class="muted">
+      {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
+    </p>
+  </header>
+  <div class="rb-dashboard__banner">
+    <p class="rb-dashboard__banner-kicker">Your workspace</p>
+    <p class="rb-dashboard__banner-text">{{ $intro }}</p>
+  </div>
 
   @if ($stat)
     <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
@@ -66,21 +79,38 @@
   @endif
 
   @if (! empty($ready))
+    <x-ui.card class="rb-dashboard__shortcuts">
     <h2>Ready to use</h2>
-    <p class="ready">
+    <div class="rb-dashboard__links">
       @foreach ($ready as $link)
-        <a class="btn-ghost" href="{{ $link['url'] }}">{{ $link['label'] }} →</a>
+        @php
+          $icon = match (true) {
+            $link['url'] === route('today') => 'today',
+            $link['url'] === route('requests') => 'requests',
+            $link['url'] === route('manage.rooms'), $link['url'] === route('manage.timetable') => 'manage',
+            $link['url'] === route('accounts.index') => 'accounts',
+            default => 'rooms',
+          };
+        @endphp
+        <x-ui.link-button variant="secondary" :href="$link['url']" class="rb-dashboard__action">
+          <span class="rb-dashboard__action-icon"><x-ui.icon :name="$icon" /></span>
+          <span class="rb-dashboard__action-label">{{ $link['label'] }}</span> <span class="rb-dashboard__action-arrow" aria-hidden="true">→</span>
+        </x-ui.link-button>
       @endforeach
-    </p>
+    </div>
+    </x-ui.card>
   @endif
 
   @if (! empty($comingNext))
+    <x-ui.card class="rb-dashboard__next">
     <h2>Coming in the next phases</h2>
     <ul>
       @foreach ($comingNext as $item)
         <li>{{ $item }}</li>
       @endforeach
     </ul>
+    </x-ui.card>
   @endif
 </section>
+@endif
 @endsection

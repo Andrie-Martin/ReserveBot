@@ -3,16 +3,22 @@
 
 @section('title', 'My bookings')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+@endpush
+
 @section('content')
-<section class="card mine-card">
+<section class="card mine-card rb-booking rb-ui">
   <div class="mine-head">
     <div>
+      <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
       <h1>My bookings</h1>
       <p class="muted">You can cancel a booking until {{ BookingRules::duration($rules->cancelMinutes) }} before it starts.</p>
     </div>
     <a class="btn-book" href="{{ route('book') }}">+ New booking</a>
   </div>
 
+  <div class="rb-booking__panel">
   <h2>Coming up <span class="count">{{ $upcoming->count() }}</span></h2>
   @if ($upcoming->isEmpty())
     <p class="empty">Nothing coming up. <a href="{{ route('book') }}">Book a room or equipment</a>.</p>
@@ -23,7 +29,9 @@
       @endforeach
     </ul>
   @endif
+  </div>
 
+  <div class="rb-booking__panel">
   <h2>Past and closed <span class="count">{{ $past->count() }}</span></h2>
   @if ($past->isEmpty())
     <p class="empty">None yet.</p>
@@ -35,5 +43,6 @@
     </ul>
     <p class="hint">Shows your last 30.</p>
   @endif
+  </div>
 </section>
 @endsection

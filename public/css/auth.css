@@ -1,0 +1,107 @@
+/* Phase 03 only. Layout dimensions below are documented responsive assumptions. */
+.rb-auth-main--login { max-width: none; margin: 0; padding: 0; }
+.rb-auth-login { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 29.5rem); grid-template-areas: "aside form"; align-items: center; gap: var(--rb-space-8) 3.5rem; max-width: 78rem; margin-inline: auto; padding: var(--rb-space-8) var(--rb-space-8) var(--rb-space-12); }
+.rb-auth-login__aside { grid-area: aside; display: flex; flex-direction: column; gap: var(--rb-space-6); min-width: 0; }
+.rb-auth-login__content { grid-area: form; min-width: 0; width: 100%; }
+.rb-auth-eyebrow { margin: 0 0 var(--rb-space-2); color: var(--rb-color-maroon); font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .09em; text-transform: uppercase; }
+.rb-auth-login__headline { margin: 0; max-width: 14em; font-size: clamp(2rem, 3.3vw, 2.75rem); font-weight: var(--rb-weight-bold); line-height: 1.12; letter-spacing: -.03em; text-wrap: balance; color: var(--rb-text-primary); }
+.rb-auth-login__intro .rb-description { max-width: 30rem; margin: var(--rb-space-4) 0 0; font-size: var(--rb-text-body); line-height: 1.65; color: var(--rb-text-secondary); }
+
+.rb-auth-card { max-width: 30rem; margin: var(--rb-space-12) auto; gap: var(--rb-section-gap); }
+.rb-auth-card .rb-heading--h1 { font-size: var(--rb-text-h2); }
+.rb-auth-card__intro .rb-description { font-size: var(--rb-text-small); }
+.rb-auth-card__footer { font-size: var(--rb-text-small); }
+.rb-auth-card__footer a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); }
+.rb-auth-login__card { max-width: none; margin: 0 0 var(--rb-space-4); }
+.rb-auth-login__card, .rb-auth-card--panel { padding: 1.875rem; border-radius: var(--rb-radius-card); box-shadow: 0 .75rem 2.5rem color-mix(in srgb, var(--rb-color-deep) 8%, transparent); }
+.rb-auth-card--panel { max-width: 34rem; }
+.rb-auth-card--panel .rb-heading { letter-spacing: -.03em; overflow-wrap: anywhere; }
+.rb-auth-login__card .rb-heading--h2 { letter-spacing: -.03em; }
+.rb-auth-login__card .rb-auth-card__footer { display: grid; gap: var(--rb-space-2); padding-top: var(--rb-space-2); border-top: 1px solid var(--rb-border-warm); }
+.rb-auth-login__card .rb-auth-card__footer a { font-weight: var(--rb-weight-semibold); }
+.rb-auth-fineprint { margin: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
+.rb-auth-form > .rb-button { justify-self: end; min-width: 7.5rem; min-height: var(--rb-control-height); }
+.rb-auth-form { gap: var(--rb-section-gap); }
+.rb-auth-disclaimer { margin: 0; text-align: center; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-medium); }
+.rb-auth-login__art { position: relative; overflow: hidden; max-width: 30rem; min-height: 9.5rem; padding: var(--rb-space-6); border-radius: 1.25rem; color: var(--rb-color-white); background: linear-gradient(135deg, var(--rb-color-maroon), var(--rb-color-deep)); }
+.rb-auth-login__art::after { content: 'CEA'; position: absolute; right: -.5rem; bottom: -3.25rem; font-size: 10rem; font-weight: var(--rb-weight-bold); line-height: 1; letter-spacing: -.1em; color: color-mix(in srgb, var(--rb-color-white) 6%, transparent); pointer-events: none; }
+.rb-auth-login__art p { position: relative; margin: 0; }
+.rb-auth-login__art-kicker { color: var(--rb-color-gold); font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .1em; text-transform: uppercase; }
+.rb-auth-login__art .rb-auth-login__art-title { max-width: 16rem; margin-top: var(--rb-space-4); font-size: 1.4375rem; font-weight: var(--rb-weight-bold); line-height: 1.25; letter-spacing: -.02em; }
+.rb-auth-illustration { display: block; width: 100%; max-width: 32.5rem; height: auto; }
+.rb-auth-illustration__arch { fill: var(--rb-color-maroon); }
+.rb-auth-illustration__building { fill: var(--rb-surface-canvas); }
+.rb-auth-illustration__white { fill: var(--rb-color-white); }
+.rb-auth-illustration__gold { fill: var(--rb-color-gold); }
+.rb-auth-illustration__window { fill: var(--rb-surface-muted); }
+.rb-auth-illustration__base { fill: var(--rb-color-deep); }
+.rb-auth-illustration__caption, .rb-auth-illustration__motto { fill: var(--rb-color-white); font-family: var(--rb-font-family); font-weight: var(--rb-weight-semibold); font-size: 12px; }
+.rb-auth-illustration__motto { font-size: 13px; }
+.rb-account-page { max-width: none; }
+.rb-account-hero .rb-heading--h1 { margin: 0; letter-spacing: -.03em; }
+.rb-account-hero .rb-description { max-width: 42rem; margin: var(--rb-space-1) 0 0; }
+.rb-account-layout { display: grid; gap: var(--rb-section-gap); align-items: start; }
+.rb-account-layout > * { min-width: 0; }
+.rb-account-page .rb-card > .rb-heading--h2, .rb-account-photo > .rb-heading--h2 { margin: 0; padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); font-size: var(--rb-text-h3); letter-spacing: -.025em; }
+.rb-account-actions { display: flex; justify-content: flex-end; }
+.rb-account-password-card { max-width: 34rem; }
+.rb-account-fineprint { margin: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
+.rb-account-page.rb-stack { gap: var(--rb-section-gap); }
+.rb-account-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); padding-bottom: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
+.rb-account-tabs a { padding: var(--rb-space-2) var(--rb-space-4); display: inline-flex; align-items: center; min-height: var(--rb-control-height); text-decoration: none; font-weight: var(--rb-weight-semibold); border: 1px solid transparent; border-radius: var(--rb-radius-control); }
+.rb-account-tabs a[aria-current] { background: var(--rb-surface-active); border-color: color-mix(in srgb, var(--rb-color-maroon) 16%, var(--rb-color-white)); }
+.rb-account-tabs a:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+.rb-auth-card a, .rb-account-page a { color: var(--rb-color-maroon); }
+.rb-auth-card a:focus-visible, .rb-account-page a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-account-photo { display: grid; gap: var(--rb-space-4); min-width: 0; }
+.rb-account-photo__head { display: flex; align-items: center; gap: var(--rb-space-4); min-width: 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+.rb-account-photo__identity { min-width: 0; }
+.rb-account-photo__identity .rb-description { margin: 0; overflow-wrap: anywhere; }
+.rb-account-photo .avatar { flex: none; width: 4.5rem; height: 4.5rem; border-radius: var(--rb-radius-control); background: var(--rb-surface-active); }
+.rb-account-photo .avatar-none { color: var(--rb-color-maroon); font-size: 1.5rem; }
+.rb-account-photo__content { min-width: 0; }
+.rb-account-photo__name { margin: 0; font-weight: var(--rb-weight-bold); font-size: var(--rb-text-h3); overflow-wrap: anywhere; }
+.rb-account-photo__forms { display: grid; gap: var(--rb-space-2); margin-block: var(--rb-space-4); }
+.rb-account-photo__forms form { min-width: 0; max-width: 100%; }
+.rb-account-photo__forms form:first-child { display: grid; gap: var(--rb-space-4); }
+.rb-account-photo__forms form:first-child > .rb-button { justify-self: end; }
+.rb-account-photo__forms form + form { justify-self: start; }
+.rb-account-photo__content > .rb-error-summary { margin-top: var(--rb-space-4); }
+.rb-account-photo .rb-control[type=file] { padding: var(--rb-space-2); font-size: var(--rb-text-small); overflow: hidden; }
+.rb-account-photo .rb-control::file-selector-button { padding: var(--rb-space-2); margin-right: var(--rb-space-2); font: inherit; color: var(--rb-color-maroon); background: var(--rb-surface-muted); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); }
+.rb-account-email p, .rb-account-email form { margin: 0; }
+.rb-account-email { padding: var(--rb-space-6); border-radius: var(--rb-radius-card); }
+.rb-account-email .rb-heading { margin: 0; }
+.rb-account-password { max-width: none; }
+.rb-account-readonly { margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px dashed var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+@media (min-width: 64rem) {
+  .rb-account-layout { grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr); grid-template-areas: "info photo" "email photo"; }
+  .rb-account-info-card { grid-area: info; }
+  .rb-account-email { grid-area: email; }
+  .rb-account-photo-card { grid-area: photo; }
+}
+@media (max-width: 63.999rem) {
+  .rb-auth-login { display: block; max-width: 39rem; padding: var(--rb-space-4); }
+  .rb-auth-login__art { display: none; }
+  .rb-auth-desktop-break { display: none; }
+  .rb-auth-login__aside { margin-top: var(--rb-space-4); }
+  .rb-auth-login__headline { font-size: 1.875rem; }
+  .rb-auth-login__intro .rb-description { margin-top: var(--rb-space-2); font-size: var(--rb-text-small); }
+  .rb-auth-login__card { margin-top: 0; }
+}
+@media (max-width: 40rem) {
+  .rb-auth-card { margin-block: var(--rb-space-6); }
+  .rb-auth-login__card, .rb-auth-card--panel { padding: var(--rb-space-4); }
+  /* Task-focused mobile: the promotional introduction is omitted; card and disclaimer remain. */
+  .rb-auth-login__aside { display: none; }
+}
+
+/* Authentication is the primary task; supporting copy follows it in DOM order. */
+.rb-auth-login__card .rb-auth-card__intro .rb-description { margin-bottom: 0; }
+@media (max-height: 49.999rem) {
+  /* Short laptops keep both columns; only the decorative panel is dropped. */
+  .rb-auth-login { padding-block: var(--rb-space-4) var(--rb-space-6); }
+  .rb-auth-login__art { display: none; }
+  .rb-auth-login__card { padding-block: var(--rb-space-6); }
+  .rb-auth-login__card .rb-auth-card__footer { padding-top: var(--rb-space-1); }
+}
