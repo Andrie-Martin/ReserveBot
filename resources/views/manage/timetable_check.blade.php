@@ -82,7 +82,7 @@
     @if ($compare[$key])
       <details class="tt-changes">
         <summary>{{ $label }} ({{ count($compare[$key]) }})</summary>
-        @include('manage._timetable_changes', ['rows' => TimetableRules::sort($compare[$key])])
+        @include('manage._timetable_changes', ['rows' => TimetableRules::sort($compare[$key]), 'label' => $label])
       </details>
     @endif
   @endforeach

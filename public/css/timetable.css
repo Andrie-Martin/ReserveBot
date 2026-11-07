@@ -15,7 +15,7 @@
 .rb-tt button.btn-small.btn-danger:hover { background: var(--rb-danger-bg); filter: none; }
 .rb-tt button.link { display: inline-flex; align-items: center; min-height: var(--rb-control-height); padding: 0 var(--rb-space-1); background: none; color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-semibold); text-decoration: underline; cursor: pointer; }
 .rb-tt button.link.tt-delete { color: var(--rb-danger-text); }
-.rb-tt :is(a, button, summary, select, input):focus-visible { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); }
+.rb-tt :is(a, button, summary, select, input, [role=region][tabindex]):focus-visible { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); }
 .rb-tt .tt-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
 .rb-tt .rb-booking__intro .error { margin: var(--rb-space-4) 0 0; }
 
