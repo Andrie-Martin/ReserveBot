@@ -76,6 +76,11 @@
   .rb-manage .acct-table td.acct-block, .rb-manage .acct-table td.acct-status { order: 2; flex: 1 1 100%; padding-left: calc(28px + .75rem); white-space: normal; }
   .rb-manage .acct-table td.acct-block { font-size: .8125rem; }
   .rb-manage .acct-table td.acct-block::before { content: attr(data-label) ': '; font-weight: var(--rb-weight-semibold); color: var(--rb-text-secondary); }
+  .rb-manage .acct-table td.acct-edit a { display: inline-flex; align-items: center; justify-content: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
+/* Touch layouts: the text links of the management screens (back link, bookings "Open") get the 44px control height. */
+@media (max-width: 40rem), (pointer: coarse) {
+  .rb-manage .back a, .rb-manage .mlist a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
 .rb-manage :is(.tag-ok, .tag-soft, .tag-warn, .tag-shared) { display: inline-flex; align-items: center; margin: 0; padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); }
 .rb-manage .tag-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
