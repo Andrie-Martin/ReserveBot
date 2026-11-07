@@ -5,17 +5,10 @@
 
 @section('title', 'Book')
 
-@push('styles')
-  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
-@endpush
-
 @section('content')
-<section class="card book-card rb-booking rb-ui">
-  <header class="rb-booking__intro">
-    <p class="rb-booking__kicker">{{ $user->roleLabel() }}</p>
-    <h1>Book a room or equipment</h1>
-    <p class="muted">{{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif</p>
-  </header>
+<section class="card book-card">
+  <h1>Book a room or equipment</h1>
+  <p class="muted">{{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif</p>
 
   <ol class="steps">
     <li @class(['on' => ! $when, 'done' => (bool) $when])><span>1</span>When</li>

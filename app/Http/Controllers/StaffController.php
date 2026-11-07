@@ -12,8 +12,7 @@ class StaffController extends Controller
     {
         $user = $request->user()->load('department', 'section');
 
-        // Approved or in-use bookings starting today in this department. Waiting, done and cancelled ones
-        // are left out on purpose: the Today page lists every status, so the label says what is counted.
+        // Reservations happening today in this department
         $today = Reservation::whereIn('status', ['Confirmed', 'InUse'])
             ->whereDate('start_time', today())
             ->whereRelation('user', 'department_id', $user->department_id)
@@ -23,7 +22,7 @@ class StaffController extends Controller
             'title' => 'Lab staff',
             'user' => $user,
             'intro' => "This is where you will review requests and run the day's room schedule.",
-            'stat' => ['value' => $today, 'label' => $today === 1 ? 'booking approved or in use today' : 'bookings approved or in use today'],
+            'stat' => ['value' => $today, 'label' => $today === 1 ? 'reservation today' : 'reservations today'],
             'classes' => null,
             'ready' => [
                 ['label' => "Today's schedule", 'url' => route('today')],
