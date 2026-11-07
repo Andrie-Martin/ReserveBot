@@ -30,10 +30,10 @@
     <x-avatar :user="$account" size="md" />
     <div>
       <h2 class="edit-title">{{ $account->name }}</h2>
-      <p class="muted small">
-        {{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif
-        @if ($account->school_id) · {{ $account->school_id }}@endif
-        · {{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}
+      <p class="muted small acct-meta">
+        <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
+        @if ($account->school_id)<span class="meta-unit">{{ $account->school_id }}</span>@endif
+        <span class="meta-unit">{{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}</span>
       </p>
       <p class="acct-status">
         @if (! $account->is_active)
