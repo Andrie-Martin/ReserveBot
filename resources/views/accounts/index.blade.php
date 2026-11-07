@@ -78,7 +78,7 @@
                 </span>
               </td>
               @if ($title !== 'Admins')
-                <td class="acct-block">{{ $person->section?->name ?? '—' }}</td>
+                <td class="acct-block" data-label="{{ $title === 'Block reps' ? 'Block' : 'Section' }}">{{ $person->section?->name ?? '—' }}</td>
                 <td class="hide-sm">{{ $person->school_id ?? '—' }}</td>
               @endif
               <td class="acct-status">

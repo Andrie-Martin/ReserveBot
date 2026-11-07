@@ -60,6 +60,23 @@
 .rb-manage td.acct-status { display: table-cell; }
 .rb-manage td.acct-status > * { margin: 0 var(--rb-space-1) var(--rb-space-1) 0; }
 .rb-manage .acct-edit { white-space: nowrap; text-align: right; }
+/* The account list is a table while its panel is wide and one card per person when it is narrow (phones, or large text on a
+   wide screen): name and Edit, then the labelled block or section, then status. The table element and its cells are kept. */
+.rb-manage .rb-booking__panel:has(> .acct-table) { container: acct / inline-size; }
+@container acct (max-width: 38rem) {
+  .rb-manage .acct-table { table-layout: fixed; }
+  .rb-manage .acct-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .rb-manage .acct-table tbody { display: block; }
+  .rb-manage .acct-table tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-manage .acct-table tbody tr:last-child { border-bottom: 0; }
+  .rb-manage .acct-table tbody td, .rb-manage .acct-table thead th { padding: 0; border: 0; }
+  .rb-manage .acct-table td.hide-sm { display: none; }
+  .rb-manage .acct-table td:first-child { flex: 1 1 12rem; min-width: 0; }
+  .rb-manage .acct-table td.acct-edit { order: 1; flex: 0 0 auto; }
+  .rb-manage .acct-table td.acct-block, .rb-manage .acct-table td.acct-status { order: 2; flex: 1 1 100%; padding-left: calc(28px + .75rem); white-space: normal; }
+  .rb-manage .acct-table td.acct-block { font-size: .8125rem; }
+  .rb-manage .acct-table td.acct-block::before { content: attr(data-label) ': '; font-weight: var(--rb-weight-semibold); color: var(--rb-text-secondary); }
+}
 .rb-manage :is(.tag-ok, .tag-soft, .tag-warn, .tag-shared) { display: inline-flex; align-items: center; margin: 0; padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); }
 .rb-manage .tag-ok { background: var(--rb-success-bg); color: var(--rb-success-text); }
 .rb-manage .tag-soft { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
