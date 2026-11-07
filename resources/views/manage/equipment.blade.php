@@ -24,16 +24,16 @@
         <h2>{{ $category->name }} <span class="count">{{ $category->equipment->count() }}</span></h2>
         <details class="rename" @if ($renameBag->any()) open @endif>
           <summary>Rename</summary>
+          @if ($renameBag->any())
+            <p class="field-error" id="cat-{{ $category->id }}-error">{{ $renameBag->first('name') }}</p>
+          @endif
           <form method="post" action="{{ route('manage.categories.update', $category) }}" class="inline-form">
             @csrf
             @method('PUT')
             <label for="cat-{{ $category->id }}" class="sr-only">New name for {{ $category->name }}</label>
-            <input id="cat-{{ $category->id }}" name="name" maxlength="60" required value="{{ $renameBag->any() ? old('name') : $category->name }}">
+            <input id="cat-{{ $category->id }}" name="name" maxlength="60" required @if ($renameBag->any()) autofocus aria-invalid="true" aria-describedby="cat-{{ $category->id }}-error" @endif value="{{ $renameBag->any() ? old('name') : $category->name }}">
             <button type="submit" class="btn-small">Save</button>
           </form>
-          @if ($renameBag->any())
-            <p class="field-error">{{ $renameBag->first('name') }}</p>
-          @endif
         </details>
       </div>
       @if ($category->equipment->isEmpty())
@@ -63,11 +63,18 @@
       <form method="post" action="{{ route('manage.equipment.store') }}" class="mform">
         @csrf
         @php $itemOld = $errors->getBag('item')->any(); @endphp
-        @include('manage._errors', ['bag' => $errors->getBag('item')])
+        @php
+        $itemBag = $errors->getBag('item');
+        $itemFocus = collect(['category_id', 'name', 'total_qty', 'max_per_request'])->first(fn ($field) => $itemBag->has($field));
+        $itemInvalid = fn (string $field) => ($itemBag->has($field) ? 'aria-invalid="true" aria-describedby="item-'.$field.'-error"' : '').($itemFocus === $field ? ' autofocus' : '');
+        $itemMsg = fn (string $field) => $itemBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="item-'.$field.'-error">'.e($itemBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($itemBag->any())<div id="item-errors">@include('manage._errors', ['bag' => $itemBag])</div>@endif
         <div class="mgrid">
           <div>
             <label for="item-category" class="field-label">Category</label>
-            <select id="item-category" name="category_id" required>
+          {!! $itemMsg('category_id') !!}
+            <select id="item-category" name="category_id" required {!! $itemInvalid('category_id') !!}>
               @foreach ($categories as $category)
                 <option value="{{ $category->id }}" @selected($itemOld && (int) old('category_id') === $category->id)>{{ $category->name }}</option>
               @endforeach
@@ -75,15 +82,18 @@
           </div>
           <div>
             <label for="item-name" class="field-label">Name</label>
-            <input id="item-name" name="name" maxlength="60" required value="{{ $itemOld ? old('name') : '' }}" placeholder="e.g. Bluetooth Speaker">
+          {!! $itemMsg('name') !!}
+            <input id="item-name" name="name" maxlength="60" required {!! $itemInvalid('name') !!} value="{{ $itemOld ? old('name') : '' }}" placeholder="e.g. Bluetooth Speaker">
           </div>
           <div>
             <label for="item-qty" class="field-label">Stock</label>
-            <input id="item-qty" name="total_qty" type="number" min="0" max="9999" required value="{{ $itemOld ? old('total_qty') : 1 }}">
+          {!! $itemMsg('total_qty') !!}
+            <input id="item-qty" name="total_qty" type="number" min="0" max="9999" required {!! $itemInvalid('total_qty') !!} value="{{ $itemOld ? old('total_qty') : 1 }}">
           </div>
           <div>
             <label for="item-max" class="field-label">Most per booking</label>
-            <input id="item-max" name="max_per_request" type="number" min="1" max="99" required value="{{ $itemOld ? old('max_per_request') : 4 }}">
+          {!! $itemMsg('max_per_request') !!}
+            <input id="item-max" name="max_per_request" type="number" min="1" max="99" required {!! $itemInvalid('max_per_request') !!} value="{{ $itemOld ? old('max_per_request') : 4 }}">
           </div>
         </div>
         <button type="submit" class="btn-small">Add item</button>
@@ -93,9 +103,16 @@
       <summary>+ Add a category</summary>
       <form method="post" action="{{ route('manage.categories.store') }}" class="mform">
         @csrf
-        @include('manage._errors', ['bag' => $errors->getBag('category')])
+        @php
+        $catBag = $errors->getBag('category');
+        $catFocus = collect(['name'])->first(fn ($field) => $catBag->has($field));
+        $catInvalid = fn (string $field) => ($catBag->has($field) ? 'aria-invalid="true" aria-describedby="category-'.$field.'-error"' : '').($catFocus === $field ? ' autofocus' : '');
+        $catMsg = fn (string $field) => $catBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="category-'.$field.'-error">'.e($catBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($catBag->any())<div id="category-errors">@include('manage._errors', ['bag' => $catBag])</div>@endif
         <label for="new-category" class="field-label">Name</label>
-        <input id="new-category" name="name" maxlength="60" required value="{{ $errors->getBag('category')->any() ? old('name') : '' }}" placeholder="e.g. Sports Equipment">
+          {!! $catMsg('name') !!}
+        <input id="new-category" name="name" maxlength="60" required {!! $catInvalid('name') !!} value="{{ $errors->getBag('category')->any() ? old('name') : '' }}" placeholder="e.g. Sports Equipment">
         <button type="submit" class="btn-small">Add category</button>
       </form>
     </details>

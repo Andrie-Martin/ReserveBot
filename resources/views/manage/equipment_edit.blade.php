@@ -24,11 +24,18 @@
   <form method="post" action="{{ route('manage.equipment.update', $item) }}" class="mform">
     @csrf
     @method('PUT')
-    @include('manage._errors', ['bag' => $errors->getBag('default')])
+    @php
+        $itemBag = $errors->getBag('default');
+        $itemFocus = collect(['category_id', 'name', 'total_qty', 'max_per_request'])->first(fn ($field) => $itemBag->has($field));
+        $itemInvalid = fn (string $field) => ($itemBag->has($field) ? 'aria-invalid="true" aria-describedby="item-'.$field.'-error"' : '').($itemFocus === $field ? ' autofocus' : '');
+        $itemMsg = fn (string $field) => $itemBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="item-'.$field.'-error">'.e($itemBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($itemBag->any())<div id="item-errors">@include('manage._errors', ['bag' => $itemBag])</div>@endif
     <div class="mgrid">
       <div>
         <label for="category_id" class="field-label">Category</label>
-        <select id="category_id" name="category_id" required>
+          {!! $itemMsg('category_id') !!}
+        <select id="category_id" name="category_id" required {!! $itemInvalid('category_id') !!}>
           @foreach ($categories as $category)
             <option value="{{ $category->id }}" @selected((int) old('category_id', $item->category_id) === $category->id)>{{ $category->name }}</option>
           @endforeach
@@ -36,15 +43,18 @@
       </div>
       <div>
         <label for="name" class="field-label">Name</label>
-        <input id="name" name="name" maxlength="60" required value="{{ old('name', $item->name) }}">
+          {!! $itemMsg('name') !!}
+        <input id="name" name="name" maxlength="60" required {!! $itemInvalid('name') !!} value="{{ old('name', $item->name) }}">
       </div>
       <div>
         <label for="total_qty" class="field-label">Stock</label>
-        <input id="total_qty" name="total_qty" type="number" min="0" max="9999" required value="{{ old('total_qty', $item->total_qty) }}">
+          {!! $itemMsg('total_qty') !!}
+        <input id="total_qty" name="total_qty" type="number" min="0" max="9999" required {!! $itemInvalid('total_qty') !!} value="{{ old('total_qty', $item->total_qty) }}">
       </div>
       <div>
         <label for="max_per_request" class="field-label">Most per booking</label>
-        <input id="max_per_request" name="max_per_request" type="number" min="1" max="99" required value="{{ old('max_per_request', $item->max_per_request) }}">
+          {!! $itemMsg('max_per_request') !!}
+        <input id="max_per_request" name="max_per_request" type="number" min="1" max="99" required {!! $itemInvalid('max_per_request') !!} value="{{ old('max_per_request', $item->max_per_request) }}">
       </div>
     </div>
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked($errors->getBag('default')->any() ? old('is_active') : $item->is_active)> Can be booked <span class="optional">(untick to turn the item off)</span></label>

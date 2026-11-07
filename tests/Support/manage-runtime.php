@@ -168,6 +168,18 @@ function manageContracts(): int
         $check($x->query('//link[contains(@href,"css/manage.css?v=")]')->length === 1, "$name manage stylesheet");
         $check($x->query('//nav[@aria-label="Manage"]//a')->length === 4, "$name four manage tabs");
         $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")]')->length === 1, "$name one current tab");
+        // Validation feedback: aria-describedby always points at something real; focus is only ever taken after a refused save
+        foreach ($x->query('//*[@aria-describedby]') as $node) {
+            $target = $node->getAttribute('aria-describedby');
+            $check($x->query('//*[@id="'.$target.'"]')->length === 1, "$name aria-describedby target $target exists");
+            $check($node->getAttribute('aria-invalid') === 'true', "$name only invalid fields carry aria-describedby ($target)");
+        }
+        $refused = str_ends_with($name, '-errors') || str_ends_with($name, '-term-error');
+        if ($refused) {
+            $check($x->query('//*[@autofocus]')->length >= 1, "$name a refused save moves focus to the error or the invalid field");
+        } else {
+            $check($x->query('//*[@autofocus]')->length === 0 && $x->query('//*[@aria-invalid]')->length === 0, "$name an ordinary load has no autofocus and no aria-invalid");
+        }
         if (str_starts_with($name, 'manage-rules-')) {
             // The approval checkbox and the open days belong to the rules form: only a failure of THAT form may change them.
             $approval = $x->query('//input[@name="requires_approval"]')->item(0);
@@ -176,7 +188,8 @@ function manageContracts(): int
                 $check($approval->hasAttribute('checked'), "$name a failed semester-dates save keeps the saved approval ticked");
                 $check($ticked === 6, "$name a failed semester-dates save keeps the saved open days ticked");
                 $check($x->query('//input[@id="start-1" and @value="2026-12-01"]')->length === 1 && $x->query('//input[@id="end-1" and @value="2026-11-01"]')->length === 1, "$name the entered dates are kept");
-                $check($x->query('//input[@id="end-1" and @autofocus and @aria-invalid="true" and @aria-describedby="term-1-errors"]')->length === 1, "$name the invalid last day takes focus and is described by its error");
+                $check($x->query('//input[@id="end-1" and @autofocus and @aria-invalid="true" and @aria-describedby="term-1-end_date-error"]')->length === 1, "$name the invalid last day takes focus and is described by its own message");
+                $check($x->query('//p[@id="term-1-end_date-error"][normalize-space()]')->length === 1, "$name the invalid last day has its message right beside it");
                 $check($x->query('//div[@id="term-1-errors"]//li')->length === 1, "$name the term error summary exists for aria-describedby");
                 $check($x->query('//*[@autofocus]')->length === 1, "$name exactly one autofocus (the invalid field)");
             } elseif (str_ends_with($name, '-errors')) {

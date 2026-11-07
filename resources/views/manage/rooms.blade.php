@@ -42,23 +42,33 @@
     <summary>+ Add a room</summary>
     <form method="post" action="{{ route('manage.rooms.store') }}" class="mform">
       @csrf
-      @include('manage._errors', ['bag' => $errors->getBag('add')])
+      @php
+        $addBag = $errors->getBag('add');
+        $addFocus = collect(['name', 'building', 'capacity', 'note'])->first(fn ($field) => $addBag->has($field));
+        $addInvalid = fn (string $field) => ($addBag->has($field) ? 'aria-invalid="true" aria-describedby="add-'.$field.'-error"' : '').($addFocus === $field ? ' autofocus' : '');
+        $addMsg = fn (string $field) => $addBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="add-'.$field.'-error">'.e($addBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($addBag->any())<div id="add-errors">@include('manage._errors', ['bag' => $addBag])</div>@endif
       <div class="mgrid">
         <div>
           <label for="add-name" class="field-label">Name</label>
-          <input id="add-name" name="name" maxlength="30" required value="{{ old('name') }}" placeholder="e.g. CEA400">
+          {!! $addMsg('name') !!}
+          <input id="add-name" name="name" {!! $addInvalid('name') !!} maxlength="30" required value="{{ old('name') }}" placeholder="e.g. CEA400">
         </div>
         <div>
           <label for="add-building" class="field-label">Building <span class="optional">(optional)</span></label>
-          <input id="add-building" name="building" maxlength="60" value="{{ old('building') }}">
+          {!! $addMsg('building') !!}
+          <input id="add-building" name="building" {!! $addInvalid('building') !!} maxlength="60" value="{{ old('building') }}">
         </div>
         <div>
           <label for="add-capacity" class="field-label">Seats <span class="optional">(optional)</span></label>
-          <input id="add-capacity" name="capacity" type="number" min="0" max="1000" value="{{ old('capacity') }}">
+          {!! $addMsg('capacity') !!}
+          <input id="add-capacity" name="capacity" {!! $addInvalid('capacity') !!} type="number" min="0" max="1000" value="{{ old('capacity') }}">
         </div>
         <div>
           <label for="add-note" class="field-label">Note <span class="optional">(optional)</span></label>
-          <input id="add-note" name="note" maxlength="200" value="{{ old('note') }}" placeholder="e.g. Has a TV and aircon">
+          {!! $addMsg('note') !!}
+          <input id="add-note" name="note" {!! $addInvalid('note') !!} maxlength="200" value="{{ old('note') }}" placeholder="e.g. Has a TV and aircon">
         </div>
       </div>
       <button type="submit" class="btn-small">Add room</button>
