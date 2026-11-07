@@ -197,3 +197,6 @@
 
 /* Phase 10 QA: the reject and cancel reason fields kept the legacy violet focus ring from style.css (details.reject textarea:focus, 0,2,2). Same ring as every other field here. */
 .rb-booking details.reject textarea:focus, .rb-booking details.cancel-box textarea:focus { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+
+/* Phase 10 QA: the "busy rooms" disclosure on the booking steps still turned legacy violet on hover (style.css .busy-rooms summary:hover). */
+.rb-booking .busy-rooms summary:hover { color: var(--rb-color-maroon); }
