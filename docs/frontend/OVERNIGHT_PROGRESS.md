@@ -17,7 +17,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-03-rep-availability` | `dev` @ `7db0f1c` (includes merged Phase 02, PR #12) | complete, local, NOT merged |
 | `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | complete, local, NOT merged |
 | `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | complete, local, NOT merged |
-| `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | in progress, local |
+| `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
+| `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -115,3 +116,21 @@ Verification (final tree):
 Real defects found by the new test and fixed in CSS only: long unbroken names overflowed hint/heading text at 390px; the "Set password" row and the delete button (nowrap) overflowed at 320px with 200% text; the `…@iskolarngbayan.pup.edu.ph` nowrap hint overflowed at 200% text.
 
 Notes: the test fixture initially picked the update form for the delete check because both share one URL; the test now selects by `_method=DELETE`. NOT RUN: PHPUnit, authenticated live app, real account changes. Neighbouring browser suites were not re-run for this phase (only new CSS file and two accounts views changed); the isolated render suites above were.
+
+## Phase 07 — Rooms, equipment, booking rules (Manage rooms, edit room, equipment, edit item, rules and terms)
+
+Branch `feat/frontend-design-07-rooms-equipment`, stacked on `feat/frontend-design-06-admin-accounts` @ `8e34b72`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 07A | `c06aff7` | `manage.css` extended (tabs as pills, category panels, rename disclosure, rules fieldsets, term forms, over-stock rows, stacked rooms/equipment tables on phones) + wrappers/classes/kicker in the five `manage/*` views. No form, field, link, label or limit changed. |
+| 07B | `dcd3bbc` | Verification tooling: `manage-runtime.php`, `render-manage.php`, `manage-browser.cjs` (46 database-free states for lab staff and admin: normal, empty, validation errors, long names, shared/off room, over-stock item) |
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052 PASS.
+- Ordered structural parity vs the pre-change views: 46 documents, 0 structure and 0 paragraph mismatches.
+- manage-browser: 368 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 (no overflow, no clipped controls); 5388 keyboard stops with visible focus; intercepted POSTs (add room, update room, rename category, add item, update item, rules, term dates) carry exact field names; form/field/link parity with baseline. accounts-browser re-run against the extended stylesheet: PASS.
+
+Real defects found by the new test and fixed in CSS only: native date/time inputs showed no focus ring when the picker button took focus (`:focus-within` added); five-column equipment and four-column room tables overflowed at 200% text on phones (stacked as labelled rows below 40rem, table semantics kept in markup).
+
+Notes: the shared `manage/_tabs` partial is restyled only inside `.rb-manage`; the Timetable pages (Phase 08) still use the legacy styling until they opt in. The room-table class `rooms-table` was added for the phone layout. NOT RUN: PHPUnit, authenticated live app, real room/stock changes.

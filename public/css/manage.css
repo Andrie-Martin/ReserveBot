@@ -2,7 +2,7 @@
    booking.css, whose intro, buttons, messages, panels and badges these pages share. Page-scoped on .rb-manage;
    presentation only. The role-based .for-rep / .for-staff switching lives in style.css and is not redefined here. */
 .rb-manage .back { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); }
-.rb-manage .back a, .rb-manage .acct-edit a, .rb-manage .mlist a { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+.rb-manage .back a, .rb-manage .mtable a, .rb-manage .mlist a { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
 .rb-manage .manage-card > h2, .rb-manage .rb-booking__panel > h2 { margin-top: 0; }
 .rb-manage .rb-booking__panel > h2 + * { margin-top: 0; }
 .rb-manage .muted.small { margin: var(--rb-space-1) 0 0; font-size: .8125rem; color: var(--rb-text-secondary); }
@@ -19,7 +19,7 @@
 .rb-manage .mform { display: grid; gap: var(--rb-space-4); margin: 0; min-width: 0; }
 .rb-manage .mform > * { margin: 0; min-width: 0; }
 .rb-manage .mform :is(input:not([type=checkbox], [type=radio], [type=hidden]), select, textarea) { display: block; width: 100%; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); }
-.rb-manage .mform :is(input, select, textarea):focus { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .mform :is(input, select, textarea):is(:focus, :focus-within) { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .mgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: var(--rb-space-4); margin: 0; }
 .rb-manage .mgrid.one { grid-template-columns: minmax(0, 24rem); }
 .rb-manage .mgrid > div { min-width: 0; }
@@ -55,7 +55,7 @@
 .rb-manage .acct-name > span { min-width: 0; }
 .rb-manage .acct-name strong { font-weight: var(--rb-weight-semibold); overflow-wrap: anywhere; }
 .rb-manage .acct-email { display: block; font-size: .8125rem; color: var(--rb-text-secondary); overflow-wrap: anywhere; }
-.rb-manage .acct-block, .rb-manage td.hide-sm { white-space: nowrap; }
+.rb-manage .acct-table .acct-block, .rb-manage .acct-table td.hide-sm { white-space: nowrap; }
 .rb-manage .acct-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1); }
 .rb-manage td.acct-status { display: table-cell; }
 .rb-manage td.acct-status > * { margin: 0 var(--rb-space-1) var(--rb-space-1) 0; }
@@ -122,3 +122,95 @@
   .rb-manage .mform .inline-form input { flex-basis: 100%; }
   .rb-manage button.btn-small, .rb-manage button.btn-danger { max-width: 100%; white-space: normal; }
 }
+
+/* Phase 07: Manage pages (rooms, equipment, booking rules). */
+.rb-manage .manage-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: var(--rb-space-4) 0; padding: 0; border: 0; }
+.rb-manage .manage-tabs a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1) var(--rb-space-4); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); color: var(--rb-text-primary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; }
+.rb-manage .manage-tabs a:hover { border-color: var(--rb-color-maroon); color: var(--rb-color-maroon); }
+.rb-manage .manage-tabs a.on { border-color: var(--rb-color-maroon); background: var(--rb-color-maroon); color: var(--rb-color-white); }
+.rb-manage .manage-tabs a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .rb-booking__intro > .success { margin: 0 0 var(--rb-space-4); }
+.rb-manage .rb-booking__panel > .notice { margin: 0 0 var(--rb-space-4); }
+.rb-manage .mtable td.note { color: var(--rb-text-secondary); font-size: .8125rem; }
+.rb-manage .mtable td { overflow-wrap: anywhere; }
+.rb-manage .mtable .tag-shared { margin-left: var(--rb-space-1); }
+.rb-manage .mcat-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: 0 0 var(--rb-space-2); }
+.rb-manage .mcat-head h2 { margin: 0; }
+.rb-manage .mcat > .mtable, .rb-manage .mcat > .empty { margin-top: var(--rb-space-2); }
+.rb-manage .rename > summary { display: inline-flex; align-items: center; min-height: var(--rb-control-height); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; }
+.rb-manage .rename > summary:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .rename .inline-form { margin-top: var(--rb-space-1); }
+.rb-manage .rename .inline-form input { flex: 1 1 12rem; width: auto; min-width: 0; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-small); }
+.rb-manage .rename .inline-form button { white-space: normal; }
+.rb-manage .add-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--rb-space-4); }
+.rb-manage .add-row .add-box { flex: 1 1 18rem; min-width: 0; }
+.rb-manage .mlist li.over { background: var(--rb-danger-bg); }
+.rb-manage .mlist li.over { margin: 0 calc(-1 * var(--rb-space-2)); padding-left: var(--rb-space-2); padding-right: var(--rb-space-2); border-radius: var(--rb-radius-control); }
+.rb-manage .rules-form { gap: var(--rb-space-4); }
+.rb-manage .rules-form fieldset { min-width: 0; margin: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-canvas); }
+.rb-manage .rules-form legend { padding: 0 var(--rb-space-2); font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); color: var(--rb-text-primary); }
+.rb-manage .rules-form fieldset > * + * { margin-top: var(--rb-space-2); }
+.rb-manage .rules-form fieldset .hint { margin: var(--rb-space-1) 0 0; }
+.rb-manage .rules-form .mgrid { align-items: end; }
+.rb-manage .day-checks { display: flex; flex-wrap: wrap; gap: var(--rb-space-2) var(--rb-space-6); }
+.rb-manage .day-checks label.check { margin: 0; min-height: var(--rb-control-height); }
+.rb-manage .term-form { margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-canvas); }
+.rb-manage .term-name { margin: 0; font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); }
+.rb-manage .rb-booking__panel > h2 + .muted { margin-bottom: 0; }
+/* Scoped to a panel's own title: the Accounts card title (.acct-head .edit-title) keeps Phase 06's tight spacing. */
+.rb-manage .rb-booking__panel > .edit-title { margin: 0 0 var(--rb-space-4) !important; font-size: 1.25rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.rb-manage .rb-booking__panel .mform + h2, .rb-manage .rb-booking__panel ul.mlist, .rb-manage .rb-booking__panel > .error { margin-top: var(--rb-space-2); }
+@media (max-width: 40rem) {
+  .rb-manage .mcat-head > * { min-width: 0; max-width: 100%; }
+  .rb-manage .rename .inline-form input { flex-basis: 100%; }
+  .rb-manage .mcat .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rb-manage .mcat .mtable, .rb-manage .mcat .mtable tbody { display: block; }
+  .rb-manage .mcat .mtable tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-manage .mcat .mtable tbody tr:last-child { border-bottom: 0; }
+  .rb-manage .mcat .mtable td { display: block; min-width: 0; padding: 0; border: 0; }
+  .rb-manage .mcat .mtable td:first-child { grid-column: 1 / -1; font-weight: var(--rb-weight-semibold); }
+  .rb-manage .mcat .mtable td:nth-child(2)::before { content: "Stock "; color: var(--rb-text-secondary); }
+  .rb-manage .mcat .mtable td:nth-child(3)::before { content: "Most per booking "; color: var(--rb-text-secondary); }
+  .rb-manage .mcat .mtable td:nth-child(5) { grid-column: 1 / -1; }
+  .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
+  .rb-manage .manage-tabs a { padding-left: .75rem; padding-right: .75rem; }
+}
+
+/* Rooms: a table while its panel is wide; one card per room when it is narrow (phones, or large text on a wide screen).
+   Notes and building names wrap inside their cells; the table element, header cells and data are unchanged. */
+.rb-manage .rb-booking__panel:has(> .rooms-table) { container: rooms / inline-size; }
+.rb-manage .rooms-table td:first-child { min-width: 7rem; }
+.rb-manage .rooms-table td.note { min-width: 12rem; }
+.rb-manage .rooms-table td:nth-child(n+3):not(.note) { white-space: nowrap; }
+@container rooms (max-width: 56rem) {
+  .rb-manage .rooms-table td:first-child, .rb-manage .rooms-table td.note { min-width: 0; }
+  .rb-manage .rooms-table td:nth-child(n+3):not(.note) { white-space: normal; }
+  .rb-manage .rooms-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rb-manage .rooms-table, .rb-manage .rooms-table tbody { display: block; }
+  .rb-manage .rooms-table tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr)); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-manage .rooms-table tbody tr:last-child { border-bottom: 0; }
+  .rb-manage .rooms-table td { display: block; min-width: 0; padding: 0; border: 0; }
+  .rb-manage .rooms-table td:first-child { grid-column: 1 / -1; }
+  .rb-manage .rooms-table td:nth-child(3)::before { content: "Seats "; color: var(--rb-text-secondary); }
+  .rb-manage .rooms-table td:nth-child(6) { grid-column: 1 / -1; }
+  .rb-manage .rooms-table td.note { grid-column: 1 / -1; }
+  .rb-manage .rooms-table td.note:empty { display: none; }
+}
+
+/* A field the server refused: marked in red, and when it takes focus the error summary just above it stays in view. */
+.rb-manage [aria-invalid="true"] { scroll-margin-block: 8rem 3rem; }
+.rb-manage .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+
+/* Touch: the row "Edit" links of the Rooms and Equipment lists are 44px targets in their card layouts and on coarse pointers
+   (the compact desktop table keeps its small links). Scoped to these two lists so the Accounts list is unchanged. */
+@container rooms (max-width: 56rem) {
+  .rb-manage .rooms-table td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
+@media (max-width: 40rem), (pointer: coarse) {
+  .rb-manage .rooms-table td:last-child a, .rb-manage .mcat .mtable td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
+.rb-manage [id$="-errors"][tabindex="-1"]:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
+
+/* Headings name the page ("Manage rooms", "Edit CEA300"); long names wrap at word breaks. The panel's repeated name is a plain title. */
+.rb-manage .rb-booking__intro h1 { overflow-wrap: break-word; }
+.rb-manage .rb-booking__panel > p.edit-title { font-weight: var(--rb-weight-bold); line-height: 1.3; }
