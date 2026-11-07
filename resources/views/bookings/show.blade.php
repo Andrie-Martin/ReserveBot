@@ -62,7 +62,7 @@
     <dd>{{ $reservation->purpose }}</dd>
 
     <dt>Booked by</dt>
-    <dd class="who-cell"><x-avatar :user="$booker" /> <span>{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif @if ($booker->school_id)<span class="muted small">· {{ $booker->school_id }}</span>@endif</span></dd>
+    <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
 
     <dt>Sent</dt>
     <dd>{{ $reservation->created_at?->format('F j, Y, g:i A') }}</dd>

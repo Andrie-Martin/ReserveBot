@@ -58,7 +58,7 @@
 .rb-ops .req-facts { display: grid; grid-template-columns: minmax(0, 5rem) minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); margin: var(--rb-space-2) 0 0; font-size: .8125rem; }
 .rb-ops .req-facts dt { font-weight: var(--rb-weight-bold); color: var(--rb-text-secondary); }
 .rb-ops .req-facts dd { margin: 0; }
-.rb-ops .req-facts .who-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-ops .req-facts .who-cell { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--rb-space-2); }
 .rb-ops .req-actions { display: grid; justify-items: end; gap: var(--rb-space-2); min-width: 0; max-width: 100%; }
 .rb-ops .req-actions form { margin: 0; min-width: 0; }
 .rb-ops .req-actions .reject { width: 100%; }
@@ -75,6 +75,8 @@
 @media (max-width: 40rem) {
   .rb-ops .tcard, .rb-ops .req { grid-template-columns: minmax(0, 1fr); }
   .rb-ops .tcard-side, .rb-ops .req-actions { justify-items: start; }
+  .rb-ops .req-facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rb-ops .req-facts dd { margin-bottom: var(--rb-space-2); }
   .rb-ops .staff-actions { justify-content: flex-start; }
   .rb-ops .req-actions .reject > summary { justify-content: flex-start; }
   .rb-ops .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

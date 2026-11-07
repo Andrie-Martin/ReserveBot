@@ -131,7 +131,11 @@
 .rb-booking .facts dt { font-size: .8125rem; font-weight: var(--rb-weight-bold); color: var(--rb-text-secondary); }
 .rb-booking .facts dd { margin: 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
 .rb-booking .facts .item-list { margin: 0; padding-left: 1.25rem; }
-.rb-booking .facts .who-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .facts .who-cell { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .who-text { display: grid; min-width: 0; gap: 0; line-height: var(--rb-leading-body); }
+.rb-booking .who-name { min-width: 0; overflow-wrap: break-word; }
+.rb-booking .who-id { font-size: .75rem; color: var(--rb-text-secondary); white-space: nowrap; overflow-wrap: normal; }
+.rb-booking .who-id-inline { white-space: nowrap; overflow-wrap: normal; }
 .rb-booking .review-actions, .rb-booking .change-grid { display: grid; gap: var(--rb-space-4); }
 .rb-booking .change-grid { grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); }
 .rb-booking .change-grid form, .rb-booking .reject form, .rb-booking .cancel-box form { display: grid; gap: var(--rb-space-2); min-width: 0; }
