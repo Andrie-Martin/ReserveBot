@@ -91,9 +91,9 @@
           <form method="post" action="{{ route('bookings.reject', $reservation) }}">
             @csrf
             <label for="reject-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-            <textarea id="reject-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day">{{ $rejectErrors->any() ? old('reason') : '' }}</textarea>
+            <textarea id="reject-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($rejectErrors->any()) autofocus aria-invalid="true" aria-describedby="reject-reason-error" @endif>{{ $rejectErrors->any() ? old('reason') : '' }}</textarea>
             @if ($rejectErrors->any())
-              <p class="field-error">{{ $rejectErrors->first('reason') }}</p>
+              <p class="field-error" id="reject-reason-error">{{ $rejectErrors->first('reason') }}</p>
             @endif
             <button type="submit" class="btn-reject">Reject booking</button>
           </form>
