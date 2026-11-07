@@ -20,6 +20,7 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
 | `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete; merged to `dev` (PR #19) |
 | `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged; independent QA corrections applied (see Phase 08 below) |
+| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | complete, local, NOT merged; independent QA corrections applied (see Phase 09 below) |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -178,3 +179,48 @@ Verification (disposable app and MariaDB; genuine browser text size, i.e. the pr
 - Merge into current `origin/dev`: clean, no conflicts; no Phase 05-07 file changed.
 
 Backend concern (not changed): replacing with a future-dated semester moves every class to the new term, so the current term's classes stop blocking rooms until its start date. The check page does state when the classes start counting.
+
+## Phase 09 — Signed class check and the six error pages
+
+Branch `feat/frontend-design-09-system-pages`, stacked on `feat/frontend-design-08-timetable` @ `22c0885`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 09A | `7958a1a` | `public/css/check.css` (new, `.rb-check`) + classes/stylesheets in `classes/check.blade.php`: card with facts strip, state badge, two outlined answer cards (face-to-face keeps the room, online frees it), picked/current states, phone stacking. Form, `answer` values, POST-only submission and copy are unchanged. |
+| 09B | `9dfb01e` | Verification tooling: `classcheck-runtime.php`, `render-classcheck.php`, `classcheck-browser.cjs` (16 database-free states for guest, rep and lab staff: waiting, face-to-face, online, freed, picked, booked, ended, wrong rep, status, problem, long names) |
+
+Error pages (403, 404, 413, 419, 429, 500): they already share `errors/message.blade.php` with the Phase 02 auth card and `auth.css`, and are covered by the Phase 02/03 suites (`auth-runtime.php`: each code for guest, rep and admin; 413 and 500 hide the user menu). No change was needed or made; the isolated auth suite (1335 assertions) passes on the final tree.
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 PASS (answer form only while the class is open, POST only, CSRF, no answering link, status/alert roles).
+- Ordered structural parity vs the pre-change view: 16 documents, 0 mismatches.
+- classcheck-browser: 128 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 (no overflow, no clipped controls); 426 keyboard stops with visible focus; intercepted POSTs carry `answer=f2f` / `answer=online` with the token; ended and booked meetings offer no buttons; GET never answers; form/field/link parity.
+
+Real defects found by the new test and fixed in CSS only: long unbroken course/room/rep names overflowed at 390px; the "Booked as a class session" badge overflowed at 320px with 200% text.
+
+Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
+
+Notes (as of 09A/09B): the "NOT RUN" items of that stage (PHPUnit, authenticated app, real links) were run afterwards by the independent QA below.
+
+### Phase 09 independent QA and corrections
+
+Independent audit (functional, security, real-browser UX/accessibility, integration) rated Phase 09 **APPROVE WITH MINOR FIXES**; the backend was unchanged and correct. Corrections are views, CSS, one small page script and tests only: no route, controller, model, validation, authorization, signed-link or business-rule code changed.
+
+| Finding | Commit | Correction |
+|---|---|---|
+| F-02 stale highlight | `cc3bdc8` | The saved answer decides which card is marked, in text ("Your answer"). The email button's `?answer=` only marks a card while nothing is saved (dashed card, "Chosen in your email"); no focus-style ring. Fixtures 165 -> 295, plus a PHPUnit presentation test. |
+| F-03 422 page | `c684400` | `errors/422.blade.php` on the shared error card (rem type, header, recovery link). Status stays 422. It was byte-identical at 100% and 200% text. |
+| F-11 mid-word headings and alerts | `e7fd5d3`, then the follow-up commit that added the alert fix | Error and email-result cards size the h1 from their own width (`min(h2, 17cqw)`, `overflow-wrap: break-word`). "Something"/"connected" no longer break at 320px/200%. A later full-page check showed the alert text still broke ("connect-ed."); at narrow-for-the-text widths the card and alert now use less padding, keeping `overflow-wrap: anywhere` so a long address still wraps (break-word made one overflow). 224/224 page states keep ordinary words whole (218/224 before). |
+| F-01 answers and result below the fold | `db332ed` | "Jump to the answer buttons" link (visible on short windows), compact spacing, and the result message takes focus and is scrolled into view after an answer (`public/js/check.js`). |
+| F-07 dead ends | `9731953` | Ended, booked and not-this-rep states end with a real link ("Open My bookings" / "Go to my home page"). |
+| F-08 contrast | `33dbef1` | Caption on the saved-answer card 4.48:1 -> 14.11:1. |
+| Browser-test race | `b662617`, `5546131` | The timetable, ops, manage, accounts and booking browser scripts carried in this branch's tree raced: the POST helper waited for the request and then for load state, so the stub navigation was still in flight at the next `goto`. On this branch they passed 1 of 10 runs, every failure "Navigation ... interrupted by another navigation". Each helper now waits for the stub document to commit (a line byte-identical to `origin/dev`'s Phase 08 fix, so the merge does not conflict on it): classcheck 5/5, timetable 5/5, ops 5/5, manage 3/3, accounts 3/3, booking 3/3 as committed. Phase 09's own `classcheck-browser.cjs` has the same pattern but never failed (23+ runs, stub delays 0-350ms), so its change (`5546131`) is defensive. |
+
+Not changed (backend/config/shell, reported separately and not Phase 09 UX defects): `APP_DEBUG=true` in `.env.example` and the committed compose file (debug page on any 500); the 500 page's "check storage/logs/laravel.log" copy; unsigned requests answer 403/404 by id before the signature check; the maintenance (503) page is still the framework default; the shell's bottom-nav labels break mid-word at 320px/200%.
+
+Verification (disposable app and MariaDB; genuine browser text size):
+- Real browser at 1438x900, 1438x638, 390x844, 320x640 at 100% and 200%: error/email pages 52/52 (46 before), answer visibility/jump link/result focus 64/64 (10 before), accessible names agree with the visual state in the stale-highlight scenario (5/5).
+- HTTP/permission/CSRF/status-code scripts: class-check 62/62, email results 9/9, error pages 32/34 (the 2 are the intended `APP_DEBUG=true` leak), on the branch and on the merged tree.
+- PHPUnit (gated against disposable MariaDB): branch 110 tests, 103 passed, 1 failure, 1 error, 5 skipped; merged tree 113, 103, 1, 1, 8; same two pre-existing tests as `origin/dev` (`AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls`, `FoundationsTest::test_presentation_contracts_without_database_access`).
+- Render suites all pass (auth 1390, class check 414). Fixture-browser suites on the merged tree: 17/17 runs; Phase 02 auth browser 3/3 (63 cases).
+- Merge into current `origin/dev`: one documentation conflict in this file (branch-map rows and the Phase 08 notes); resolve by keeping dev's text and adding Phase 09's row and section. Code merges cleanly; 36/36 pages identical to dev apart from the new card class.
