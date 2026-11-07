@@ -54,10 +54,13 @@
     <p class="hint">Answering for {{ $rep->name }}. You can change it until the class ends. If the room was freed, “Face-to-face” takes it back as long as nobody has booked it.</p>
   @elseif ($state === 'booked')
     <p class="hint">This class meeting is booked as a class session, so it keeps its room. To change that, open the booking from My bookings.</p>
+    <a class="check-next" href="{{ route('bookings.mine') }}">Open My bookings</a>
   @elseif (! $isRep)
     <p class="hint">This link was for {{ $rep->name }}, who isn’t this block’s rep anymore.</p>
+    <a class="check-next" href="{{ url('/') }}">Go to my home page</a>
   @else
     <p class="hint">This class has ended.</p>
+    <a class="check-next" href="{{ url('/') }}">Go to my home page</a>
   @endif
 </section>
 @endsection

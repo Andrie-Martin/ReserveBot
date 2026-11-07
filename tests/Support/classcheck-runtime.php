@@ -93,6 +93,8 @@ function checkContracts(): int
         $hasResult = in_array($case[1], ['status', 'problem'], true);
         $check($focusTargets->length === (int) $hasResult, "$name autofocus only on a result message (".$focusTargets->length.')');
         foreach ($focusTargets as $target) { $check($target->getAttribute('id') === 'check-result' && $target->getAttribute('tabindex') === '-1', "$name the focused element is the result message"); }
+        // A state with no answer to give offers a way on (a real link), and a state with answers does not.
+        $check($x->query('//a[contains(@class,"check-next")][@href]')->length === ($open ? 0 : 1), "$name way on only from a state with no answer to give");
         // The saved answer, not a leftover ?answer=, decides what is marked; the mark is text, not tint alone.
         [$key, $emailChoice] = checkModel($case[0], $case[1]);
         $saved = in_array($key, ['f2f', 'online'], true) && $open ? $key : null;

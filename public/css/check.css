@@ -29,6 +29,9 @@
 .rb-check .check-choice .picked { border-style: dashed; }
 .rb-check .check-choice button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-check .hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+/* A way on from the states that have no answer to give (ended, booked, not this block's rep). */
+.rb-check .check-next { display: inline-flex; align-items: center; min-height: var(--rb-control-height); margin-top: var(--rb-space-2); color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-check .check-next:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 /* Jump link: hidden until focused on a roomy screen, always visible when the window is short for its text size (rem breakpoint: 48rem is 768px at
    100% and 1536px at 200%), where the answer buttons can be below the fold. The result message and the answers are focus targets (tabindex -1). */
 .rb-check .check-jump { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
