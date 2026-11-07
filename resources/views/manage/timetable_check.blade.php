@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @use('App\Support\TimetableRules')
 
-@section('title', 'Check the new timetable')
+@section('title', 'Check and replace timetable')
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
@@ -24,7 +24,7 @@
 <section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Check and replace timetable</h1>
   @include('manage._tabs')
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>

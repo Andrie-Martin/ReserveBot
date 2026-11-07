@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Timetable')
+@section('title', 'Manage timetable')
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
@@ -14,7 +14,7 @@
 <section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Manage timetable</h1>
   @include('manage._tabs')
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>

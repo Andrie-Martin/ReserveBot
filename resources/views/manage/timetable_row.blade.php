@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @use('App\Support\TimetableRules')
 
-@section('title', 'Change a row')
+@section('title', 'Edit timetable row')
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
@@ -14,7 +14,7 @@
 <section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Edit timetable row</h1>
   @include('manage._tabs')
   <p class="back"><a href="{{ $back }}">← New timetable</a></p>
   </header>
