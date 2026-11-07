@@ -84,3 +84,5 @@
   .rb-ops .mtable tr { display: grid; gap: var(--rb-space-1); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
   .rb-ops .mtable td { padding: 0; border: 0; }
 }
+/* Touch: the decided-list links are real targets, so give them the 44px control height. */
+@media (max-width: 40rem), (pointer: coarse) { .rb-ops .decided a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); } }
