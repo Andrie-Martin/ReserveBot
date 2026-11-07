@@ -174,6 +174,17 @@ function manageContracts(): int
         $check($x->query('//link[contains(@href,"css/manage.css?v=")]')->length === 1, "$name manage stylesheet");
         $check($x->query('//nav[@aria-label="Manage"]//a')->length === 4, "$name four manage tabs");
         $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")]')->length === 1, "$name one current tab");
+        // Empty states say what to do; populated states do not show them (and the empty rooms list has no blank table)
+        if (str_starts_with($name, 'manage-rooms-')) {
+            $isEmpty = str_ends_with($name, '-empty');
+            $check(($x->query('//main//p[contains(@class,"empty") and contains(.,"No rooms yet")]')->length === 1) === $isEmpty, "$name 'No rooms yet' message only when there are no rooms");
+            $check(($x->query('//main//table')->length === 0) === $isEmpty, "$name the rooms table is shown only when there are rooms");
+        }
+        if (str_starts_with($name, 'manage-equipment-') && ! str_starts_with($name, 'manage-equipment-edit-')) {
+            $isEmpty = str_ends_with($name, '-empty');
+            $check(($x->query('//main//p[contains(@class,"empty") and contains(.,"No equipment yet")]')->length === 1) === $isEmpty, "$name 'No equipment yet' message only when there are no categories");
+            $check(($x->query('//*[@id="item-category"]')->length === 0) === $isEmpty, "$name the add-item form is offered only when a category exists");
+        }
         // Validation feedback: aria-describedby always points at something real; focus is only ever taken after a refused save
         foreach ($x->query('//*[@aria-describedby]') as $node) {
             $target = $node->getAttribute('aria-describedby');

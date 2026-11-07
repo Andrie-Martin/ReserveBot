@@ -18,6 +18,9 @@
   </header>
 
   <div class="rb-booking__panel">
+  @if ($rooms->isEmpty())
+    <p class="empty">No rooms yet. Use “+ Add a room” below to add the first one; it can be booked as soon as it’s added.</p>
+  @else
   <table class="mtable rooms-table">
     <thead>
       <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr>
@@ -35,6 +38,7 @@
       @endforeach
     </tbody>
   </table>
+  @endif
   </div>
 
   <div class="rb-booking__panel">

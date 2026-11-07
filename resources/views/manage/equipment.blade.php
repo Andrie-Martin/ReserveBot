@@ -17,6 +17,12 @@
   <p class="muted">Stock is how many the department has. “Most per booking” is the most one booking can ask for. An item that’s off can’t be booked; bookings already made keep it.</p>
   </header>
 
+  @if ($categories->isEmpty())
+    <div class="rb-booking__panel">
+      <p class="empty">No equipment yet. Add a category first (for example “Audiovisual Equipment”), then add items to it.</p>
+    </div>
+  @endif
+
   @foreach ($categories as $category)
     @php $renameBag = $errors->getBag('category'.$category->id); @endphp
     <section class="mcat rb-booking__panel">
@@ -58,6 +64,7 @@
   @endforeach
 
   <div class="add-row rb-booking__panel">
+    @if ($categories->isNotEmpty())
     <details class="add-box" @if ($errors->getBag('item')->any()) open @endif>
       <summary>+ Add an item</summary>
       <form method="post" action="{{ route('manage.equipment.store') }}" class="mform">
@@ -99,6 +106,7 @@
         <button type="submit" class="btn-small">Add item</button>
       </form>
     </details>
+    @endif
     <details class="add-box" @if ($errors->getBag('category')->any()) open @endif>
       <summary>+ Add a category</summary>
       <form method="post" action="{{ route('manage.categories.store') }}" class="mform">
