@@ -71,6 +71,17 @@
     </div>
   @endif
 
+  @if ($done->isNotEmpty())
+    <div class="rb-booking__panel">
+    <details class="done-list">
+      <summary>Done <span class="count">{{ $done->count() }}</span> <span class="muted">completed, no-shows, cancelled and rejected</span></summary>
+      @foreach ($done as $r)
+        @include('today._card', ['r' => $r, 'staff' => $staff])
+      @endforeach
+    </details>
+    </div>
+  @endif
+
   @if ($classes)
     {{-- Phase 10: the department's classes this day. Online, or not confirmed by the 5-hour email, frees the room. --}}
     @php
@@ -104,17 +115,6 @@
         </tbody>
       </table>
       <p class="hint">Reps get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
-    </details>
-    </div>
-  @endif
-
-  @if ($done->isNotEmpty())
-    <div class="rb-booking__panel">
-    <details class="done-list">
-      <summary>Done <span class="count">{{ $done->count() }}</span> <span class="muted">completed, no-shows, cancelled and rejected</span></summary>
-      @foreach ($done as $r)
-        @include('today._card', ['r' => $r, 'staff' => $staff])
-      @endforeach
     </details>
     </div>
   @endif

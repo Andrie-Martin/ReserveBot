@@ -58,7 +58,7 @@
 .rb-ops .req-facts { display: grid; grid-template-columns: minmax(0, 5rem) minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); margin: var(--rb-space-2) 0 0; font-size: .8125rem; }
 .rb-ops .req-facts dt { font-weight: var(--rb-weight-bold); color: var(--rb-text-secondary); }
 .rb-ops .req-facts dd { margin: 0; }
-.rb-ops .req-facts .who-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-ops .req-facts .who-cell { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--rb-space-2); }
 .rb-ops .req-actions { display: grid; justify-items: end; gap: var(--rb-space-2); min-width: 0; max-width: 100%; }
 .rb-ops .req-actions form { margin: 0; min-width: 0; }
 .rb-ops .req-actions .reject { width: 100%; }
@@ -75,10 +75,26 @@
 @media (max-width: 40rem) {
   .rb-ops .tcard, .rb-ops .req { grid-template-columns: minmax(0, 1fr); }
   .rb-ops .tcard-side, .rb-ops .req-actions { justify-items: start; }
+  .rb-ops .req-facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rb-ops .req-facts dd { margin-bottom: var(--rb-space-2); }
   .rb-ops .staff-actions { justify-content: flex-start; }
   .rb-ops .req-actions .reject > summary { justify-content: flex-start; }
   .rb-ops .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .rb-ops .mtable, .rb-ops .mtable tbody { display: block; }
   .rb-ops .mtable tr { display: grid; gap: var(--rb-space-1); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
-  .rb-ops .mtable td { padding: 0; border: 0; }
+  .rb-ops .mtable td { padding: 0; border: 0; min-width: 0; }
+  /* Classes: a compact row (time and room, then class and status, then the two answer buttons) that wraps
+     item by item when the screen or the text size leaves no room, so nothing overlaps. */
+  .rb-ops .class-table tr { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--rb-space-2); }
+  .rb-ops .class-table td:nth-child(1), .rb-ops .class-table td:nth-child(3) { flex: 1 1 auto; }
+  .rb-ops .class-table td:nth-child(1) { font-weight: var(--rb-weight-semibold); }
+  .rb-ops .class-table td:nth-child(1).nowrap { white-space: normal; }
+  .rb-ops .class-table td:nth-child(2) { margin-left: auto; font-weight: var(--rb-weight-semibold); text-align: right; overflow-wrap: anywhere; }
+  .rb-ops .class-table td:nth-child(4) { margin-left: auto; max-width: 100%; text-align: right; }
+  .rb-ops .class-table .st { max-width: 100%; white-space: normal; text-align: left; }
+  .rb-ops .class-table td:nth-child(5) { flex: 1 1 100%; margin-top: var(--rb-space-1); }
+  .rb-ops .class-table td:nth-child(5):empty { display: none; }
+  .rb-ops .class-table .answer-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); }
 }
+/* Touch: the decided-list links are real targets, so give them the 44px control height. */
+@media (max-width: 40rem), (pointer: coarse) { .rb-ops .decided a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); } }

@@ -14,7 +14,7 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Accounts</h1>
+  <h1>Edit {{ $account->name }}</h1>
   <p class="back"><a href="{{ route('accounts.index') }}">‹ All accounts</a></p>
   </header>
 
@@ -29,11 +29,11 @@
   <div class="acct-head">
     <x-avatar :user="$account" size="md" />
     <div>
-      <h2 class="edit-title">{{ $account->name }}</h2>
-      <p class="muted small">
-        {{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif
-        @if ($account->school_id) · {{ $account->school_id }}@endif
-        · {{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}
+      <p class="edit-title">{{ $account->name }}</p>
+      <p class="muted small acct-meta">
+        <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
+        @if ($account->school_id)<span class="meta-unit">{{ $account->school_id }}</span>@endif
+        <span class="meta-unit">{{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}</span>
       </p>
       <p class="acct-status">
         @if (! $account->is_active)
@@ -57,9 +57,13 @@
   <form method="post" action="{{ route('accounts.update', $account) }}" class="mform acct-form">
     @csrf
     @method('PUT')
-    @include('manage._errors', ['bag' => $errors->getBag('details')])
-    @include('accounts._fields', ['prefix' => 'edit'])
-    <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $account->is_active)> Can log in <span class="optional">(untick to turn the account off)</span></label>
+    @php
+      $detailsBag = $errors->getBag('details');
+      $detailsFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id'])->first(fn ($field) => $detailsBag->has($field));
+    @endphp
+    @if ($detailsBag->any())<div id="edit-errors">@include('manage._errors', ['bag' => $detailsBag])</div>@endif
+    @include('accounts._fields', ['prefix' => 'edit', 'bag' => $detailsBag, 'focus' => $detailsFocus])
+    <label class="check"><input type="checkbox" name="is_active" value="1" @checked($detailsBag->any() ? old('is_active') : $account->is_active)> Can log in <span class="optional">(untick to turn the account off)</span></label>
     <button type="submit" class="btn-small">Save</button>
     <p class="hint">A new email has to be connected again: we email it a link.</p>
   </form>
@@ -70,10 +74,11 @@
   <form method="post" action="{{ route('accounts.password', $account) }}" class="mform">
     @csrf
     @method('PUT')
-    @include('manage._errors', ['bag' => $errors->getBag('password')])
+    @php $passwordBag = $errors->getBag('password'); @endphp
+    @if ($passwordBag->any())<div id="password-errors">@include('manage._errors', ['bag' => $passwordBag])</div>@endif
     <div class="inline-form">
       <label for="new-password" class="sr-only">New password</label>
-      <input id="new-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="New password">
+      <input id="new-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="New password" @if ($passwordBag->any()) autofocus aria-invalid="true" aria-describedby="password-errors" @endif>
       <button type="submit" class="btn-small">Set password</button>
     </div>
     <p class="hint">{{ AccountFields::PASSWORD_HINT }} Give it to {{ $account->name }}; they’ll pick their own when they next log in. Any device logged in to the account is logged out.</p>

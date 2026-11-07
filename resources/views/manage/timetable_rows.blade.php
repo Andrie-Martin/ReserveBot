@@ -1,12 +1,13 @@
 @extends('layouts.app')
 @use('App\Support\TimetableRules')
 
-@section('title', $draft ? 'New timetable' : 'Timetable in use')
+@section('title', $draft ? 'Edit new timetable' : 'View timetable in use')
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+  <script src="{{ asset('js/timetable.js') }}?v={{ filemtime(public_path('js/timetable.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -19,7 +20,7 @@
 <section class="card manage-card tt-card rb-booking rb-manage rb-tt rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>{{ $draft ? 'Edit new timetable' : 'View timetable in use' }}</h1>
   @include('manage._tabs')
   </header>
 

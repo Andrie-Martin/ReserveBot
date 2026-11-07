@@ -12,14 +12,14 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Edit {{ $room->name }}</h1>
   @include('manage._tabs')
 
   <p class="back"><a href="{{ route('manage.rooms') }}">‹ All rooms</a></p>
   </header>
 
   <div class="rb-booking__panel">
-  <h2 class="edit-title">{{ $room->name }}</h2>
+  <p class="edit-title">{{ $room->name }}</p>
   @if ($sharedWith->isNotEmpty())
     <p class="notice">Shared with {{ $sharedWith->join(', ', ' and ') }}: changes here show for them too.</p>
   @endif
@@ -27,26 +27,36 @@
   <form method="post" action="{{ route('manage.rooms.update', $room) }}" class="mform">
     @csrf
     @method('PUT')
-    @include('manage._errors', ['bag' => $errors->getBag('default')])
+    @php
+        $roomBag = $errors->getBag('default');
+        $roomFocus = collect(['name', 'building', 'capacity', 'note'])->first(fn ($field) => $roomBag->has($field));
+        $roomInvalid = fn (string $field) => ($roomBag->has($field) ? 'aria-invalid="true" aria-describedby="room-'.$field.'-error"' : '').($roomFocus === $field ? ' autofocus' : '');
+        $roomMsg = fn (string $field) => $roomBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="room-'.$field.'-error">'.e($roomBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($roomBag->any())<div id="room-errors">@include('manage._errors', ['bag' => $roomBag])</div>@endif
     <div class="mgrid">
       <div>
         <label for="name" class="field-label">Name</label>
-        <input id="name" name="name" maxlength="30" required value="{{ old('name', $room->name) }}">
+          {!! $roomMsg('name') !!}
+        <input id="name" name="name" {!! $roomInvalid('name') !!} maxlength="30" required value="{{ old('name', $room->name) }}">
       </div>
       <div>
         <label for="building" class="field-label">Building <span class="optional">(optional)</span></label>
-        <input id="building" name="building" maxlength="60" value="{{ old('building', $room->building) }}">
+          {!! $roomMsg('building') !!}
+        <input id="building" name="building" {!! $roomInvalid('building') !!} maxlength="60" value="{{ old('building', $room->building) }}">
       </div>
       <div>
         <label for="capacity" class="field-label">Seats <span class="optional">(optional)</span></label>
-        <input id="capacity" name="capacity" type="number" min="0" max="1000" value="{{ old('capacity', $room->capacity) }}">
+          {!! $roomMsg('capacity') !!}
+        <input id="capacity" name="capacity" {!! $roomInvalid('capacity') !!} type="number" min="0" max="1000" value="{{ old('capacity', $room->capacity) }}">
       </div>
       <div>
         <label for="note" class="field-label">Note <span class="optional">(optional)</span></label>
-        <input id="note" name="note" maxlength="200" value="{{ old('note', $room->fixed_equipment_note) }}">
+          {!! $roomMsg('note') !!}
+        <input id="note" name="note" {!! $roomInvalid('note') !!} maxlength="200" value="{{ old('note', $room->fixed_equipment_note) }}">
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $room->is_active)> Can be booked <span class="optional">(untick to turn the room off)</span></label>
+    <label class="check"><input type="checkbox" name="is_active" value="1" @checked($errors->getBag('default')->any() ? old('is_active') : $room->is_active)> Can be booked <span class="optional">(untick to turn the room off)</span></label>
     <button type="submit" class="btn-small">Save</button>
   </form>
   </div>
