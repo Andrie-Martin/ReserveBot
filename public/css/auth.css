@@ -105,3 +105,8 @@
   .rb-auth-login__card { padding-block: var(--rb-space-6); }
   .rb-auth-login__card .rb-auth-card__footer { padding-top: var(--rb-space-1); }
 }
+
+/* Error and email-result cards: the heading size follows the card's own width (container query units), so ordinary words never break
+   mid-word when the card is narrow or the browser's text is enlarged; only a token wider than the card (a long address) still wraps. */
+.rb-auth-card--message { container-type: inline-size; }
+.rb-auth-card--message .rb-heading--h1 { font-size: min(var(--rb-text-h2), 17cqw); overflow-wrap: break-word; }

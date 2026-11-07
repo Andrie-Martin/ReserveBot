@@ -109,6 +109,9 @@ function authContracts(): int
             $expected = ['info', ...(($case[2]['connected'] ?? true) ? [] : ['email']), 'upload', ...(empty($case[2]['photo']) ? [] : ['remove'])];
             $check($order === $expected, "$name form order ".implode(',', $order)." expected ".implode(',', $expected));
         }
+        if (str_starts_with($name, 'error-') || str_starts_with($name, 'link-')) {
+            $check($x->query('//*[contains(concat(" ", normalize-space(@class), " "), " rb-auth-card--message ")]')->length === 1, "$name card sizes its heading to its width");
+        }
         if (str_starts_with($name, 'welcome-')) {
             $ask = in_array($case[1], ['rep', 'lab_staff']) && !isset($case[2]['school']);
             $check($x->query('//input[@name="school_id"]')->length === (int)$ask, "$name asks school");
