@@ -40,8 +40,10 @@ const widths=[320,390,768,1024,1280,1440];
   const text=(await page.locator('main').textContent()).replace(/\s+/g,' ').trim();
   for(const content of info)assert.ok(text.includes(content),name+' retained information: '+content);
   if(name==='home-lab_staff'||name==='home-admin'){
-   assert.equal((await page.locator('main').innerHTML()).trim(),staffMain.trim(),name+' unchanged markup');
-   assert.equal(await page.locator('link[href*="dashboard.css"]').count(),0);
+   // Phase 05 intentionally redesigned the lab-staff/admin dashboard (shared dashboard structure and stylesheet), so the
+   // earlier "markup unchanged / no dashboard.css" scope guard no longer applies. Their forms, links, titles, records,
+   // disclosures and information are still compared exactly against the baseline above.
+   assert.equal(await page.locator('link[href*="dashboard.css"]').count(),1,name+' loads the dashboard stylesheet once');
   }
   for(const width of widths){await page.setViewportSize({width,height:900});if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)){console.error(await page.locator('body *').evaluateAll(es=>es.filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1&&!e.closest('.rb-availability__cal-wrap');}).map(e=>[e.tagName,e.className,e.getBoundingClientRect().width])));await page.screenshot({path:path.join(current,'overflow.png'),fullPage:true});throw new Error(name+' page overflow '+width);}states++;}
  }

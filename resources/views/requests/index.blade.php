@@ -3,10 +3,18 @@
 
 @section('title', 'Requests')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/operations.css') }}?v={{ filemtime(public_path('css/operations.css')) }}">
+@endpush
+
 @section('content')
-<section class="card requests-card">
+<section class="card requests-card rb-booking rb-ops rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
   <h1>Requests</h1>
   <p class="muted">Bookings waiting for approval, soonest first. Approving keeps the room and items for the rep; rejecting frees them. Lab staff and admins can both decide.</p>
+  </header>
 
   @if (session('status'))
     <p class="success" role="status">{{ session('status') }}</p>
@@ -15,6 +23,7 @@
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
+  <div class="rb-booking__panel">
   <h2>Waiting <span class="count">{{ $waiting->count() }}</span></h2>
   @forelse ($waiting as $r)
     @php
@@ -30,7 +39,7 @@
         </p>
         <p class="req-title">{{ $r->purpose }}</p>
         <dl class="req-facts">
-          <dt>Who</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span>{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif @if ($r->user->school_id)<span class="muted small">· {{ $r->user->school_id }}</span>@endif</span></dd>
+          <dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd>
           <dt>Needs</dt><dd>{{ $r->needLabel() }}</dd>
           <dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd>
           @if ($r->hasEquipment())
@@ -49,9 +58,9 @@
           <form method="post" action="{{ route('bookings.reject', $r) }}">
             @csrf
             <label for="reason-{{ $r->id }}" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-            <textarea id="reason-{{ $r->id }}" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day">{{ $bag->any() ? old('reason') : '' }}</textarea>
+            <textarea id="reason-{{ $r->id }}" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($bag->any()) autofocus aria-invalid="true" aria-describedby="reason-{{ $r->id }}-error" @endif>{{ $bag->any() ? old('reason') : '' }}</textarea>
             @if ($bag->any())
-              <p class="field-error">{{ $bag->first('reason') }}</p>
+              <p class="field-error" id="reason-{{ $r->id }}-error">{{ $bag->first('reason') }}</p>
             @endif
             <button type="submit" class="btn-reject">Reject booking</button>
           </form>
@@ -62,8 +71,10 @@
   @empty
     <p class="empty">Nothing is waiting for approval.</p>
   @endforelse
+  </div>
 
   @if ($decided->isNotEmpty())
+    <div class="rb-booking__panel">
     <h2>Recently decided</h2>
     <ul class="decided">
       @foreach ($decided as $r)
@@ -77,6 +88,7 @@
         </li>
       @endforeach
     </ul>
+    </div>
   @endif
 </section>
 @endsection

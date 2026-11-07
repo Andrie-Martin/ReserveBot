@@ -4,8 +4,13 @@
 
 @section('title', "Today's schedule")
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/operations.css') }}?v={{ filemtime(public_path('css/operations.css')) }}">
+@endpush
+
 @section('content')
-<section class="card today-card">
+<section class="card today-card rb-booking rb-ops rb-ui">
   <div class="today-head">
     <div>
       <p class="eyebrow">{{ $date->isToday() ? 'Today' : ($date->isPast() ? 'Earlier day' : 'Coming day') }}</p>
@@ -39,25 +44,42 @@
     <li><strong>{{ $done->count() }}</strong> done</li>
   </ul>
 
+  <div class="rb-booking__panel">
   <h2>In use now <span class="count">{{ $inUse->count() }}</span></h2>
   @forelse ($inUse as $r)
     @include('today._card', ['r' => $r, 'staff' => $staff])
   @empty
     <p class="empty">Nothing is out right now.</p>
   @endforelse
+  </div>
 
+  <div class="rb-booking__panel">
   <h2>To hand out <span class="count">{{ $toHandOut->count() }}</span></h2>
   @forelse ($toHandOut as $r)
     @include('today._card', ['r' => $r, 'staff' => $staff])
   @empty
     <p class="empty">No approved bookings left to hand out{{ $date->isToday() ? ' today' : '' }}.</p>
   @endforelse
+  </div>
 
   @if ($waiting->isNotEmpty())
+    <div class="rb-booking__panel">
     <h2>Waiting for approval <span class="count">{{ $waiting->count() }}</span></h2>
     @foreach ($waiting as $r)
       @include('today._card', ['r' => $r, 'staff' => $staff])
     @endforeach
+    </div>
+  @endif
+
+  @if ($done->isNotEmpty())
+    <div class="rb-booking__panel">
+    <details class="done-list">
+      <summary>Done <span class="count">{{ $done->count() }}</span> <span class="muted">completed, no-shows, cancelled and rejected</span></summary>
+      @foreach ($done as $r)
+        @include('today._card', ['r' => $r, 'staff' => $staff])
+      @endforeach
+    </details>
+    </div>
   @endif
 
   @if ($classes)
@@ -66,6 +88,7 @@
       $freedCount = collect($classes)->filter(fn ($m) => in_array($m['state'], ['online', 'freed'], true))->count();
       $waitingCount = collect($classes)->where('state', 'waiting')->count();
     @endphp
+    <div class="rb-booking__panel">
     <details class="done-list class-list" @if ($date->isToday()) open @endif>
       <summary>Classes <span class="count">{{ count($classes) }}</span>
         <span class="muted">{{ $freedCount }} {{ $freedCount === 1 ? 'room' : 'rooms' }} freed · {{ $waitingCount }} not confirmed yet</span></summary>
@@ -93,15 +116,7 @@
       </table>
       <p class="hint">Reps get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
     </details>
-  @endif
-
-  @if ($done->isNotEmpty())
-    <details class="done-list">
-      <summary>Done <span class="count">{{ $done->count() }}</span> <span class="muted">completed, no-shows, cancelled and rejected</span></summary>
-      @foreach ($done as $r)
-        @include('today._card', ['r' => $r, 'staff' => $staff])
-      @endforeach
-    </details>
+    </div>
   @endif
 
   <p class="hint">The buttons work at any time. A booking shows <strong>Late</strong> when it isn’t picked up {{ $staff->graceMinutes }} minutes after it starts, and <strong>Overdue</strong> when items are still out after it ends.@if ($date->gte(today())) For each room’s full day, see <a href="{{ route('rooms', ['date' => $date->toDateString()]) }}#day">Free rooms</a>.@endif</p>
