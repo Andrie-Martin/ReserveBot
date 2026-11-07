@@ -21,7 +21,7 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete, local, NOT merged |
 | `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged |
 | `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | complete, local, NOT merged |
-| `feat/frontend-design-10-integration-qa` | `feat/frontend-design-09-system-pages` @ `c30191b` (stacked; contains Phases 03-09) | in progress, local |
+| `feat/frontend-design-10-integration-qa` | `feat/frontend-design-09-system-pages` @ `c30191b` (stacked; contains Phases 03-09 as they were then; `dev` has since merged Phases 03-09 plus their QA corrections) | complete, local, NOT merged; independent QA corrections applied (see Phase 10 below) |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -177,17 +177,37 @@ Real defects found by the new test and fixed in CSS only: long unbroken course/r
 
 Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
 
-## Phase 10 — Integration visual consistency and QA (no new feature scope)
+## Phase 10 — Link colour consistency, colour scan and QA handoff (no new feature scope)
 
-Branch `feat/frontend-design-10-integration-qa`, stacked on `feat/frontend-design-09-system-pages` @ `c30191b`.
+Branch `feat/frontend-design-10-integration-qa`, branched from `feat/frontend-design-09-system-pages` @ `c30191b`. Phase 10 was **not** integrated with `dev` when it was written; `dev` has since merged Phases 03-09 and their QA corrections (PR #21 is the latest). Phases 11-13 are stacked on this branch.
 
 | Part | Commit | Summary |
 |---|---|---|
-| 10A | `121fe47` | One CSS fix found by the cross-screen colour scan (plain inline links and `.req-link` on booking-system pages were still legacy violet), `tests/Support/legacy-colour-scan.cjs`, `docs/frontend/QA_HANDOFF.md` (human QA checklist, limitations, how to re-run) |
+| 10A | `121fe47`, `5e3b5e4` | CSS fix found by the cross-screen colour scan (plain inline links and `.req-link` on booking-system pages were legacy violet), first `tests/Support/legacy-colour-scan.cjs`, first `docs/frontend/QA_HANDOFF.md`. |
 
-Verification on the final tree (fixtures re-exported from the working tree in a throwaway container):
-- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 PASS.
-- Browser suites PASS: task-ux, timeline, rooms-correction, layout, auth, shell-navigation, booking, operations, accounts, manage, timetable, class check. foundations-browser PASS against the pre-Phase-04 layout export and reports the documented intentional difference against the current one.
-- Colour scan: no legacy violet remains on any real screen (accounts, manage, timetable, class check, booking, operations, availability, auth, timeline fixtures).
+Verification recorded at 10A (isolated fixtures on the branch's own tree): layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288, management 1052, timetable 692, class check 165 render assertions PASS; the browser suites listed in the original entry passed. Those counts are for the branch tree; merged with `dev` they are higher (auth 1390, operations 536, accounts 291, management 1464, timetable 892, class check 414).
 
-Real defect found and fixed: violet "Details/Cancel or move…" links on Today and the empty-state links on booking pages.
+### Phase 10 independent QA and corrections
+
+An independent audit (fixtures, PHPUnit against a disposable MariaDB, an authenticated live app on a disposable database, real-browser checks at 1438x900, 1438x638, 390x844, 320x640 at 100% and genuine 200% text) rated Phase 10 **APPROVE WITH MINOR FIXES**. Backend, routes, authorization and migrations were not changed. Corrections are CSS, the scan script and documentation only:
+
+| Finding | Commit | Correction |
+|---|---|---|
+| N-1 My bookings titles went dark to maroon and lost the hover cue; N-2 timetable week-day links went from weight 700 to 600 | `5e544c0`, `b494ebd` | The plain-link rule excludes `.brow-title a` and `.tt-dayname a`. The exclusions sit in `:where()`: a plain `:not(.brow-title a)` raised the rule's specificity to (0,2,2), which made it beat dev's dark "Recently decided" purpose links; the follow-up commit keeps it at the original (0,2,1). |
+| E-1 legacy violet focus ring on the Reject and Cancel reason fields (`style.css` `details.reject textarea:focus`) | `8699f09` | Maroon focus ring and a visible border on those two fields, same as every other field. |
+| Found by the new `--states` scan: violet hover on the busy-rooms disclosure (`style.css` `.busy-rooms summary:hover`) | `bdeac81` | Maroon hover. |
+| Scanner limits: pale tints missed, no focus/hover, truncated output, could not separate known-legacy fixtures, raw stack trace on bad arguments | `621230c` | Hue-based detection (pale tints included), `--states` focus and hover checks, all findings printed with a distinct-findings summary, `--known-legacy=` lists but does not fail, exit 0/1/2, usage errors, external requests aborted, prints what it does not cover. |
+| Stale or false handoff claims | this documentation commit | `QA_HANDOFF.md` rewritten: merged versus local branches, what was tested, open risks. |
+
+Verification of the corrections (disposable infrastructure only):
+- Targeted browser assertions on the `dev` + Phase 10 tree, 1438x900, 390x844, 320x640 at 100% and 200% text: 42 checks (title colour and hover, week-day weight equal to `dev`, plain link colour, Reject and Cancel focus ring, busy-rooms hover), 0 failures; the same checks fail 30 of 42 against the original `5e3b5e4` CSS.
+- Computed-style diff `dev` versus `dev` + Phase 10 (172 fixtures, 4 viewports, 100% and 200%): only the intended changes (plain violet links to maroon; the two reason fields' focus ring); no `.brow-title`, `.tt-dayname` or purpose-link change; no new horizontal overflow at 200%.
+- Colour scan: original CSS with `--states` exit 1 (29 documents with violet textarea focus, 5 with violet hover); corrected tree with `--states` and `--known-legacy=layout` exit 0, 0 active, 15 known-legacy layout fixtures listed; usage errors exit 2. Merged with `dev` the scan correctly exits 1 on the Phase 09 `a.check-jump` link (15 class-check fixtures): not hidden, not fixed here because `check.css` does not exist on this branch.
+- PHPUnit (disposable MariaDB, all gates): branch 109 tests, 102 passed, 1 failure, 1 error, 5 skipped, 2 risky; merged with `dev` 113 tests, 106 passed, 1 failure, 1 error, 5 skipped, 3 risky. The failures are the two pre-existing `dev` tests named in `QA_HANDOFF.md`; identical before and after these corrections.
+- Render checks PASS on the branch and the merged tree (layout 279, booking 536, operations 532 / 536 merged, timetable 692 / 892 merged); fixture-browser booking 31, operations 28, timetable 34 cases PASS on the merged tree.
+
+Not changed and still open (see `QA_HANDOFF.md`): `APP_DEBUG=true` defaults (deployment review), login throttling (Phase 12, not merged), future-day hand-out (Phase 13, not merged), future-dated semester availability (unresolved), the two failing tests (fixed on Phase 11, not merged), the violet `a.check-jump` on `dev`.
+
+### Integrating with `dev`
+
+Merging `origin/dev` (`771fe95`) into this branch conflicts in this file only: (1) branch-map rows 07-09 and 10, (2) the end of the Phase 09 section against the appended Phase 10 section. Resolution: keep `dev`'s rows 07-09 and its whole Phase 09 section (including "Phase 09 independent QA and corrections"), then keep this Phase 10 row and section after them. `public/css/booking.css` merges automatically and keeps dev's Phase 05 corrections.
