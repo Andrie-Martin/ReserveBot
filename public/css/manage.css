@@ -125,7 +125,8 @@
 .rb-manage .term-form { margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-canvas); }
 .rb-manage .term-name { margin: 0; font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); }
 .rb-manage .rb-booking__panel > h2 + .muted { margin-bottom: 0; }
-.rb-manage .edit-title { margin: 0 0 var(--rb-space-4) !important; font-size: 1.25rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+/* Scoped to a panel's own title: the Accounts card title (.acct-head .edit-title) keeps Phase 06's tight spacing. */
+.rb-manage .rb-booking__panel > .edit-title { margin: 0 0 var(--rb-space-4) !important; font-size: 1.25rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .rb-manage .rb-booking__panel .mform + h2, .rb-manage .rb-booking__panel ul.mlist, .rb-manage .rb-booking__panel > .error { margin-top: var(--rb-space-2); }
 @media (max-width: 40rem) {
   .rb-manage .mcat-head > * { min-width: 0; max-width: 100%; }
