@@ -8,7 +8,7 @@ function manageCases(): array
     $cases = [];
     foreach ([['rooms', ['normal', 'empty', 'errors', 'long']], ['room-edit', ['normal', 'shared', 'off', 'errors', 'none', 'long']],
         ['equipment', ['normal', 'empty', 'errors', 'long']], ['equipment-edit', ['normal', 'over', 'off', 'errors', 'none', 'long']],
-        ['rules', ['normal', 'errors', 'long']]] as [$page, $states]) {
+        ['rules', ['normal', 'errors', 'term-error', 'long']]] as [$page, $states]) {
         foreach (['lab_staff', 'admin'] as $role) {
             foreach ($states as $s) {
                 $cases['manage-'.$page.'-'.$role.'-'.$s] = [$page, $role, $s];
@@ -131,6 +131,11 @@ function manageRender(array $case): string
     // rules
     $config = new App\Models\DepartmentConfig(App\Models\DepartmentConfig::DEFAULTS + ['department_id' => 73]);
     $terms = collect([['1st Semester', '2026-08-10', '2026-12-19'], ['2nd Semester', '2027-01-11', '2027-05-22']])->map(fn ($t, $i) => tap(new App\Models\Term(['name' => $t[0], 'start_date' => $t[1], 'end_date' => $t[2]]), fn ($m) => $m->id = $i + 1));
+    if ($state === 'term-error') {
+        // Only the Semester-dates form failed: its old input (and CSRF token) is flashed, the rules form's fields are not
+        $errors->put('term1', $bag(['end_date' => ['The last day has to be after the first day.']]));
+        $old = ['_token' => 'x', 'start_date' => '2026-12-01', 'end_date' => '2026-11-01'];
+    }
     if ($errs) {
         $errors->put('rules', $bag(['open_days' => ['Pick at least one open day.'], 'max_booking_minutes' => ['The longest booking can’t be shorter than the shortest.']]));
         $errors->put('term1', $bag(['end_date' => ['The last day has to be after the first day.']]));
@@ -163,6 +168,21 @@ function manageContracts(): int
         $check($x->query('//link[contains(@href,"css/manage.css?v=")]')->length === 1, "$name manage stylesheet");
         $check($x->query('//nav[@aria-label="Manage"]//a')->length === 4, "$name four manage tabs");
         $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")]')->length === 1, "$name one current tab");
+        if (str_starts_with($name, 'manage-rules-')) {
+            // The approval checkbox and the open days belong to the rules form: only a failure of THAT form may change them.
+            $approval = $x->query('//input[@name="requires_approval"]')->item(0);
+            $ticked = $x->query('//input[@name="open_days[]" and @checked]')->length;
+            if (str_ends_with($name, '-term-error')) {
+                $check($approval->hasAttribute('checked'), "$name a failed semester-dates save keeps the saved approval ticked");
+                $check($ticked === 6, "$name a failed semester-dates save keeps the saved open days ticked");
+                $check($x->query('//input[@id="start-1" and @value="2026-12-01"]')->length === 1 && $x->query('//input[@id="end-1" and @value="2026-11-01"]')->length === 1, "$name the entered dates are kept");
+            } elseif (str_ends_with($name, '-errors')) {
+                $check(! $approval->hasAttribute('checked'), "$name an intentionally unticked approval stays unticked after a failed rules save");
+                $check($ticked === 2, "$name the submitted open days (Mon, Fri) stay ticked after a failed rules save");
+            } else {
+                $check($approval->hasAttribute('checked') && $ticked === 6, "$name saved approval and open days shown");
+            }
+        }
     }
 
     return $count;

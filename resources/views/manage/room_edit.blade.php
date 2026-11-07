@@ -46,7 +46,7 @@
         <input id="note" name="note" maxlength="200" value="{{ old('note', $room->fixed_equipment_note) }}">
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $room->is_active)> Can be booked <span class="optional">(untick to turn the room off)</span></label>
+    <label class="check"><input type="checkbox" name="is_active" value="1" @checked($errors->getBag('default')->any() ? old('is_active') : $room->is_active)> Can be booked <span class="optional">(untick to turn the room off)</span></label>
     <button type="submit" class="btn-small">Save</button>
   </form>
   </div>

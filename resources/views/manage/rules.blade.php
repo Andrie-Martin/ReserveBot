@@ -11,8 +11,10 @@
 @section('content')
 @php
   $bag = $errors->getBag('rules');
-  $days = old('open_days', $config->openDays());
-  $value = fn ($field, $current) => old($field, $current);
+  // Old input is only meaningful when THIS form failed. A failed Semester-dates save also flashes old input, but it must not
+  // reset the separate checkboxes here (an unchecked box submits nothing, so "no old value" would read as "unticked").
+  $days = $bag->any() ? (array) old('open_days', []) : $config->openDays();
+  $value = fn ($field, $current) => $bag->any() ? old($field, $current) : $current;
 @endphp
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
@@ -31,7 +33,7 @@
 
     <fieldset>
       <legend>Approval</legend>
-      <label class="check"><input type="checkbox" name="requires_approval" value="1" @checked(old('_token') ? old('requires_approval') : $config->requires_approval)> New bookings wait for approval from lab staff or an admin</label>
+      <label class="check"><input type="checkbox" name="requires_approval" value="1" @checked($bag->any() ? old('requires_approval') : $config->requires_approval)> New bookings wait for approval from lab staff or an admin</label>
       <p class="hint">Untick to confirm bookings right away.</p>
     </fieldset>
 

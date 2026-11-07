@@ -47,7 +47,7 @@
         <input id="max_per_request" name="max_per_request" type="number" min="1" max="99" required value="{{ old('max_per_request', $item->max_per_request) }}">
       </div>
     </div>
-    <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('_token') ? old('is_active') : $item->is_active)> Can be booked <span class="optional">(untick to turn the item off)</span></label>
+    <label class="check"><input type="checkbox" name="is_active" value="1" @checked($errors->getBag('default')->any() ? old('is_active') : $item->is_active)> Can be booked <span class="optional">(untick to turn the item off)</span></label>
     <button type="submit" class="btn-small">Save</button>
   </form>
   </div>
