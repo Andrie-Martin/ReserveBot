@@ -4,10 +4,18 @@
 
 @section('title', 'Accounts')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+@endpush
+
 @section('content')
-<section class="card manage-card">
+<section class="card manage-card rb-booking rb-manage rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ $admin->roleLabel() }}</p>
   <h1>Accounts</h1>
   <p class="muted">Everyone in {{ $admin->department->name }} who can log in. You make and manage the block rep and lab staff accounts; each person picks their own password the first time they log in.</p>
+  </header>
 
   @if (session('status'))
     <p class="success" role="status">{{ session('status') }}</p>
@@ -19,16 +27,21 @@
     <p class="notice">Emails aren’t sent yet: the site writes them to <code>storage/logs/laravel.log</code> instead (MAIL_MAILER=log). Set up Gmail to really send them: see the README, “Email”.</p>
   @endunless
 
+  <div class="rb-booking__panel">
   <details class="add-box" @if ($errors->getBag('add')->any()) open @endif>
     <summary>+ Add an account</summary>
     <form method="post" action="{{ route('accounts.store') }}" class="mform acct-form">
       @csrf
-      @include('manage._errors', ['bag' => $errors->getBag('add')])
-      @include('accounts._fields', ['prefix' => 'add', 'account' => null])
+      @php
+        $addBag = $errors->getBag('add');
+        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id', 'password'])->first(fn ($field) => $addBag->has($field));
+      @endphp
+      @if ($addBag->any())<div id="add-errors">@include('manage._errors', ['bag' => $addBag])</div>@endif
+      @include('accounts._fields', ['prefix' => 'add', 'account' => null, 'bag' => $addBag, 'focus' => $addFocus])
       <div class="mgrid one">
         <div>
           <label for="add-password" class="field-label">Starting password</label>
-          <input id="add-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off">
+          <input id="add-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off" @if ($addBag->has('password')) aria-invalid="true" aria-describedby="add-errors" @endif @if ($addFocus === 'password') autofocus @endif>
           <p class="hint">{{ AccountFields::PASSWORD_HINT }} Give it to them in person or by chat; they’ll pick their own when they first log in.</p>
         </div>
       </div>
@@ -36,8 +49,10 @@
       <p class="hint">We email them a link to connect their email. Block reps can book once it’s connected.</p>
     </form>
   </details>
+  </div>
 
   @foreach ($groups as $title => $people)
+    <div class="rb-booking__panel">
     <h2>{{ $title }} <span class="count">{{ $people->count() }}</span></h2>
     @if ($people->isEmpty())
       <p class="empty">None yet.</p>
@@ -67,7 +82,7 @@
                 </span>
               </td>
               @if ($title !== 'Admins')
-                <td class="acct-block">{{ $person->section?->name ?? '—' }}</td>
+                <td class="acct-block" data-label="{{ $title === 'Block reps' ? 'Block' : 'Section' }}">{{ $person->section?->name ?? '—' }}</td>
                 <td class="hide-sm">{{ $person->school_id ?? '—' }}</td>
               @endif
               <td class="acct-status">
@@ -95,6 +110,7 @@
         </tbody>
       </table>
     @endif
+    </div>
   @endforeach
 </section>
 @endsection

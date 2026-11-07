@@ -16,7 +16,8 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 |---|---|---|
 | `feat/frontend-design-03-rep-availability` | `dev` @ `7db0f1c` (includes merged Phase 02, PR #12) | complete, local, NOT merged |
 | `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | complete, local, NOT merged |
-| `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | in progress, local |
+| `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | complete, local, NOT merged |
+| `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | in progress, local |
 
 ## Phase 03 — Representative dashboard and Free Rooms
 
@@ -96,3 +97,21 @@ Deliberate exceptions / notes:
 - visual-refinement-browser (HTML byte-parity assumes CSS-only changes): an adapted scratchpad copy skips parity ONLY for Free Rooms, timeline and the two staff dashboard documents; it passes with 87 documents of parity, computed-style parity and 144 timeline comparisons.
 - Admin-specific dashboard content (S10) shares this structure; its role-specific checks belong to Phase 06.
 - NOT RUN: PHPUnit, authenticated live app, real approvals/hand-outs.
+
+## Phase 06 — Admin accounts (list and edit)
+
+Branch `feat/frontend-design-06-admin-accounts`, stacked on `feat/frontend-design-05-lab-operations` @ `204a337`.
+
+| Part | Commit | Summary |
+|---|---|---|
+| 06A | `7885366` | `public/css/manage.css` (new, `.rb-manage`, reused by Phases 07-08) + wrappers/classes/kicker in `accounts/index` and `accounts/edit`. No form, field, link, label or the delete confirmation changed; the `for-rep`/`for-staff` switching in `style.css` is untouched. |
+| 06B | `50dfd37` | Verification tooling: `accounts-runtime.php`, `render-accounts.php`, `accounts-browser.cjs` (11 database-free states) and this log |
+
+Verification (final tree):
+- Isolated: layout 279, foundations 63, auth 1335, availability 2137, booking 536, operations 532, accounts 288 PASS (password never rendered back, unique ids, labelled controls, CSRF, delete confirmation).
+- Ordered structural parity vs the pre-change views: 11 documents, 0 structure and 0 paragraph mismatches.
+- accounts-browser: 88 layout states at 100%/200% text over 1438x638, 1438x900, 390x844, 320x640 (no overflow, no clipped controls); 1214 keyboard stops with visible focus; role switching still shows/hides the block and staff fields; intercepted add, update (`_method=PUT`), password and delete (`_method=DELETE`, confirmation fires once) carry exact field names; form/field/link parity with baseline.
+
+Real defects found by the new test and fixed in CSS only: long unbroken names overflowed hint/heading text at 390px; the "Set password" row and the delete button (nowrap) overflowed at 320px with 200% text; the `…@iskolarngbayan.pup.edu.ph` nowrap hint overflowed at 200% text.
+
+Notes: the test fixture initially picked the update form for the delete check because both share one URL; the test now selects by `_method=DELETE`. NOT RUN: PHPUnit, authenticated live app, real account changes. Neighbouring browser suites were not re-run for this phase (only new CSS file and two accounts views changed); the isolated render suites above were.
