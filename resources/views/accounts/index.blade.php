@@ -32,12 +32,16 @@
     <summary>+ Add an account</summary>
     <form method="post" action="{{ route('accounts.store') }}" class="mform acct-form">
       @csrf
-      @include('manage._errors', ['bag' => $errors->getBag('add')])
-      @include('accounts._fields', ['prefix' => 'add', 'account' => null])
+      @php
+        $addBag = $errors->getBag('add');
+        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id', 'password'])->first(fn ($field) => $addBag->has($field));
+      @endphp
+      @if ($addBag->any())<div id="add-errors">@include('manage._errors', ['bag' => $addBag])</div>@endif
+      @include('accounts._fields', ['prefix' => 'add', 'account' => null, 'bag' => $addBag, 'focus' => $addFocus])
       <div class="mgrid one">
         <div>
           <label for="add-password" class="field-label">Starting password</label>
-          <input id="add-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off">
+          <input id="add-password" name="password" type="text" minlength="8" maxlength="64" required autocomplete="off" spellcheck="false" autocapitalize="off" @if ($addBag->has('password')) aria-invalid="true" aria-describedby="add-errors" @endif @if ($addFocus === 'password') autofocus @endif>
           <p class="hint">{{ AccountFields::PASSWORD_HINT }} Give it to them in person or by chat; they’ll pick their own when they first log in.</p>
         </div>
       </div>

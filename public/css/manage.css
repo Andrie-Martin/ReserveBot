@@ -78,6 +78,9 @@
   .rb-manage .acct-table td.acct-block::before { content: attr(data-label) ': '; font-weight: var(--rb-weight-semibold); color: var(--rb-text-secondary); }
   .rb-manage .acct-table td.acct-edit a { display: inline-flex; align-items: center; justify-content: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
+/* A field the server refused: marked in red, and when it takes focus the error summary just above it stays in view. */
+.rb-manage [aria-invalid="true"] { scroll-margin-block: 8rem 3rem; }
+.rb-manage .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
 /* Touch layouts: the text links of the management screens (back link, bookings "Open") get the 44px control height. */
 @media (max-width: 40rem), (pointer: coarse) {
   .rb-manage .back a, .rb-manage .mlist a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
