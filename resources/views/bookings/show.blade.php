@@ -26,8 +26,8 @@
   <div class="rb-booking__panel">
   <div class="booking-head">
     <div>
-      <p class="eyebrow">Booking #{{ $reservation->id }}</p>
-      <h1>{{ $reservation->needLabel() }}</h1>
+      <p class="eyebrow">Booking #{{ $reservation->id }} · {{ $reservation->needLabel() }}</p>
+      <h1>{{ $reservation->purpose }}</h1>
     </div>
     <span class="status-badge st-{{ strtolower($reservation->status) }}">{{ $reservation->statusLabel() }}</span>
   </div>
@@ -58,8 +58,6 @@
       </dd>
     @endif
 
-    <dt>Reason</dt>
-    <dd>{{ $reservation->purpose }}</dd>
 
     <dt>Booked by</dt>
     <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
