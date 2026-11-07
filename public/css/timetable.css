@@ -35,10 +35,10 @@
 .rb-tt .tt-attention h2 { margin: 0 0 var(--rb-space-1); color: var(--rb-warning-text); font-size: 1rem; letter-spacing: -.02em; }
 .rb-tt .tt-attention > p { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
 .rb-tt .tt-clashes { background: var(--rb-surface-panel); border-radius: var(--rb-radius-control); padding: 0 var(--rb-space-4); }
-/* "Open" on an overlapping booking: at least 24px tall everywhere, a full 44px target on touch layouts. The link and its destination are unchanged. */
-.rb-tt .tt-clashes a { display: inline-flex; align-items: center; justify-content: center; min-height: 1.75rem; }
+/* "Open" on a booking (overlap panel, and the check page's class-session list): at least 24px tall everywhere, a full 44px target on touch layouts. The link and its destination are unchanged. */
+.rb-tt :is(.tt-clashes, .mlist) a { display: inline-flex; align-items: center; justify-content: center; min-height: 1.75rem; }
 @media (max-width: 40rem), (pointer: coarse) {
-  .rb-tt .tt-clashes a { min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+  .rb-tt :is(.tt-clashes, .mlist) a { min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
 .rb-tt .tt-draft { display: block; border: 1px solid var(--rb-color-maroon); background: var(--rb-surface-active); }
 .rb-tt .tt-draft-title { margin: var(--rb-space-1) 0 0; font-size: 1.0625rem; font-weight: var(--rb-weight-bold); overflow-wrap: anywhere; }
