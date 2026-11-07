@@ -32,7 +32,7 @@ function authCases(): array
         foreach ([true, false] as $ok) $cases['link-'.$role.'-'.(int) $ok] = ['auth.email_link', $role, ['route' => 'email.connect', 'ok' => $ok]];
     }
     $cases['link-class-expired'] = ['auth.email_link', 'guest', ['ok' => false, 'message' => 'This link has expired (it works until the class ends) or isn’t complete. Reps can also answer on their home page.']];
-    foreach ([403, 404, 413, 419, 429, 500] as $code) {
+    foreach ([403, 404, 413, 419, 422, 429, 500] as $code) {
         foreach (['guest', 'rep', 'admin'] as $role) $cases['error-'.$code.'-'.$role] = ['errors.'.$code, $role, []];
     }
     return $cases;
