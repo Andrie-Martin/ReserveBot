@@ -110,3 +110,11 @@
    mid-word when the card is narrow or the browser's text is enlarged; only a token wider than the card (a long address) still wraps. */
 .rb-auth-card--message { container-type: inline-size; }
 .rb-auth-card--message .rb-heading--h1 { font-size: min(var(--rb-text-h2), 17cqw); overflow-wrap: break-word; }
+/* Narrow for the text size (rem breakpoint: 352px at 100%, 704px at 200%): the card and its alert give up padding so the message keeps a column
+   wide enough for ordinary words. The alert keeps the design system's overflow-wrap:anywhere, so a token wider than the column (a long address)
+   still wraps instead of widening the page. */
+@media (max-width: 22rem) {
+  .rb-auth-card--message { padding: var(--rb-space-2); }
+  .rb-auth-card--message .rb-alert { padding: var(--rb-space-2); }
+}
+
