@@ -26,6 +26,8 @@
 .rb-check .check-choice .btn-f2f:hover { background: var(--rb-success-bg); }
 .rb-check .check-choice .btn-online:hover { background: var(--check-info-bg); }
 .rb-check .check-choice .current { background: var(--rb-surface-active); }
+/* The pale tint behind the saved answer lowers the caption's contrast (4.48:1 at 13px): use the primary text colour there. */
+.rb-check .check-choice .current .check-sub { color: var(--rb-text-primary); }
 .rb-check .check-choice .picked { border-style: dashed; }
 .rb-check .check-choice button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-check .hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
