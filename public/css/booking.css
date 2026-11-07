@@ -194,3 +194,6 @@
 /* Phase 10: plain inline links and detail links on booking-system pages use the maroon system, not the legacy violet.
    Row titles (.brow-title, dark text with a maroon hover) and timetable week-day names (.tt-dayname, bold) keep their own link styling. */
 .rb-booking a:not([class], .brow-title a, .tt-dayname a), .rb-booking .req-link { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+
+/* Phase 10 QA: the reject and cancel reason fields kept the legacy violet focus ring from style.css (details.reject textarea:focus, 0,2,2). Same ring as every other field here. */
+.rb-booking details.reject textarea:focus, .rb-booking details.cancel-box textarea:focus { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
