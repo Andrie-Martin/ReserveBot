@@ -191,5 +191,6 @@
 .rb-booking .change-grid form { align-content: start; }
 .rb-booking .change-box > .change-grid { margin-top: var(--rb-space-4); }
 
-/* Phase 10: plain inline links and detail links on booking-system pages use the maroon system, not the legacy violet. */
-.rb-booking a:not([class]), .rb-booking .req-link { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+/* Phase 10: plain inline links and detail links on booking-system pages use the maroon system, not the legacy violet.
+   Row titles (.brow-title, dark text with a maroon hover) and timetable week-day names (.tt-dayname, bold) keep their own link styling. */
+.rb-booking a:not([class], .brow-title a, .tt-dayname a), .rb-booking .req-link { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
