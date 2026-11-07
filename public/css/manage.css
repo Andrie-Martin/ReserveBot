@@ -85,6 +85,9 @@
 .rb-manage .acct-meta .meta-unit { display: inline-block; overflow-wrap: anywhere; }
 .rb-manage .acct-meta .meta-unit:not(:last-child)::after { content: ' ·'; content: ' ·' / ''; }
 @media (max-width: 40rem) { .rb-manage .hint .nowrap { display: inline-block; } }
+/* Account edit page: the heading names the person (long names wrap at word breaks); the card repeats it as a plain title. */
+.rb-manage .rb-booking__intro h1 { overflow-wrap: break-word; }
+.rb-manage .acct-head p.edit-title { font-weight: var(--rb-weight-bold); line-height: 1.3; }
 /* Touch layouts: the text links of the management screens (back link, bookings "Open") get the 44px control height. */
 @media (max-width: 40rem), (pointer: coarse) {
   .rb-manage .back a, .rb-manage .mlist a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }

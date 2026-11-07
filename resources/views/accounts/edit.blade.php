@@ -14,7 +14,7 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Accounts</h1>
+  <h1>Edit {{ $account->name }}</h1>
   <p class="back"><a href="{{ route('accounts.index') }}">‹ All accounts</a></p>
   </header>
 
@@ -29,7 +29,7 @@
   <div class="acct-head">
     <x-avatar :user="$account" size="md" />
     <div>
-      <h2 class="edit-title">{{ $account->name }}</h2>
+      <p class="edit-title">{{ $account->name }}</p>
       <p class="muted small acct-meta">
         <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
         @if ($account->school_id)<span class="meta-unit">{{ $account->school_id }}</span>@endif
