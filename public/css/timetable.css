@@ -1,0 +1,192 @@
+/* Phase 08: timetable management (overview, in use, draft, row edit, check and replace). Loaded after booking.css and
+   manage.css; page-scoped on .rb-tt. Presentation only: the draft/check/replace flow, version field and formaction are
+   untouched. The CSS-only row-type switch (.tt-class-only) stays in style.css. */
+.rb-tt { --tt-focus: var(--rb-focus-width) solid var(--rb-focus-color); }
+.rb-tt.tt-card { max-width: none; }
+.rb-tt .eyebrow { margin: 0; color: var(--rb-color-maroon); font-size: .75rem; font-weight: var(--rb-weight-bold); letter-spacing: .06em; text-transform: uppercase; }
+.rb-tt .tt-tag { margin-left: var(--rb-space-1); padding: .0625rem var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-warning-bg); color: var(--rb-warning-text); font-size: .75rem; font-weight: var(--rb-weight-bold); letter-spacing: 0; text-transform: none; vertical-align: .125rem; }
+.rb-tt a.btn-main, .rb-tt button.btn-replace { display: inline-flex; align-items: center; justify-content: center; width: auto; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-color-maroon); border-radius: var(--rb-radius-control); background: var(--rb-color-maroon); color: var(--rb-color-white); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-bold); text-decoration: none; cursor: pointer; }
+.rb-tt a.btn-main:hover, .rb-tt button.btn-replace:hover:not(:disabled) { background: var(--rb-color-deep); border-color: var(--rb-color-deep); }
+.rb-tt button.btn-replace:disabled { border-color: var(--rb-border-control); background: var(--rb-neutral-bg); color: var(--rb-neutral-text); cursor: not-allowed; }
+.rb-tt button.btn-outline { display: inline-flex; align-items: center; justify-content: center; width: auto; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; white-space: normal; }
+.rb-tt button.btn-outline:hover { background: var(--rb-surface-active); }
+.rb-tt .btn-ghost, .rb-tt a.btn-main, .rb-tt button.btn-replace { white-space: normal; text-align: center; }
+.rb-tt button.btn-small.btn-danger { border-color: var(--rb-danger-text); background: var(--rb-surface-panel); color: var(--rb-danger-text); }
+.rb-tt button.btn-small.btn-danger:hover { background: var(--rb-danger-bg); filter: none; }
+.rb-tt button.link { display: inline-flex; align-items: center; min-height: var(--rb-control-height); padding: 0 var(--rb-space-1); background: none; color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-semibold); text-decoration: underline; cursor: pointer; }
+.rb-tt button.link.tt-delete { color: var(--rb-danger-text); }
+.rb-tt :is(a, button, summary, select, input, [role=region][tabindex]):focus-visible { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); }
+.rb-tt .tt-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-tt .rb-booking__intro .error { margin: var(--rb-space-4) 0 0; }
+
+/* A field the server refused: marked in red, and when it takes focus the message above it stays in view (scroll margin in rem, so it grows with text size). */
+.rb-tt [aria-invalid="true"] { scroll-margin-block: 17rem 3rem; }
+.rb-tt .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+.rb-tt [id$="-errors"][tabindex="-1"]:focus { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
+
+/* Overview: in use, attention, draft. */
+.rb-tt .tt-now, .rb-tt .tt-draft, .rb-tt .tt-attention { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--rb-space-4) 1.25rem; margin: 0 0 var(--rb-space-4); padding: var(--rb-space-4) 1.25rem; border-radius: var(--rb-radius-card); }
+.rb-tt .tt-now { border: 1px solid var(--rb-border-warm); background: var(--rb-surface-panel); }
+.rb-tt .tt-now > div { min-width: 0; }
+.rb-tt .tt-now-term { margin: var(--rb-space-1) 0 0; font-size: 1.125rem; font-weight: var(--rb-weight-bold); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.rb-tt :is(.tt-now-dates, .tt-now-counts, .tt-draft-facts) { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-tt .tt-now-counts { color: var(--rb-text-secondary); }
+.rb-tt .tt-attention { display: block; border: 1px solid var(--rb-warning-text); background: var(--rb-warning-bg); }
+.rb-tt .tt-attention h2 { margin: 0 0 var(--rb-space-1); color: var(--rb-warning-text); font-size: 1rem; letter-spacing: -.02em; }
+.rb-tt .tt-attention > p { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-tt .tt-clashes { background: var(--rb-surface-panel); border-radius: var(--rb-radius-control); padding: 0 var(--rb-space-4); }
+/* "Open" on a booking (overlap panel, and the check page's class-session list): at least 24px tall everywhere, a full 44px target on touch layouts. The link and its destination are unchanged. */
+.rb-tt :is(.tt-clashes, .mlist) a { display: inline-flex; align-items: center; justify-content: center; min-height: 1.75rem; }
+@media (max-width: 40rem), (pointer: coarse) {
+  .rb-tt :is(.tt-clashes, .mlist) a { min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
+.rb-tt .tt-draft { display: block; border: 1px solid var(--rb-color-maroon); background: var(--rb-surface-active); }
+.rb-tt .tt-draft-title { margin: var(--rb-space-1) 0 0; font-size: 1.0625rem; font-weight: var(--rb-weight-bold); overflow-wrap: anywhere; }
+.rb-tt .tt-draft .hint { margin: var(--rb-space-1) 0 var(--rb-space-4); }
+.rb-tt .tt-bad { color: var(--rb-danger-text); }
+.rb-tt :is(.tt-discard, .tt-restore) > summary { display: inline-flex; align-items: center; min-height: var(--rb-control-height); width: fit-content; max-width: 100%; color: var(--rb-danger-text); font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; }
+.rb-tt .tt-restore > summary { padding: 0 var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); }
+.rb-tt .tt-discard { margin-top: var(--rb-space-2); }
+.rb-tt :is(.tt-discard, .tt-restore) form { margin-top: var(--rb-space-2); }
+.rb-tt :is(.tt-discard, .tt-restore) .hint { margin: 0 0 var(--rb-space-2); }
+
+/* Two ways to make a new timetable. */
+.rb-tt .tt-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: var(--rb-space-4); margin-top: var(--rb-space-2); }
+.rb-tt .tt-way { min-width: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-canvas); }
+.rb-tt .tt-way h3 { display: flex; align-items: center; gap: var(--rb-space-2); margin: 0 0 var(--rb-space-2); font-size: 1rem; letter-spacing: -.02em; }
+.rb-tt .tt-num { display: inline-grid; flex: none; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--rb-color-maroon); color: var(--rb-color-white); font-size: .8125rem; }
+.rb-tt .tt-way > p, .rb-tt .tt-steps { margin: 0 0 var(--rb-space-4); font-size: var(--rb-text-small); }
+.rb-tt .tt-steps { padding-left: 1.25rem; }
+.rb-tt .tt-steps li { margin-bottom: var(--rb-space-1); }
+.rb-tt .tt-steps a, .rb-tt .tt-other a, .rb-tt .tt-fixlist a, .rb-tt .tt-head a:not(.btn-main, .btn-ghost), .rb-tt .tt-box a, .rb-tt .tt-row-actions a, .rb-tt .tt-attention a, .rb-tt .tt-backups a:not(.btn-ghost), .rb-tt p.error a, .rb-tt .hint a { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
+.rb-tt .tt-upload { gap: var(--rb-space-2); }
+.rb-tt .tt-upload input[type=file] { min-height: var(--rb-control-height); padding: .5rem; }
+.rb-tt .tt-upload input[type=file]::file-selector-button { margin-right: var(--rb-space-2); padding: var(--rb-space-1) var(--rb-space-2); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; }
+.rb-tt .tt-zip { margin-top: var(--rb-space-4); }
+
+/* Backups. */
+.rb-tt .tt-backups { margin: var(--rb-space-2) 0 0; padding: 0; border: 0; border-radius: 0; list-style: none; overflow: visible; }
+.rb-tt .tt-backups li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: 0; padding: var(--rb-space-4) 0; border-top: 1px solid var(--rb-border-warm); }
+.rb-tt .tt-backups li:first-child { border-top: 0; }
+.rb-tt .tt-backup-main { display: flex; flex: 1 1 14rem; flex-direction: column; min-width: 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-tt .tt-backup-why { color: var(--rb-text-secondary); font-size: .8125rem; }
+.rb-tt .tt-backup-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--rb-space-2); min-width: 0; }
+.rb-tt .tt-backup-actions form { margin: 0; }
+
+/* In use / draft: header, day tabs, week picker. */
+.rb-tt .tt-undo { margin: 0 0 var(--rb-space-4); }
+.rb-tt .tt-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--rb-space-2) 1.25rem; margin: var(--rb-space-2) 0 var(--rb-space-4); }
+.rb-tt .tt-head > div { flex: 1 1 18rem; min-width: 0; }
+.rb-tt .tt-head .edit-title { margin: 0 0 var(--rb-space-1) !important; }
+.rb-tt .tt-head .muted { margin: 0; }
+.rb-tt .tt-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: var(--rb-space-4) 0 var(--rb-space-2); }
+.rb-tt .tt-days { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
+.rb-tt .tt-days a { display: inline-flex; align-items: center; gap: var(--rb-space-1); min-height: var(--rb-control-height); padding: 0 var(--rb-space-4); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); color: var(--rb-text-primary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; }
+.rb-tt .tt-days a span { color: var(--rb-text-secondary); font-size: .75rem; font-weight: var(--rb-weight-medium); }
+.rb-tt .tt-days a:hover { border-color: var(--rb-color-maroon); color: var(--rb-color-maroon); }
+.rb-tt .tt-days a.on { border-color: var(--rb-color-maroon); background: var(--rb-color-maroon); color: var(--rb-color-white); }
+.rb-tt .tt-days a.on span { color: var(--rb-color-white); }
+.rb-tt .tt-days a.tt-fixtab { border-color: var(--rb-danger-text); color: var(--rb-danger-text); }
+.rb-tt .tt-days a.tt-fixtab.on { background: var(--rb-danger-text); color: var(--rb-color-white); }
+.rb-tt .tt-weekpick { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; min-width: 0; }
+.rb-tt .tt-weekpick select { min-width: 0; max-width: 100%; width: auto; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); }
+.rb-tt .tt-weekpick select:focus { border-color: var(--rb-border-control); }
+.rb-tt .tt-listhead { margin: var(--rb-space-4) 0 var(--rb-space-2); font-size: 1rem; letter-spacing: -.02em; }
+.rb-tt .tt-listhead .count { margin-left: var(--rb-space-1); }
+
+/* Row tables. */
+.rb-tt .tt-table td { vertical-align: top; overflow-wrap: anywhere; }
+.rb-tt .tt-time, .rb-tt .tt-room { white-space: nowrap; }
+.rb-tt .tt-room { font-weight: var(--rb-weight-semibold); }
+.rb-tt .tt-table .extra, .rb-tt .tt-clashes .extra, .rb-tt .tt-what .extra { display: block; color: var(--rb-text-secondary); font-size: .8125rem; }
+.rb-tt .tt-table tr.tt-blocked-row td, .rb-tt .tt-small tr.tt-blocked-row td { background: var(--rb-surface-canvas); color: var(--rb-text-secondary); }
+.rb-tt .tt-table tr.tt-warn-row td { background: var(--rb-warning-bg); }
+.rb-tt .tt-table tr.tt-bad-row td { background: var(--rb-danger-bg); }
+.rb-tt .tt-msg { display: block; margin-top: var(--rb-space-1); font-size: .8125rem; }
+.rb-tt .tt-msg-bad { color: var(--rb-danger-text); font-weight: var(--rb-weight-bold); }
+.rb-tt .tt-msg-warn { color: var(--rb-warning-text); }
+.rb-tt .tt-row-actions { white-space: nowrap; text-align: right; }
+.rb-tt .tt-row-actions a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); }
+.rb-tt .tt-row-actions form { display: inline; margin: 0 0 0 var(--rb-space-2); }
+.rb-tt .tt-add { margin: 0 0 var(--rb-space-4); }
+.rb-tt .table-scroll { overflow-x: auto; }
+.rb-tt .tt-small { font-size: .8125rem; }
+.rb-tt .tt-small th, .rb-tt .tt-small td { padding: var(--rb-space-1) var(--rb-space-2); }
+
+/* Week grid. */
+.rb-tt .tt-week-scroll { overflow-x: auto; margin: var(--rb-space-2) 0 0; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
+.rb-tt .tt-corner, .rb-tt .tt-dayname { border-bottom: 1px solid var(--rb-border-warm); background: var(--rb-surface-canvas); }
+.rb-tt .tt-dayname { border-left: 1px solid var(--rb-border-warm); font-size: .8125rem; }
+.rb-tt .tt-dayname a { display: inline-flex; align-items: center; justify-content: center; min-height: var(--rb-control-height); min-width: var(--rb-control-height); color: var(--rb-text-primary); }
+.rb-tt .tt-dayname a:hover { color: var(--rb-color-maroon); }
+.rb-tt .tt-hours span { color: var(--rb-text-secondary); font-size: .6875rem; }
+.rb-tt .tt-daycol { border-left: 1px solid var(--rb-border-warm); background: linear-gradient(to bottom, var(--rb-border-warm) 1px, transparent 1px) 0 0 / 100% var(--tt-hour); }
+.rb-tt .tt-item { border: 1px solid var(--rb-action-secondary-border); border-left: 3px solid var(--rb-color-maroon); border-radius: var(--rb-radius-control); background: var(--rb-surface-active); color: var(--rb-text-primary); }
+.rb-tt .tt-item:hover, .rb-tt .tt-item:focus-visible { border-color: var(--rb-color-maroon); }
+.rb-tt .tt-item-time { color: var(--rb-text-secondary); }
+.rb-tt .tt-item.blocked { border-color: var(--rb-border-control); border-left-color: var(--rb-text-secondary); background: repeating-linear-gradient(135deg, var(--rb-surface-canvas) 0 6px, var(--rb-neutral-bg) 6px 12px); color: var(--rb-neutral-text); }
+.rb-tt .tt-item.overlap { border-color: var(--rb-danger-text); border-left-color: var(--rb-danger-text); background: var(--rb-danger-bg); }
+
+/* Row form. */
+.rb-tt .tt-form { gap: var(--rb-space-4); }
+.rb-tt .tt-kind { display: flex; flex-wrap: wrap; gap: var(--rb-space-1) var(--rb-space-6); margin: 0; padding: 0; border: 0; }
+.rb-tt .tt-kind legend { width: 100%; }
+.rb-tt .tt-kind label.check { margin: 0; min-height: var(--rb-control-height); }
+.rb-tt .tt-kind label.check input[type=radio] { accent-color: var(--rb-color-maroon); }
+.rb-tt .tt-form .mgrid, .rb-tt .tt-note { margin: 0; }
+.rb-tt .tt-edit { margin: 0 0 var(--rb-space-4); padding: 0; border: 0; }
+.rb-tt .tt-delete-form, .rb-tt .tt-delete-form button { margin: 0; }
+.rb-tt .tt-delete-form { padding-top: var(--rb-space-4); border-top: 1px solid var(--rb-border-warm); }
+
+/* Check and replace. */
+.rb-tt .tt-box { margin: var(--rb-space-4) 0; padding: var(--rb-space-4) 1.25rem; border-radius: var(--rb-radius-card); }
+.rb-tt .tt-box h3 { margin: 0 0 var(--rb-space-2); font-size: 1rem; letter-spacing: -.02em; }
+.rb-tt .tt-box-bad { border: 1px solid var(--rb-danger-text); background: var(--rb-danger-bg); }
+.rb-tt .tt-box-bad h3 { color: var(--rb-danger-text); }
+.rb-tt .tt-fixlist { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-tt .tt-fixlist li { margin-bottom: var(--rb-space-2); overflow-wrap: anywhere; }
+.rb-tt .tt-section { margin: var(--rb-space-6) 0 var(--rb-space-2); padding-top: var(--rb-space-4); border-top: 1px solid var(--rb-border-warm); font-size: 1rem; letter-spacing: -.02em; }
+.rb-tt .tt-total, .rb-tt .tt-text { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-tt .tt-tally { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0 0 var(--rb-space-2); padding: 0; list-style: none; }
+.rb-tt .tt-tally li { margin: 0; padding: var(--rb-space-1) var(--rb-space-4); border-radius: var(--rb-radius-pill); font-size: var(--rb-text-small); }
+.rb-tt .t-added { background: var(--rb-success-bg); color: var(--rb-success-text); }
+.rb-tt .t-removed { background: var(--rb-danger-bg); color: var(--rb-danger-text); }
+.rb-tt .t-changed { background: var(--rb-warning-bg); color: var(--rb-warning-text); }
+.rb-tt .t-same { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
+.rb-tt .tt-changes { margin-top: var(--rb-space-2); }
+.rb-tt .tt-changes > summary { display: inline-flex; align-items: center; min-height: var(--rb-control-height); width: fit-content; color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); cursor: pointer; }
+.rb-tt .tt-changed, .rb-tt .tt-adds { margin: 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-tt .tt-warnings { display: grid; gap: var(--rb-space-1); margin: 0; padding: 0; font-size: var(--rb-text-small); list-style: none; }
+.rb-tt .tt-warnings li { padding: var(--rb-space-1) var(--rb-space-2); border-left: 3px solid var(--rb-warning-text); border-radius: var(--rb-radius-control); background: var(--rb-warning-bg); overflow-wrap: anywhere; }
+.rb-tt .tt-hint-top { margin: 0 0 var(--rb-space-2); }
+.rb-tt .tt-final { margin: 0; }
+.rb-tt .tt-final fieldset { min-width: 0; margin: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-canvas); }
+.rb-tt .tt-final legend { padding: 0 var(--rb-space-2); font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); }
+.rb-tt .tt-final fieldset > * + * { margin-top: var(--rb-space-4); }
+.rb-tt .tt-replace { padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-color-maroon); border-radius: var(--rb-radius-card); background: var(--rb-surface-active); }
+.rb-tt .tt-replace .hint { margin: var(--rb-space-2) 0 0; }
+.rb-tt .tt-other { margin: var(--rb-space-4) 0 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+
+@media (max-width: 40rem) {
+  .rb-tt :is(.tt-now, .tt-draft, .tt-way, .tt-replace, .tt-final fieldset, .tt-box) { padding: var(--rb-space-4); }
+  .rb-tt .tt-weekpick { width: 100%; }
+  .rb-tt .tt-weekpick select { flex: 1 1 8rem; }
+  .rb-tt .tt-table, .rb-tt .tt-table tbody { display: block; }
+  .rb-tt .tt-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rb-tt .tt-table tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-tt .tt-table tbody td { display: block; padding: 0; border: 0; }
+  .rb-tt .tt-table td.tt-what, .rb-tt .tt-table td.tt-row-actions { grid-column: 1 / -1; }
+  .rb-tt .tt-table td.tt-row-actions { text-align: left; }
+  .rb-tt .tt-table td.tt-day { grid-column: 1 / -1; font-weight: var(--rb-weight-semibold); }
+  .rb-tt .tt-table td.hide-sm { display: none; }
+  .rb-tt .tt-table .show-sm { display: block; }
+  .rb-tt .tt-backup-actions { width: 100%; }
+}
+
+/* Narrow for the text size (a phone, or large text on a phone): the nested cards give up padding so forms and messages keep a readable column.
+   rem breakpoints follow the browser's own text-size setting, so 22rem is 352px at 100% and 704px at 200%. */
+@media (max-width: 22rem) {
+  .rb-tt .rb-booking__panel, .rb-tt .add-box form, .rb-tt :is(.tt-now, .tt-draft, .tt-attention, .tt-way, .tt-replace, .tt-box) { padding: var(--rb-space-2); }
+  .rb-tt .tt-final fieldset { padding: var(--rb-space-2); }
+  .rb-tt .field-error, .rb-tt .error { padding: var(--rb-space-1) var(--rb-space-2); }
+}

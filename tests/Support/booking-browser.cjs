@@ -112,7 +112,7 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     await page.locator('#purpose').fill('Example reason');
     const before2 = submissions.length;
     await Promise.all([page.waitForRequest(r => r.method() === 'POST'), page.locator('button.btn-next').click()]);
-    await page.waitForLoadState();
+    await page.waitForFunction(() => document.title === 'intercepted'); await page.waitForLoadState('load'); // the stub page has committed: the next goto cannot collide with this navigation
     const post = submissions[before2];
     assert.equal(post.method, 'POST');
     assert.equal(post.path, '/book');
@@ -124,7 +124,7 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     await page.locator('#cancel-reason').fill('Example cancel reason');
     const before3 = submissions.length;
     await Promise.all([page.waitForRequest(r => r.method() === 'POST'), page.locator('#cancel button[type=submit]').click()]);
-    await page.waitForLoadState();
+    await page.waitForFunction(() => document.title === 'intercepted'); await page.waitForLoadState('load'); // the stub page has committed: the next goto cannot collide with this navigation
     assert.equal(submissions[before3].path, '/bookings/55/cancel');
     assert.ok(decodeURIComponent(submissions[before3].body.replace(/\+/g, ' ')).includes('reason=Example cancel reason'));
     summary.push('intercepted GET step 1, POST step 2 and POST cancel carry the exact field names');

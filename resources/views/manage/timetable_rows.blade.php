@@ -1,7 +1,14 @@
 @extends('layouts.app')
 @use('App\Support\TimetableRules')
 
-@section('title', $draft ? 'New timetable' : 'Timetable in use')
+@section('title', $draft ? 'Edit new timetable' : 'View timetable in use')
+
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+  <script src="{{ asset('js/timetable.js') }}?v={{ filemtime(public_path('js/timetable.js')) }}" defer></script>
+@endpush
 
 @section('content')
 @php
@@ -10,9 +17,14 @@
   $here = request()->fullUrl();
   $problemCount = count($problems);
 @endphp
-<section class="card manage-card tt-card">
-  <h1>Manage</h1>
+<section class="card manage-card tt-card rb-booking rb-manage rb-tt rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
+  <h1>{{ $draft ? 'Edit new timetable' : 'View timetable in use' }}</h1>
   @include('manage._tabs')
+  </header>
+
+  <div class="rb-booking__panel">
   @if ($undo)
     {{-- Right after a delete: put the row back --}}
     <form method="post" action="{{ route('manage.timetable.rows.undo') }}" class="tt-undo">
@@ -93,5 +105,6 @@
   @if ($editable)
     @include('manage._timetable_datalists')
   @endif
+  </div>
 </section>
 @endsection

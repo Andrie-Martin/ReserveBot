@@ -1,17 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Timetable')
+@section('title', 'Manage timetable')
+
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+  <script src="{{ asset('js/timetable.js') }}?v={{ filemtime(public_path('js/timetable.js')) }}" defer></script>
+@endpush
 
 @section('content')
 @php $inUse = $counts['classes'] + $counts['blocked']; @endphp
-<section class="card manage-card">
-  <h1>Manage</h1>
+<section class="card manage-card rb-booking rb-manage rb-tt rb-ui">
+  <header class="rb-booking__intro">
+  <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
+  <h1>Manage timetable</h1>
   @include('manage._tabs')
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
   <p class="muted">{{ $department->name }}’s timetable: the classes and blocked times that hold rooms each week. When a new semester starts, or classes move, make a new timetable here. It replaces this one as soon as you save it, and this one is kept as a backup.</p>
+  </header>
 
   {{-- The timetable in use --}}
   <div class="tt-now">
@@ -73,6 +83,7 @@
   @endif
 
   {{-- Two ways to make a new one --}}
+  <div class="rb-booking__panel">
   <h2>{{ $draft ? 'Or start over' : 'Make a new timetable' }}</h2>
   <div class="tt-ways">
     <section class="tt-way">
@@ -84,9 +95,10 @@
       </ol>
       <form method="post" action="{{ route('manage.timetable.upload') }}" enctype="multipart/form-data" class="mform tt-upload">
         @csrf
-        @include('manage._errors', ['bag' => $errors->getBag('upload')])
+        @php $uploadBag = $errors->getBag('upload'); @endphp
+        @if ($uploadBag->any())<div id="upload-errors" tabindex="-1">@include('manage._errors', ['bag' => $uploadBag])</div>@endif
         <label for="tt-file" class="field-label">Excel or CSV file</label>
-        <input id="tt-file" name="file" type="file" required accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
+        <input id="tt-file" name="file" type="file" @if ($uploadBag->any()) aria-invalid="true" aria-describedby="upload-errors" autofocus @endif required accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
         <button type="submit" class="btn-small">Upload and check</button>
         @if ($draft)
           <p class="hint">It takes the place of the new timetable in progress.</p>
@@ -109,8 +121,10 @@
   @unless ($canXlsx)
     <p class="notice tt-zip">This computer’s PHP can’t open or make Excel (.xlsx) files yet: its zip extension is off. Downloads are CSV files for now (Excel opens them too), and you can upload CSV files. To turn .xlsx on, see “Timetable” in the README.</p>
   @endunless
+  </div>
 
   {{-- Backups --}}
+  <div class="rb-booking__panel">
   <h2 id="backups">Backups</h2>
   <p class="muted">Each time the timetable is replaced, the one it replaced is saved here. Bringing one back works like a new timetable: you see what changes first, and the timetable in use is saved as a backup too.</p>
   @if ($backups->isEmpty())
@@ -146,5 +160,6 @@
       @endforeach
     </ul>
   @endif
+  </div>
 </section>
 @endsection
