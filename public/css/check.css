@@ -17,13 +17,16 @@
 .rb-check .st-wait { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
 .rb-check .check-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); margin: 0 0 var(--rb-space-4); }
 .rb-check .check-choice button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--rb-space-1); width: 100%; min-height: 4.5rem; margin: 0; padding: var(--rb-space-4); border: 2px solid var(--rb-border-control); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: 1rem; font-weight: var(--rb-weight-bold); cursor: pointer; text-align: center; overflow-wrap: anywhere; }
-.rb-check .check-choice button span { color: var(--rb-text-secondary); font-size: .8125rem; font-weight: var(--rb-weight-medium); opacity: 1; }
+.rb-check .check-choice .check-sub { color: var(--rb-text-secondary); font-size: .8125rem; font-weight: var(--rb-weight-medium); opacity: 1; }
+/* The saved answer is named in text, not by tint alone; the email's choice (while nothing is saved) is a dashed card with a plain tag. Neither uses the focus-ring style. */
+.rb-check .check-choice .check-tag { margin-top: var(--rb-space-1); padding: .0625rem var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-color-maroon); color: var(--rb-color-white); font-size: .75rem; font-weight: var(--rb-weight-bold); }
+.rb-check .check-choice .check-tag--cue { border: 1px dashed var(--rb-text-secondary); background: transparent; color: var(--rb-text-primary); }
 .rb-check .check-choice .btn-f2f { border-color: var(--rb-success-text); background: var(--rb-surface-panel); }
 .rb-check .check-choice .btn-online { border-color: var(--check-info-text); background: var(--rb-surface-panel); }
 .rb-check .check-choice .btn-f2f:hover { background: var(--rb-success-bg); }
 .rb-check .check-choice .btn-online:hover { background: var(--check-info-bg); }
 .rb-check .check-choice .current { background: var(--rb-surface-active); }
-.rb-check .check-choice .picked { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-check .check-choice .picked { border-style: dashed; }
 .rb-check .check-choice button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-check .hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
 @media (max-width: 30rem) {

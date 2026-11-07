@@ -6,7 +6,7 @@ require_once __DIR__.'/layout-runtime.php';
 function checkCases(): array
 {
     $cases = [];
-    foreach (['waiting', 'f2f', 'online', 'freed', 'picked', 'booked', 'ended', 'stranger', 'status', 'problem', 'long'] as $s) {
+    foreach (['waiting', 'f2f', 'online', 'freed', 'picked', 'freed-picked', 'online-picked', 'mismatch', 'stale', 'booked', 'ended', 'stranger', 'status', 'problem', 'long'] as $s) {
         $cases['check-guest-'.$s] = ['guest', $s];
     }
     foreach (['waiting', 'online', 'ended', 'stranger'] as $s) {
@@ -15,6 +15,15 @@ function checkCases(): array
     $cases['check-lab_staff-waiting'] = ['lab_staff', 'waiting'];
 
     return $cases;
+}
+
+/** The state a fixture models, and what the email button's ?answer= says. 'mismatch' and 'stale' are a leftover ?answer= that disagrees with the saved answer. */
+function checkModel(string $role, string $state): array
+{
+    $key = ['f2f' => 'f2f', 'online' => 'online', 'picked' => 'waiting', 'freed-picked' => 'freed', 'online-picked' => 'online', 'mismatch' => 'f2f', 'stale' => 'online', 'freed' => 'freed', 'booked' => 'booked'][$state] ?? 'waiting';
+    $picked = ['picked' => 'online', 'freed-picked' => 'f2f', 'online-picked' => 'online', 'mismatch' => 'online', 'stale' => 'f2f'][$state] ?? null;
+
+    return [$key, $picked];
 }
 
 function checkRender(array $case): string
@@ -38,8 +47,7 @@ function checkRender(array $case): string
     $class->setRelation('course', $course);
     $class->setRelation('room', $room);
     $class->setRelation('section', new App\Models\Section(['name' => $long ? str_repeat('BSCPE4', 8) : '4-1', 'program' => 'BSCPE']));
-    $stateKey = ['f2f' => 'f2f', 'online' => 'online', 'picked' => 'online', 'freed' => 'freed', 'booked' => 'booked'][$state] ?? ($role === 'rep' && $state === 'online' ? 'online' : 'waiting');
-    if ($state === 'online') { $stateKey = 'online'; }
+    [$stateKey, $picked] = checkModel($role, $state);
     $ended = $state === 'ended';
     $isRep = $state !== 'stranger';
     $start = $now->startOfDay()->addHours($ended ? 8 : 13);
@@ -50,7 +58,7 @@ function checkRender(array $case): string
         'class' => $class, 'name' => App\Services\ClassChecks::name($class), 'start' => $start,
         'span' => App\Support\TimeSlots::span($start->hour * 60 + $start->minute, $end->hour * 60 + $end->minute),
         'state' => $stateKey, 'label' => App\Services\ClassChecks::LABELS[$stateKey],
-        'picked' => $state === 'picked' ? 'online' : null,
+        'picked' => $picked,
         'open' => ! $ended && $stateKey !== 'booked' && $isRep, 'isRep' => $isRep, 'rep' => $rep,
     ])->render();
 }
@@ -77,6 +85,24 @@ function checkContracts(): int
         $check($x->query('//link[contains(@href,"css/check.css?v=")]')->length === 1, "$name check stylesheet");
         $check($x->query('//*[@role="status"]')->length === (int) ($case[1] === 'status'), "$name status message");
         $check($x->query('//*[@role="alert"]')->length === (int) ($case[1] === 'problem'), "$name problem message");
+        // The saved answer, not a leftover ?answer=, decides what is marked; the mark is text, not tint alone.
+        [$key, $emailChoice] = checkModel($case[0], $case[1]);
+        $saved = in_array($key, ['f2f', 'online'], true) && $open ? $key : null;
+        $marked = $x->query('//button[@name="answer"][contains(concat(" ", normalize-space(@class), " "), " current ")]');
+        $cued = $x->query('//button[@name="answer"][contains(concat(" ", normalize-space(@class), " "), " picked ")]');
+        $check($marked->length === ($saved ? 1 : 0), "$name saved answer marked once (".$marked->length.')');
+        $check($cued->length === (($open && $saved === null && $emailChoice) ? 1 : 0), "$name email choice marked only while nothing is saved (".$cued->length.')');
+        foreach ($marked as $button) {
+            $check($button->getAttribute('value') === $saved, "$name the marked card is the saved answer");
+            $check(str_contains($button->textContent, 'Your answer'), "$name saved answer says so in text");
+            $check(! str_contains($button->getAttribute('class'), 'picked'), "$name saved answer is not also a cue");
+        }
+        foreach ($cued as $button) {
+            $check($button->getAttribute('value') === $emailChoice && str_contains($button->textContent, 'Chosen in your email'), "$name email choice says so in text");
+        }
+        foreach ($x->query('//button[@name="answer"]') as $button) {
+            $check((str_contains($button->textContent, 'Your answer') ? 1 : 0) === (str_contains(' '.$button->getAttribute('class').' ', ' current ') ? 1 : 0), "$name text and mark agree");
+        }
     }
 
     return $count;
