@@ -91,7 +91,7 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     const post = async (action, click) => {
       const n = submissions.length;
       await Promise.all([page.waitForRequest(r => r.method() === 'POST'), click()]);
-      await page.waitForLoadState();
+      await page.waitForFunction(() => document.title === 'intercepted'); await page.waitForLoadState('load'); // the stub page has committed: the next goto cannot collide with this navigation
       const s = submissions[n];
       return { path: s.path, body: decodeURIComponent(s.body.replace(/\+/g, ' ')) };
     };
