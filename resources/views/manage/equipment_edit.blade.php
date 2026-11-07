@@ -12,14 +12,14 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Edit {{ $item->name }}</h1>
   @include('manage._tabs')
 
   <p class="back"><a href="{{ route('manage.equipment') }}">‹ All equipment</a></p>
   </header>
 
   <div class="rb-booking__panel">
-  <h2 class="edit-title">{{ $item->name }}</h2>
+  <p class="edit-title">{{ $item->name }}</p>
 
   <form method="post" action="{{ route('manage.equipment.update', $item) }}" class="mform">
     @csrf

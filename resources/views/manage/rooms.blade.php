@@ -11,7 +11,7 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Manage rooms</h1>
   @include('manage._tabs')
 
   <p class="muted">{{ $department->name }}’s rooms. Rooms are shared between departments, so a change shows for every department that uses the room. A room that’s off can’t be booked; bookings already made keep it.</p>

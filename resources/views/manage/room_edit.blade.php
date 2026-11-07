@@ -12,14 +12,14 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Edit {{ $room->name }}</h1>
   @include('manage._tabs')
 
   <p class="back"><a href="{{ route('manage.rooms') }}">‹ All rooms</a></p>
   </header>
 
   <div class="rb-booking__panel">
-  <h2 class="edit-title">{{ $room->name }}</h2>
+  <p class="edit-title">{{ $room->name }}</p>
   @if ($sharedWith->isNotEmpty())
     <p class="notice">Shared with {{ $sharedWith->join(', ', ' and ') }}: changes here show for them too.</p>
   @endif

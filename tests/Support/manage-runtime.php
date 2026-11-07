@@ -155,6 +155,12 @@ function manageContracts(): int
         $html = manageRender($case);
         $x = foundationsDocument($html);
         $check($x->query('//main//h1')->length === 1, "$name one main heading");
+        $h1 = trim($x->query('//main//h1')->item(0)?->textContent ?? '');
+        $expectedHeading = ['rooms' => 'Manage rooms', 'equipment' => 'Manage equipment', 'rules' => 'Booking rules'][$case[0]] ?? null;
+        $check($expectedHeading ? $h1 === $expectedHeading : str_starts_with($h1, 'Edit '), "$name the heading names the page ($h1)");
+        if (str_ends_with($case[0], '-edit')) {
+            $check($x->query('//main//h2[normalize-space()="'.substr($h1, 5).'"]')->length === 0, "$name the item name is not repeated as a second heading");
+        }
         $ids = [];
         foreach ($x->query('//*[@id]') as $node) { $id = $node->getAttribute('id'); $check(! isset($ids[$id]), "$name unique ID $id"); $ids[$id] = true; }
         foreach ($x->query('//main//input[not(@type="hidden")]|//main//select|//main//textarea') as $node) {

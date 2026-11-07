@@ -19,7 +19,7 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Manage</h1>
+  <h1>Booking rules</h1>
   @include('manage._tabs')
 
   <p class="muted">{{ auth()->user()->department->name }}’s booking rules. New bookings follow them as soon as you save; bookings already made stay as they are.</p>

@@ -178,3 +178,7 @@
   .rb-manage .rooms-table td:last-child a, .rb-manage .mcat .mtable td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
 .rb-manage [id$="-errors"][tabindex="-1"]:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
+
+/* Headings name the page ("Manage rooms", "Edit CEA300"); long names wrap at word breaks. The panel's repeated name is a plain title. */
+.rb-manage .rb-booking__intro h1 { overflow-wrap: break-word; }
+.rb-manage .rb-booking__panel > p.edit-title { font-weight: var(--rb-weight-bold); line-height: 1.3; }
