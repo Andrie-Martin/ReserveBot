@@ -29,7 +29,7 @@
       <div class="mcat-head">
         <h2>{{ $category->name }} <span class="count">{{ $category->equipment->count() }}</span></h2>
         <details class="rename" @if ($renameBag->any()) open @endif>
-          <summary>Rename</summary>
+          <summary>Rename<span class="sr-only"> {{ $category->name }}</span></summary>
           @if ($renameBag->any())
             <p class="field-error" id="cat-{{ $category->id }}-error">{{ $renameBag->first('name') }}</p>
           @endif

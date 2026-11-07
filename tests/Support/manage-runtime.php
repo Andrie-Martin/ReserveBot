@@ -185,6 +185,12 @@ function manageContracts(): int
             $check(($x->query('//main//p[contains(@class,"empty") and contains(.,"No equipment yet")]')->length === 1) === $isEmpty, "$name 'No equipment yet' message only when there are no categories");
             $check(($x->query('//*[@id="item-category"]')->length === 0) === $isEmpty, "$name the add-item form is offered only when a category exists");
         }
+        if (str_starts_with($name, 'manage-equipment-') && ! str_starts_with($name, 'manage-equipment-edit-')) {
+            $labels = [];
+            foreach ($x->query('//main//details[contains(@class,"rename")]/summary') as $summary) { $labels[] = preg_replace('/\s+/', ' ', trim($summary->textContent)); }
+            $check(count($labels) === count(array_unique($labels)), "$name every Rename control has a distinguishable accessible name");
+            $check(count(array_filter($labels, fn ($l) => $l === 'Rename')) === 0, "$name no Rename control is announced as just 'Rename'");
+        }
         // Validation feedback: aria-describedby always points at something real; focus is only ever taken after a refused save
         foreach ($x->query('//*[@aria-describedby]') as $node) {
             $target = $node->getAttribute('aria-describedby');
