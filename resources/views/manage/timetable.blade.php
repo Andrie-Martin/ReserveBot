@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+  <script src="{{ asset('js/timetable.js') }}?v={{ filemtime(public_path('js/timetable.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -94,9 +95,10 @@
       </ol>
       <form method="post" action="{{ route('manage.timetable.upload') }}" enctype="multipart/form-data" class="mform tt-upload">
         @csrf
-        @include('manage._errors', ['bag' => $errors->getBag('upload')])
+        @php $uploadBag = $errors->getBag('upload'); @endphp
+        @if ($uploadBag->any())<div id="upload-errors" tabindex="-1">@include('manage._errors', ['bag' => $uploadBag])</div>@endif
         <label for="tt-file" class="field-label">Excel or CSV file</label>
-        <input id="tt-file" name="file" type="file" required accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
+        <input id="tt-file" name="file" type="file" @if ($uploadBag->any()) aria-invalid="true" aria-describedby="upload-errors" autofocus @endif required accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
         <button type="submit" class="btn-small">Upload and check</button>
         @if ($draft)
           <p class="hint">It takes the place of the new timetable in progress.</p>

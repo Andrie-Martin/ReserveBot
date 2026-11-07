@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/timetable.css') }}?v={{ filemtime(public_path('css/timetable.css')) }}">
+  <script src="{{ asset('js/timetable.js') }}?v={{ filemtime(public_path('js/timetable.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -171,19 +172,27 @@
     <fieldset>
       <legend>Semester</legend>
       <p class="hint tt-hint-top">Starting a new semester? Type its name and dates. Classes only count between these dates. Semesters are shared by every department: one with the same name gets these dates for everyone.</p>
-      @include('manage._errors', ['bag' => $semesterBag])
+      @php
+        $termFocus = collect(['term_name', 'term_start', 'term_end'])->first(fn ($field) => $semesterBag->has($field));
+        $termBad = fn (string $field) => new \Illuminate\Support\HtmlString(($semesterBag->has($field) ? 'aria-invalid="true" aria-describedby="term-'.$field.'-error"' : '').($termFocus === $field ? ' autofocus' : ''));
+        $termMsg = fn (string $field) => $semesterBag->has($field) ? new \Illuminate\Support\HtmlString('<p class="field-error" id="term-'.$field.'-error">'.e($semesterBag->first($field)).'</p>') : '';
+      @endphp
+      @if ($semesterBag->any())<div id="semester-errors" tabindex="-1">@include('manage._errors', ['bag' => $semesterBag])</div>@endif
       <div class="mgrid">
         <div>
           <label for="term-name" class="field-label">Name</label>
-          <input id="term-name" name="term_name" maxlength="60" required value="{{ old('term_name', $draft->term_name) }}" placeholder="e.g. 2nd Semester AY 2026-2027">
+          {!! $termMsg('term_name') !!}
+          <input id="term-name" name="term_name" {!! $termBad('term_name') !!} maxlength="60" required value="{{ old('term_name', $draft->term_name) }}" placeholder="e.g. 2nd Semester AY 2026-2027">
         </div>
         <div>
           <label for="term-start" class="field-label">First day</label>
-          <input id="term-start" name="term_start" type="date" required value="{{ old('term_start', $draft->term_start?->toDateString()) }}">
+          {!! $termMsg('term_start') !!}
+          <input id="term-start" name="term_start" {!! $termBad('term_start') !!} type="date" required value="{{ old('term_start', $draft->term_start?->toDateString()) }}">
         </div>
         <div>
           <label for="term-end" class="field-label">Last day</label>
-          <input id="term-end" name="term_end" type="date" required value="{{ old('term_end', $draft->term_end?->toDateString()) }}">
+          {!! $termMsg('term_end') !!}
+          <input id="term-end" name="term_end" {!! $termBad('term_end') !!} type="date" required value="{{ old('term_end', $draft->term_end?->toDateString()) }}">
         </div>
       </div>
       @if ($term && $draft->term_name !== $term->name)

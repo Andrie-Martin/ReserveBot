@@ -19,6 +19,11 @@
 .rb-tt .tt-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
 .rb-tt .rb-booking__intro .error { margin: var(--rb-space-4) 0 0; }
 
+/* A field the server refused: marked in red, and when it takes focus the message above it stays in view (scroll margin in rem, so it grows with text size). */
+.rb-tt [aria-invalid="true"] { scroll-margin-block: 17rem 3rem; }
+.rb-tt .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+.rb-tt [id$="-errors"][tabindex="-1"]:focus { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
+
 /* Overview: in use, attention, draft. */
 .rb-tt .tt-now, .rb-tt .tt-draft, .rb-tt .tt-attention { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--rb-space-4) 1.25rem; margin: 0 0 var(--rb-space-4); padding: var(--rb-space-4) 1.25rem; border-radius: var(--rb-radius-card); }
 .rb-tt .tt-now { border: 1px solid var(--rb-border-warm); background: var(--rb-surface-panel); }
@@ -171,4 +176,12 @@
   .rb-tt .tt-table td.hide-sm { display: none; }
   .rb-tt .tt-table .show-sm { display: block; }
   .rb-tt .tt-backup-actions { width: 100%; }
+}
+
+/* Narrow for the text size (a phone, or large text on a phone): the nested cards give up padding so forms and messages keep a readable column.
+   rem breakpoints follow the browser's own text-size setting, so 22rem is 352px at 100% and 704px at 200%. */
+@media (max-width: 22rem) {
+  .rb-tt .rb-booking__panel, .rb-tt .add-box form, .rb-tt :is(.tt-now, .tt-draft, .tt-attention, .tt-way, .tt-replace, .tt-box) { padding: var(--rb-space-2); }
+  .rb-tt .tt-final fieldset { padding: var(--rb-space-2); }
+  .rb-tt .field-error, .rb-tt .error { padding: var(--rb-space-1) var(--rb-space-2); }
 }
