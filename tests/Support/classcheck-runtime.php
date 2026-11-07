@@ -85,6 +85,14 @@ function checkContracts(): int
         $check($x->query('//link[contains(@href,"css/check.css?v=")]')->length === 1, "$name check stylesheet");
         $check($x->query('//*[@role="status"]')->length === (int) ($case[1] === 'status'), "$name status message");
         $check($x->query('//*[@role="alert"]')->length === (int) ($case[1] === 'problem'), "$name problem message");
+        // Large text / short window: a link to the answers, and the result message takes focus only after an answer (never on a plain load).
+        $check($x->query('//script[contains(@src,"js/check.js?v=")]')->length === 1, "$name page script");
+        $check($x->query('//a[@href="#check-answers"]')->length === ($open ? 1 : 0), "$name jump link to the answers only while they exist");
+        $check($x->query('//form[@id="check-answers"][@tabindex="-1"]')->length === ($open ? 1 : 0), "$name answers form is the jump target");
+        $focusTargets = $x->query('//*[@autofocus]');
+        $hasResult = in_array($case[1], ['status', 'problem'], true);
+        $check($focusTargets->length === (int) $hasResult, "$name autofocus only on a result message (".$focusTargets->length.')');
+        foreach ($focusTargets as $target) { $check($target->getAttribute('id') === 'check-result' && $target->getAttribute('tabindex') === '-1', "$name the focused element is the result message"); }
         // The saved answer, not a leftover ?answer=, decides what is marked; the mark is text, not tint alone.
         [$key, $emailChoice] = checkModel($case[0], $case[1]);
         $saved = in_array($key, ['f2f', 'online'], true) && $open ? $key : null;

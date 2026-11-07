@@ -6,22 +6,28 @@
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/check.css') }}?v={{ filemtime(public_path('css/check.css')) }}">
+  <script src="{{ asset('js/check.js') }}?v={{ filemtime(public_path('js/check.js')) }}" defer></script>
 @endpush
 
 @section('content')
 <section class="card narrow check-card rb-booking rb-check rb-ui">
   <p class="eyebrow">Face-to-face check</p>
   <h1>{{ $name }}@if ($class->course?->title) <span class="check-title">{{ $class->course->title }}</span>@endif</h1>
+  @if ($open)
+    {{-- On a short window (or large text) the answer buttons can sit below the fold: this link goes straight to them. Hidden until focused on roomy screens. --}}
+    <a class="check-jump" href="#check-answers">Jump to the answer buttons</a>
+  @endif
   <p class="check-facts">
     {{ $start->format('l, F j') }} · {{ $span }}<br>
     {{ $class->room->name }}@if ($class->section) · {{ $class->section->name }}@endif
   </p>
 
+  {{-- After pressing a button the page reloads with the result: it takes focus and is scrolled into view (check.js), so it is not left below the fold at large text. --}}
   @if (session('status'))
-    <p class="success" role="status">{{ session('status') }}</p>
+    <p class="success" role="status" id="check-result" tabindex="-1" autofocus>{{ session('status') }}</p>
   @endif
   @if (session('problem'))
-    <p class="error" role="alert">{{ session('problem') }}</p>
+    <p class="error" role="alert" @unless (session('status')) id="check-result" tabindex="-1" autofocus @endunless>{{ session('problem') }}</p>
   @endif
 
   <p class="check-now">Now: <span class="st {{ \App\Services\ClassChecks::BADGES[$state] }}">{{ $label }}</span></p>
@@ -34,7 +40,7 @@
       $chosen = $saved === null ? $picked : null;
     @endphp
     {{-- The answer is saved only when a button is pressed, so link checkers in email apps can't answer by opening the link --}}
-    <form method="post" action="{{ request()->fullUrl() }}" class="check-choice">
+    <form method="post" action="{{ request()->fullUrl() }}" class="check-choice" id="check-answers" tabindex="-1">
       @csrf
       <button type="submit" name="answer" value="f2f" @class(['btn-f2f', 'picked' => $chosen === 'f2f', 'current' => $saved === 'f2f'])>
         Face-to-face<span class="check-sub">keep {{ $class->room->name }}</span>
