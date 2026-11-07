@@ -190,7 +190,7 @@ Independent audit (functional, security, real-browser UX/accessibility, integrat
 | F-01 answers and result below the fold | `db332ed` | "Jump to the answer buttons" link (visible on short windows), compact spacing, and the result message takes focus and is scrolled into view after an answer (`public/js/check.js`). |
 | F-07 dead ends | `9731953` | Ended, booked and not-this-rep states end with a real link ("Open My bookings" / "Go to my home page"). |
 | F-08 contrast | `33dbef1` | Caption on the saved-answer card 4.48:1 -> 14.11:1. |
-| Browser-test race | none | The race is in the inherited timetable/ops/manage/accounts scripts, already fixed in `origin/dev`. Phase 09's own `classcheck-browser.cjs` has the same pattern but did not fail at stub delays of 0-350ms or in 23+ runs, so it was left unchanged. |
+| Browser-test race | `5546131` | The race that makes suites fail intermittently is in the inherited timetable/ops/manage/accounts scripts, already fixed in `origin/dev`. Phase 09's own `classcheck-browser.cjs` has the same pattern but never failed (23+ runs, stub delays of 0-350ms), so its change is defensive: the POST helper waits for the stub document to commit instead of the request. 6/6 sequential and 18/18 parallel runs pass. |
 
 Not changed (backend/config, reported separately): `APP_DEBUG=true` in `.env.example` and the committed compose file (debug page on any 500); the 500 page's "check storage/logs/laravel.log" copy; unsigned requests answer 403/404 by id before the signature check; the maintenance (503) page is still the framework default; the shell's bottom-nav labels break mid-word at 320px/200%.
 
