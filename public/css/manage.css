@@ -168,3 +168,12 @@
 /* A field the server refused: marked in red, and when it takes focus the error summary just above it stays in view. */
 .rb-manage [aria-invalid="true"] { scroll-margin-block: 8rem 3rem; }
 .rb-manage .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+
+/* Touch: the row "Edit" links of the Rooms and Equipment lists are 44px targets in their card layouts and on coarse pointers
+   (the compact desktop table keeps its small links). Scoped to these two lists so the Accounts list is unchanged. */
+@container rooms (max-width: 56rem) {
+  .rb-manage .rooms-table td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
+@media (max-width: 40rem), (pointer: coarse) {
+  .rb-manage .rooms-table td:last-child a, .rb-manage .mcat .mtable td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
