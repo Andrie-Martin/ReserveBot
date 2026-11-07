@@ -19,7 +19,7 @@ The running Docker app serves the code baked into its image and was never used a
 ## What has been tested, and how
 
 - **Authenticated HTTP and browser testing has happened**, but only against disposable infrastructure (a throwaway MariaDB and `php artisan serve` on a private port),
-  never against the running Docker app or its database: the independent QA of Phases 05-09, and the Phase 10 audit (rep, lab staff and admin sessions, role/status matrix,
+  never against the running Docker app or its database (the Phase 08 and 09 records state a disposable app and MariaDB explicitly; the Phase 05-07 records mention authenticated checks but say less about the setup): the independent QA of Phases 05-09, and the Phase 10 audit (rep, lab staff and admin sessions, role/status matrix,
   forged and wrong-role POSTs, approve, reject, cancel, and rendering at 1438x900, 1438x638, 390x844 and 320x640 at 100% and genuine 200% text).
 - **PHPUnit** (all gates on, disposable MariaDB, Phase 10 tree): 109 tests, 102 passed, 1 failure, 1 error, 5 skipped, 2 risky. Merged with `dev`: 113 tests, 106 passed, 1 failure, 1 error, 5 skipped, 3 risky.
   The two failures are **pre-existing on `dev`** and not caused by Phase 10: `AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls` (stale assertion) and
