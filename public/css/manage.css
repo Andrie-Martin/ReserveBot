@@ -164,3 +164,7 @@
   .rb-manage .rooms-table td.note { grid-column: 1 / -1; }
   .rb-manage .rooms-table td.note:empty { display: none; }
 }
+
+/* A field the server refused: marked in red, and when it takes focus the error summary just above it stays in view. */
+.rb-manage [aria-invalid="true"] { scroll-margin-block: 8rem 3rem; }
+.rb-manage .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }

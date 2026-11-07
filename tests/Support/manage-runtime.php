@@ -176,11 +176,15 @@ function manageContracts(): int
                 $check($approval->hasAttribute('checked'), "$name a failed semester-dates save keeps the saved approval ticked");
                 $check($ticked === 6, "$name a failed semester-dates save keeps the saved open days ticked");
                 $check($x->query('//input[@id="start-1" and @value="2026-12-01"]')->length === 1 && $x->query('//input[@id="end-1" and @value="2026-11-01"]')->length === 1, "$name the entered dates are kept");
+                $check($x->query('//input[@id="end-1" and @autofocus and @aria-invalid="true" and @aria-describedby="term-1-errors"]')->length === 1, "$name the invalid last day takes focus and is described by its error");
+                $check($x->query('//div[@id="term-1-errors"]//li')->length === 1, "$name the term error summary exists for aria-describedby");
+                $check($x->query('//*[@autofocus]')->length === 1, "$name exactly one autofocus (the invalid field)");
             } elseif (str_ends_with($name, '-errors')) {
                 $check(! $approval->hasAttribute('checked'), "$name an intentionally unticked approval stays unticked after a failed rules save");
                 $check($ticked === 2, "$name the submitted open days (Mon, Fri) stay ticked after a failed rules save");
             } else {
                 $check($approval->hasAttribute('checked') && $ticked === 6, "$name saved approval and open days shown");
+                $check($x->query('//*[@autofocus]')->length === 0 && $x->query('//*[@aria-invalid]')->length === 0, "$name an ordinary load has no autofocus and no aria-invalid");
             }
         }
     }

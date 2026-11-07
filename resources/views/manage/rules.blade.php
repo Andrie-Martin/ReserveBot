@@ -112,20 +112,25 @@
   <h2>Semester dates</h2>
   <p class="muted">Shared by every department. Classes on the timetable only count between these dates.</p>
   @foreach ($terms as $term)
-    @php $termBag = $errors->getBag('term'.$term->id); @endphp
+    @php
+      $termBag = $errors->getBag('term'.$term->id);
+      // After a refused save the first invalid date takes focus (never on an ordinary load); the summary is its description.
+      $termFocus = $termBag->has('start_date') ? 'start_date' : ($termBag->has('end_date') ? 'end_date' : null);
+      $termInvalid = fn (string $field) => ($termBag->has($field) ? 'aria-invalid="true" aria-describedby="term-'.$term->id.'-errors"' : '').($termFocus === $field ? ' autofocus' : '');
+    @endphp
     <form method="post" action="{{ route('manage.terms.update', $term) }}" class="mform term-form">
       @csrf
       @method('PUT')
       <p class="term-name">{{ $term->name }}</p>
-      @include('manage._errors', ['bag' => $termBag])
+      @if ($termBag->any())<div id="term-{{ $term->id }}-errors">@include('manage._errors', ['bag' => $termBag])</div>@endif
       <div class="mgrid">
         <div>
           <label for="start-{{ $term->id }}" class="field-label">First day</label>
-          <input id="start-{{ $term->id }}" name="start_date" type="date" required value="{{ $termBag->any() ? old('start_date') : $term->start_date->toDateString() }}">
+          <input id="start-{{ $term->id }}" name="start_date" type="date" required {!! $termInvalid('start_date') !!} value="{{ $termBag->any() ? old('start_date') : $term->start_date->toDateString() }}">
         </div>
         <div>
           <label for="end-{{ $term->id }}" class="field-label">Last day</label>
-          <input id="end-{{ $term->id }}" name="end_date" type="date" required value="{{ $termBag->any() ? old('end_date') : $term->end_date->toDateString() }}">
+          <input id="end-{{ $term->id }}" name="end_date" type="date" required {!! $termInvalid('end_date') !!} value="{{ $termBag->any() ? old('end_date') : $term->end_date->toDateString() }}">
         </div>
       </div>
       <button type="submit" class="btn-small">Save dates</button>
