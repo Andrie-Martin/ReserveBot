@@ -175,3 +175,28 @@ Verification (final tree):
 Real defects found by the new test and fixed in CSS only: long unbroken course/room/rep names overflowed at 390px; the "Booked as a class session" badge overflowed at 320px with 200% text.
 
 Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
+
+Notes (as of 09A/09B): the "NOT RUN" items of that stage (PHPUnit, authenticated app, real links) were run afterwards by the independent QA below.
+
+### Phase 09 independent QA and corrections
+
+Independent audit (functional, security, real-browser UX/accessibility, integration) rated Phase 09 **APPROVE WITH MINOR FIXES**; the backend was unchanged and correct. Corrections are views, CSS, one small page script and tests only: no route, controller, model, validation, authorization, signed-link or business-rule code changed.
+
+| Finding | Commit | Correction |
+|---|---|---|
+| F-02 stale highlight | `cc3bdc8` | The saved answer decides which card is marked, in text ("Your answer"). The email button's `?answer=` only marks a card while nothing is saved (dashed card, "Chosen in your email"); no focus-style ring. Fixtures 165 -> 295, plus a PHPUnit presentation test. |
+| F-03 422 page | `c684400` | `errors/422.blade.php` on the shared error card (rem type, header, recovery link). Status stays 422. It was byte-identical at 100% and 200% text. |
+| F-11 mid-word headings | `e7fd5d3` | Error and email-result cards size the h1 from their own width (`min(h2, 17cqw)`, `overflow-wrap: break-word`). "Something"/"connected" no longer break at 320px/200%. |
+| F-01 answers and result below the fold | `db332ed` | "Jump to the answer buttons" link (visible on short windows), compact spacing, and the result message takes focus and is scrolled into view after an answer (`public/js/check.js`). |
+| F-07 dead ends | `9731953` | Ended, booked and not-this-rep states end with a real link ("Open My bookings" / "Go to my home page"). |
+| F-08 contrast | `33dbef1` | Caption on the saved-answer card 4.48:1 -> 14.11:1. |
+| Browser-test race | none | The race is in the inherited timetable/ops/manage/accounts scripts, already fixed in `origin/dev`. Phase 09's own `classcheck-browser.cjs` has the same pattern but did not fail at stub delays of 0-350ms or in 23+ runs, so it was left unchanged. |
+
+Not changed (backend/config, reported separately): `APP_DEBUG=true` in `.env.example` and the committed compose file (debug page on any 500); the 500 page's "check storage/logs/laravel.log" copy; unsigned requests answer 403/404 by id before the signature check; the maintenance (503) page is still the framework default; the shell's bottom-nav labels break mid-word at 320px/200%.
+
+Verification (disposable app and MariaDB; genuine browser text size):
+- Real browser at 1438x900, 1438x638, 390x844, 320x640 at 100% and 200%: error/email pages 52/52 (46 before), answer visibility/jump link/result focus 64/64 (10 before), accessible names agree with the visual state in the stale-highlight scenario (5/5).
+- HTTP/permission/CSRF/status-code scripts: class-check 62/62, email results 9/9, error pages 32/34 (the 2 are the intended `APP_DEBUG=true` leak), on the branch and on the merged tree.
+- PHPUnit (gated against disposable MariaDB): branch 110 tests, 103 passed, 1 failure, 1 error, 5 skipped; merged tree 113, 103, 1, 1, 8; same two pre-existing tests as `origin/dev` (`AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls`, `FoundationsTest::test_presentation_contracts_without_database_access`).
+- Render suites all pass (auth 1390, class check 414). Fixture-browser suites on the merged tree: 17/17 runs; Phase 02 auth browser 3/3 (63 cases).
+- Merge into current `origin/dev`: one documentation conflict in this file (branch-map rows and the Phase 08 notes); resolve by keeping dev's text and adding Phase 09's row and section. Code merges cleanly; 36/36 pages identical to dev apart from the new card class.
