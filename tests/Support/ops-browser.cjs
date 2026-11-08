@@ -109,7 +109,8 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     assert.equal(await page.locator('#change').count(), 0, 'an ended booking offers no cancel/move box');
     await visit('show-lab_staff-move-errors');
     assert.equal(await page.locator('#move-reason').inputValue(), 'Old example reason', 'the move form reopens with its old input after an error');
-    assert.equal(await page.locator('#change').evaluate(e => e.open), true, 'the move form reopens after an error');
+    assert.equal(await page.locator('#move-panel').evaluate(e => e.classList.contains('is-open')), true, 'the move form reopens after an error');
+    assert.equal(await page.locator('#cancel-panel').evaluate(e => e.classList.contains('is-open')), false, 'only the action that failed is open');
     summary.push('intercepted approve, reject, hand-out, no-show (confirmation kept), returned and class-answer POSTs carry the exact field names');
 
     // 4. Ordered form/field/link parity with the pre-change fixtures.

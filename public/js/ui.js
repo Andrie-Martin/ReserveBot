@@ -74,6 +74,11 @@
     const triggerFor = panel => $$(`[data-rb-reveal="${panel.id}"]`);
     const sync = panel => triggerFor(panel).forEach(trigger => trigger.setAttribute('aria-expanded', String(panel.classList.contains('is-open'))));
     const setOpen = (panel, open, { focus = true } = {}) => {
+      // Panels that share data-rb-reveal-group are alternatives: opening one closes the others.
+      if (open && panel.dataset.rbRevealGroup) {
+        $$(`.rb-reveal[data-rb-reveal-group="${panel.dataset.rbRevealGroup}"]`).filter(other => other !== panel && other.classList.contains('is-open'))
+          .forEach(other => setOpen(other, false, { focus: false }));
+      }
       panel.classList.toggle('is-open', open);
       panel.dispatchEvent(new CustomEvent('rb-reveal', { bubbles: true, detail: { open } }));
       sync(panel);
@@ -397,6 +402,24 @@
     });
   };
 
-  const start = () => { drawers(); reveals(); pickers(); searches(); };
+  /* ------------------------------------------------------------------ one submission per press */
+  const once = () => {
+    $$('form[data-rb-once]').forEach(form => {
+      form.addEventListener('submit', event => {
+        if (event.defaultPrevented) return;
+        const buttons = $$('button[type="submit"]', form);
+        // Disable after the browser has collected the form, so the click still submits; a second press does nothing.
+        setTimeout(() => buttons.forEach(button => { button.disabled = true; }), 0);
+        form.setAttribute('aria-busy', 'true');
+      });
+    });
+    // Coming back with the Back button must not leave a dead form.
+    window.addEventListener('pageshow', event => {
+      if (!event.persisted) return;
+      $$('form[data-rb-once]').forEach(form => { form.removeAttribute('aria-busy'); $$('button[type="submit"]', form).forEach(button => { button.disabled = false; }); });
+    });
+  };
+
+  const start = () => { drawers(); reveals(); pickers(); searches(); once(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
