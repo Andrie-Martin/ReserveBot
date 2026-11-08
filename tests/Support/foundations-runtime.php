@@ -6,21 +6,64 @@ use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 
+/**
+ * Releases the standalone application booted by foundationsApplication() and restores the environment it changed.
+ * PHPUnit runs every test in one process, so without this the extra app (facade root, container singleton, view
+ * factory, putenv values) leaks into later tests such as FoundationsTest (QA F-08).
+ */
+function foundationsRelease(): void
+{
+    Illuminate\Support\Facades\Facade::clearResolvedInstances();
+    Illuminate\Support\Facades\Facade::setFacadeApplication(null);
+    Illuminate\Container\Container::setInstance(null);
+    // Component keeps the first app's view factory and compiled-string views in statics.
+    Illuminate\View\Component::flushCache();
+    Illuminate\View\Component::forgetFactory();
+    // The leaked state behind "No hint path defined for [__components]" was exactly this static view factory: it stays
+    // bound to the first standalone app's view finder, so the next test's own app resolves components against it.
+    foreach ($GLOBALS['foundationsSavedEnv'] ?? [] as $key => [$env, $envArray, $server]) {
+        $env === false ? putenv($key) : putenv($key.'='.$env);
+        foreach (['_ENV' => $envArray, '_SERVER' => $server] as $bag => $value) {
+            $value === null ? ($GLOBALS[$bag][$key] = null) : ($GLOBALS[$bag][$key] = $value);
+            if ($value === null) {
+                unset($GLOBALS[$bag][$key]);
+            }
+        }
+    }
+    $GLOBALS['foundationsSavedEnv'] = [];
+}
+
 function foundationsApplication(): Illuminate\Foundation\Application
 {
     $root = dirname(__DIR__, 2);
     require_once $root.'/vendor/autoload.php';
+    // Start from a clean slate: a previous standalone boot in this process (for example a test class that has no
+    // tearDown) must not leave its facade root, container or Component view factory behind.
+    foundationsRelease();
     $cache = sys_get_temp_dir().'/reservebot-foundations-'.getmypid();
     if (! is_dir($cache)) {
         mkdir($cache, 0700, true);
+    }
+    foreach (['APP_ENV', 'APP_CONFIG_CACHE', 'VIEW_COMPILED_PATH', 'SESSION_DRIVER', 'CACHE_STORE', 'MAIL_MAILER', 'APP_URL'] as $key) {
+        $GLOBALS['foundationsSavedEnv'][$key] ??= [getenv($key), $_ENV[$key] ?? null, $_SERVER[$key] ?? null];
     }
     foreach (['APP_ENV' => 'testing', 'APP_CONFIG_CACHE' => $cache.'/no-config.php', 'VIEW_COMPILED_PATH' => $cache,
         'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'MAIL_MAILER' => 'array', 'APP_URL' => 'http://reservebot.test'] as $key => $value) {
         putenv($key.'='.$value);
         $_ENV[$key] = $_SERVER[$key] = $value;
     }
+    $errorLevel = error_reporting();
     $app = require $root.'/bootstrap/app.php';
     $app->make(Kernel::class)->bootstrap();
+    if (class_exists(PHPUnit\Framework\TestCase::class, false)) {
+        // Kernel::bootstrap() installs Laravel's error and exception handlers (and raises error_reporting). Under PHPUnit
+        // nothing removes them, which made every caller "risky"; remove exactly the two it pushed so PHPUnit's own
+        // handlers keep reporting warnings and deprecations. CLI use (render-*.php) keeps Laravel's handlers.
+        restore_error_handler();
+        restore_exception_handler();
+        error_reporting($errorLevel);
+        Illuminate\Foundation\Bootstrap\HandleExceptions::forgetApp();
+    }
     // Any accidental DB access fails; nothing can reach the configured application database.
     $app['config']->set('database.connections', []);
     $app['config']->set('database.default', 'foundations-no-database');

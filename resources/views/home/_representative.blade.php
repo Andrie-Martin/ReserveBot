@@ -102,13 +102,5 @@
   @endif
 
 </div>
-  @if (! empty($comingNext))
-    <h2>Coming in the next phases</h2>
-    <ul>
-      @foreach ($comingNext as $item)
-        <li>{{ $item }}</li>
-      @endforeach
-    </ul>
-  @endif
 </div>
 </div>

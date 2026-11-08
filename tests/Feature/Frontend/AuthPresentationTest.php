@@ -8,6 +8,12 @@ require_once dirname(__DIR__, 2).'/Support/auth-runtime.php';
 
 final class AuthPresentationTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        \foundationsRelease();
+        parent::tearDown();
+    }
+
     public function test_actual_auth_views_preserve_presentation_contracts(): void
     {
         foundationsApplication();
