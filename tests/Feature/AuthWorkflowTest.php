@@ -245,6 +245,128 @@ final class AuthWorkflowTest extends TestCase
         $this->assertThrottled($this->loginAs($long, 'Wrong123', '203.0.113.50'));
     }
 
+    /**
+     * Spellings of one address that the database (utf8mb4_unicode_ci) accepts as the same account but that differ as strings:
+     * zero-width and bidi characters, control characters and combining marks inside the address, plus case and spaces.
+     *
+     * @return array<string, string>
+     */
+    private function spellingsOf(string $email): array
+    {
+        [$local, $domain] = explode('@', $email, 2);
+        $mid = intdiv(strlen($local), 2);
+        $at = fn (string $inserted) => substr($local, 0, $mid).$inserted.substr($local, $mid).'@'.$domain;
+
+        return [
+            'upper case' => strtoupper($email),
+            'surrounding spaces' => "  \t".$email." \n",
+            'zero-width space' => $at("\u{200B}"),
+            'several zero-width spaces' => $at(str_repeat("\u{200B}", 5)),
+            'zero-width non-joiner' => $at("\u{200C}"),
+            'zero-width joiner' => $at("\u{200D}"),
+            'word joiner' => $at("\u{2060}"),
+            'byte order mark' => $at("\u{FEFF}"),
+            'left-to-right mark' => $at("\u{200E}"),
+            'control character' => $at("\u{0001}"),
+            'combining acute accent' => $at("\u{0301}"),
+            'accented letter' => preg_replace('/e/', "\u{00E9}", $email, 1),
+            'full-width letters' => preg_replace('/a/', "\u{FF41}", $email, 1),
+        ];
+    }
+
+    public function test_the_database_really_treats_these_spellings_as_the_same_account(): void
+    {
+        // Guard against a vacuous lockout test: if the database did not accept the altered spellings they could not bypass anything.
+        $accepted = [];
+        foreach ($this->spellingsOf($this->user()->email) as $name => $spelling) {
+            $user = $this->user();
+            $spelling = $this->spellingsOf($user->email)[$name];
+            $this->loginAs($spelling, 'Starting123', '203.0.113.60');
+            if ($this->isAuthenticated()) {
+                $accepted[] = $name;
+                $this->post('/logout');
+            }
+        }
+        $this->assertContains('zero-width space', $accepted);
+        $this->assertContains('combining acute accent', $accepted);
+        $this->assertContains('upper case', $accepted);
+    }
+
+    public function test_no_alternate_spelling_can_bypass_an_active_lockout(): void
+    {
+        foreach (array_keys($this->spellingsOf('someone@example.com')) as $name) {
+            $user = $this->user();
+            for ($i = 0; $i < 5; $i++) {
+                $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', '203.0.113.61'));
+            }
+            $this->assertThrottled($this->loginAs($user->email, 'Wrong123', '203.0.113.61'));
+
+            $spelling = $this->spellingsOf($user->email)[$name];
+            // Wrong and correct passwords through the altered spelling are both refused, and nothing is signed in.
+            $this->assertThrottled($this->loginAs($spelling, 'Wrong123', '203.0.113.61'));
+            $this->assertThrottled($this->loginAs($spelling, 'Starting123', '203.0.113.61'));
+            $this->assertGuest();
+            RateLimiter::clear('login-ip|203.0.113.61');
+        }
+    }
+
+    public function test_failures_through_different_spellings_share_one_counter(): void
+    {
+        $user = $this->user();
+        $spellings = array_values($this->spellingsOf($user->email));
+        // Five failures typed five different ways use up the one account counter; the sixth, in yet another spelling, is blocked.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($spellings[$i + 2], 'Wrong123', '203.0.113.62'));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', '203.0.113.62'));
+    }
+
+    public function test_spellings_of_an_unknown_address_behave_exactly_like_those_of_a_real_one(): void
+    {
+        // No enumeration through spellings: for a made-up address, too, the variants share a counter and the sixth is blocked.
+        $ghost = 'nobody-'.Str::lower(Str::random(10)).'@gmail.com';
+        $spellings = array_values($this->spellingsOf($ghost));
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($spellings[$i + 2], 'Wrong123', '203.0.113.63'));
+        }
+        $this->assertThrottled($this->loginAs($ghost, 'Wrong123', '203.0.113.63'));
+    }
+
+    public function test_different_accounts_are_never_merged_by_the_spelling_rules(): void
+    {
+        $alice = $this->user();
+        $bob = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($alice->email, 'Wrong123', '203.0.113.64');
+        }
+        $this->assertThrottled($this->loginAs($this->spellingsOf($alice->email)['zero-width space'], 'Starting123', '203.0.113.64'));
+        // Bob, typed with the same kind of decoration, is a different account and still signs in.
+        $this->loginAs($this->spellingsOf($bob->email)['zero-width space'], 'Starting123', '203.0.113.64')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($bob);
+    }
+
+    public function test_limiter_keys_hold_no_typed_address_or_password_and_fit_the_cache_column(): void
+    {
+        $user = $this->user();
+        $secret = 'My-Secret-Pass-9';
+        $typed = [$user->email, $secret, 'nobody-'.Str::lower(Str::random(8)).'@gmail.com', str_repeat("\u{200B}", 400).$user->email, str_repeat('x', 5000)];
+        foreach ($typed as $input) {
+            $this->loginAs($input, 'Wrong123', '203.0.113.65');
+        }
+
+        $keys = (fn () => array_keys($this->storage))->call(\Illuminate\Support\Facades\Cache::getStore());
+        $this->assertNotEmpty($keys);
+        foreach ($keys as $key) {
+            $this->assertLessThan(200, strlen($key), 'Keys must fit the 255-character cache column with the store prefix and ":timer" suffix.');
+            $this->assertStringNotContainsString('@', $key);
+            $this->assertStringNotContainsString(Str::lower($secret), Str::lower($key));
+            $this->assertStringNotContainsString('gmail', $key);
+        }
+        // One counter per distinct identity (account, made-up address, the secret, the long padded one is the account again, the 5000 x's) plus the IP counter.
+        $accountKeys = array_filter($keys, fn ($k) => str_contains($k, 'login|') && ! str_contains($k, ':timer'));
+        $this->assertCount(4, $accountKeys);
+    }
+
     public function test_disabled_session_and_onboarding_gates(): void
     {
         $user = $this->user('rep', ['is_active' => false]);

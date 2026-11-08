@@ -29,4 +29,32 @@ class LoginThrottleKeyTest extends TestCase
         $this->assertNotSame($key, LoginController::accountKey('bob@example.com', '203.0.113.5'));
         $this->assertNotSame($key, LoginController::accountKey('alice@example.com', '203.0.113.6'));
     }
+
+    public function test_spellings_the_database_ignores_share_one_canonical_address(): void
+    {
+        $plain = LoginController::accountKey('alice@example.com', '203.0.113.5');
+        foreach (["ali\u{200B}ce@example.com", "ali\u{200C}\u{200D}ce@example.com", "al\u{2060}ice@example.com", "\u{FEFF}alice@example.com",
+                  "ali\u{200E}ce@example.com", "ali\u{0001}ce@example.com", "alice\u{0301}@example.com", "al ice@example.com", "ALICE@EXAMPLE.COM",
+                  "\u{FF41}lice@example.com", "al\u{00ED}ce@example.com"] as $spelling) {
+            $this->assertSame($plain, LoginController::accountKey($spelling, '203.0.113.5'), 'Spelling should share the canonical bucket: '.json_encode($spelling));
+        }
+        $this->assertNotSame($plain, LoginController::accountKey('alicf@example.com', '203.0.113.5'));
+    }
+
+    public function test_a_resolved_account_uses_its_id_whatever_was_typed(): void
+    {
+        $a = LoginController::accountKey("ali\u{200B}ce@example.com", '203.0.113.5', 42);
+        $this->assertSame($a, LoginController::accountKey('totally-different-spelling', '203.0.113.5', 42));
+        $this->assertNotSame($a, LoginController::accountKey('alice@example.com', '203.0.113.5', 43));
+        $this->assertNotSame($a, LoginController::accountKey('alice@example.com', '203.0.113.5'));
+        $this->assertStringNotContainsString('alice', $a);
+        $this->assertStringNotContainsString('42', explode('|', $a)[1], 'The account id itself is not exposed either.');
+    }
+
+    public function test_malformed_input_never_breaks_key_building(): void
+    {
+        foreach (["\xff\xfe\x00bad", str_repeat("\u{200B}", 10000), '', ' '] as $input) {
+            $this->assertMatchesRegularExpression('/^login\|[0-9a-f]{64}\|203\.0\.113\.5$/', LoginController::accountKey($input, '203.0.113.5'));
+        }
+    }
 }
