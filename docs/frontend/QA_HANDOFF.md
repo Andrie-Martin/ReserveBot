@@ -37,7 +37,7 @@ The running Docker app serves the code baked into its image and was never used a
 4. **Future-dated semester availability is unresolved** and no branch addresses it. The class timetable blocks rooms only for dates inside a semester (`RoomAvailability::inTerm`). With the sample semester ending 2027-01-31,
    a Tuesday after that date shows no class blocks, so rooms look free during class hours and can be booked until the next semester is entered. Needs an owner decision (block, warn, or require a semester).
 5. **Legacy violet styling may still exist.** `public/css/style.css` still defines the old violet palette and rules; the redesigned screens override most of it. Known at the time of writing:
-   on `dev`, the class-check "Jump to the answer buttons" link (`a.check-jump`, added by Phase 09 QA) is violet (the scan reports it after merging); the Reject and Cancel reason fields and the busy-rooms hover were violet and are corrected on this branch.
+   the class-check "Jump to the answer buttons" link (`a.check-jump`, added by Phase 09 QA) was violet on `dev` when focused; the Reject and Cancel reason fields and the busy-rooms hover were violet on `dev` too. All three are corrected on this branch (not on `dev` until it is merged).
 6. `/rep` at 1438x638: the first meeting-answer buttons start about 694px down (below the fold); visible at 1438x900. Follows the approved prototype order. Needs a human decision.
 
 ## What to review by hand (authenticated, real data)
