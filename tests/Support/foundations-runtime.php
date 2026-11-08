@@ -52,8 +52,18 @@ function foundationsApplication(): Illuminate\Foundation\Application
         putenv($key.'='.$value);
         $_ENV[$key] = $_SERVER[$key] = $value;
     }
+    $errorLevel = error_reporting();
     $app = require $root.'/bootstrap/app.php';
     $app->make(Kernel::class)->bootstrap();
+    if (class_exists(PHPUnit\Framework\TestCase::class, false)) {
+        // Kernel::bootstrap() installs Laravel's error and exception handlers (and raises error_reporting). Under PHPUnit
+        // nothing removes them, which made every caller "risky"; remove exactly the two it pushed so PHPUnit's own
+        // handlers keep reporting warnings and deprecations. CLI use (render-*.php) keeps Laravel's handlers.
+        restore_error_handler();
+        restore_exception_handler();
+        error_reporting($errorLevel);
+        Illuminate\Foundation\Bootstrap\HandleExceptions::forgetApp();
+    }
     // Any accidental DB access fails; nothing can reach the configured application database.
     $app['config']->set('database.connections', []);
     $app['config']->set('database.default', 'foundations-no-database');
