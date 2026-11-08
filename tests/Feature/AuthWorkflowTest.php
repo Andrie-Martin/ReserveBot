@@ -345,6 +345,52 @@ final class AuthWorkflowTest extends TestCase
         $this->assertAuthenticatedAs($bob);
     }
 
+    public function test_successful_logins_do_not_use_up_the_ip_allowance(): void
+    {
+        // Attempts are counted before the password check; a success must give its slot back so only FAILURES count against the IP.
+        $ip = '203.0.113.66';
+        for ($i = 0; $i < 19; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        for ($i = 0; $i < 3; $i++) {
+            $user = $this->user();
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->assertAuthenticatedAs($user);
+            $this->post('/logout');
+        }
+        $this->assertSame(19, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip));
+        $this->assertWrongLogin($this->loginAs('twentieth-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));   // the 20th failure is still allowed
+        $this->assertThrottled($this->loginAs('twenty-first-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+    }
+
+    public function test_an_attempt_refused_for_the_ip_is_not_charged_to_the_account(): void
+    {
+        $ip = '203.0.113.67';
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        $user = $this->user();
+        for ($i = 0; $i < 3; $i++) {
+            $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        }
+        $key = \App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id);
+        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get($key, 0), 'Refusals caused by the IP limit must not use up the account allowance.');
+        $this->assertSame(20, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Refused attempts do not raise the IP counter either.');
+    }
+
+    public function test_an_attempt_refused_for_the_account_does_not_raise_the_ip_counter(): void
+    {
+        $ip = '203.0.113.68';
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Hammering a locked account must not push the whole IP towards its limit.');
+    }
+
     public function test_limiter_keys_hold_no_typed_address_or_password_and_fit_the_cache_column(): void
     {
         $user = $this->user();

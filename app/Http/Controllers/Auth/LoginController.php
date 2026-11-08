@@ -8,7 +8,9 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -65,8 +67,20 @@ class LoginController extends Controller
         $accountKey = self::accountKey($email, (string) $request->ip(), $accountId === null ? null : (int) $accountId);
         $ipKey = 'login-ip|'.$request->ip();
 
-        if (RateLimiter::tooManyAttempts($accountKey, self::MAX_FAILURES_PER_ACCOUNT_AND_IP)
-            || RateLimiter::tooManyAttempts($ipKey, self::MAX_FAILURES_PER_IP)) {
+        // Count first, then decide. Checking the counters and only recording the failure after the (slow) password check let
+        // every request that arrived together pass the check, so a burst got far more than the limit. Each increment is
+        // atomic in the cache, so each request gets its own number and only the first N run the password check.
+        $accountAttempts = $this->count($accountKey);
+        $ipAttempts = 0;
+        if ($accountAttempts <= self::MAX_FAILURES_PER_ACCOUNT_AND_IP) {
+            $ipAttempts = $this->count($ipKey);
+            if ($ipAttempts > self::MAX_FAILURES_PER_IP) {
+                $this->refund($accountKey);   // refused for the IP, so neither counter is charged
+                $this->refund($ipKey);
+            }
+        }
+
+        if ($accountAttempts > self::MAX_FAILURES_PER_ACCOUNT_AND_IP || $ipAttempts > self::MAX_FAILURES_PER_IP) {
             event(new Lockout($request));
             $seconds = max(RateLimiter::availableIn($accountKey), RateLimiter::availableIn($ipKey), 1);
 
@@ -82,20 +96,49 @@ class LoginController extends Controller
             && Auth::attempt(['email' => $email, 'password' => $password, 'is_active' => true]);
 
         if (! $ok) {
-            RateLimiter::hit($accountKey, self::DECAY_SECONDS);
-            RateLimiter::hit($ipKey, self::DECAY_SECONDS);
-
+            // Already counted above.
             return back()
                 ->withErrors(['email' => 'Wrong email or password.'])
                 ->withInput(['email' => $email]);
         }
 
+        // Only failures count: a success clears the account counter and gives its IP slot back.
         RateLimiter::clear($accountKey);
+        $this->refund($ipKey);
 
         // New session ID on every login (stops "session fixation" attacks)
         $request->session()->regenerate();
 
         return redirect($request->user()->homeUrl());
+    }
+
+    /**
+     * Adds one to a counter and returns the new total. Uses the cache's own atomic add and increment, with the same
+     * key and ":timer" layout as Laravel's RateLimiter (so availableIn() and clear() keep working). RateLimiter::increment()
+     * is not used because, when two requests create a counter at the same moment, the loser writes the value 1 back and
+     * erases increments the others already made.
+     */
+    private function count(string $key): int
+    {
+        $cache = Cache::store(config('cache.limiter'));
+        $cache->add($key.':timer', Carbon::now()->addSeconds(self::DECAY_SECONDS)->getTimestamp(), self::DECAY_SECONDS);
+        $cache->add($key, 0, self::DECAY_SECONDS);
+        $total = $cache->increment($key);
+        if ($total === false) {   // the counter expired between the two calls
+            $cache->add($key, 0, self::DECAY_SECONDS);
+            $total = $cache->increment($key);
+        }
+
+        return (int) $total;
+    }
+
+    /** Gives one count back (never below zero, and nothing if the counter has already expired). */
+    private function refund(string $key): void
+    {
+        $cache = Cache::store(config('cache.limiter'));
+        if ((int) $cache->get($key, 0) > 0) {
+            $cache->decrement($key);
+        }
     }
 
     public function logout(Request $request): RedirectResponse
