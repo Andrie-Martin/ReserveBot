@@ -3,7 +3,8 @@
    - drawers:  <dialog class="rb-drawer"> opened by <a href="#id" data-rb-drawer="id">   (fallback: :target)
    - pickers:  <select data-rb-picker[="search"]> gets a compact, scrollable, keyboard-friendly list (the select stays
                in the form and remains the submitted value; without script the native select is used)
-   - reveals:  <a href="#id" data-rb-reveal="id"> shows/hides a panel inline                (fallback: :target) */
+   - reveals:  <a href="#id" data-rb-reveal="id"> shows/hides a panel inline                (fallback: :target)
+   - subnav:   a .rb-subnav that scrolls sideways on a narrow screen starts with its current link in view */
 (() => {
   'use strict';
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -424,6 +425,13 @@
     });
   };
 
-  const start = () => { drawers(); reveals(); pickers(); searches(); once(); };
+  // Only the nav's own scroll position changes (never the page), so nothing else on the page moves.
+  const subnavs = () => $$('.rb-subnav').forEach(nav => {
+    const current = $('[aria-current]', nav);
+    if (!current || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollLeft = Math.max(0, current.offsetLeft - (nav.clientWidth - current.offsetWidth) / 2);
+  });
+
+  const start = () => { drawers(); reveals(); pickers(); searches(); once(); subnavs(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

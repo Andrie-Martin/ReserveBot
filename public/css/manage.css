@@ -124,11 +124,6 @@
 }
 
 /* Phase 07: Manage pages (rooms, equipment, booking rules). */
-.rb-manage .manage-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: var(--rb-space-4) 0; padding: 0; border: 0; }
-.rb-manage .manage-tabs a { display: inline-flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1) var(--rb-space-4); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); color: var(--rb-text-primary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; }
-.rb-manage .manage-tabs a:hover { border-color: var(--rb-color-maroon); color: var(--rb-color-maroon); }
-.rb-manage .manage-tabs a.on { border-color: var(--rb-color-maroon); background: var(--rb-color-maroon); color: var(--rb-color-white); }
-.rb-manage .manage-tabs a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .rb-booking__intro > .success { margin: 0 0 var(--rb-space-4); }
 .rb-manage .rb-booking__panel > .notice { margin: 0 0 var(--rb-space-4); }
 .rb-manage .mtable td.note { color: var(--rb-text-secondary); font-size: .8125rem; }
@@ -167,8 +162,7 @@
   .rb-manage .mcat .mtable td:nth-child(3)::before { content: "Most per booking "; color: var(--rb-text-secondary); }
   .rb-manage .mcat .mtable td:nth-child(5) { grid-column: 1 / -1; }
   .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
-  .rb-manage .manage-tabs a { padding-left: .75rem; padding-right: .75rem; }
-}
+  }
 
 /* Rooms: a table while its panel is wide; one card per room when it is narrow (phones, or large text on a wide screen).
    Notes and building names wrap inside their cells; the table element, header cells and data are unchanged. */

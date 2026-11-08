@@ -78,7 +78,7 @@ textarea.rb-control { resize: vertical; }
 .rb-page-header__text { flex: 1 1 var(--rb-grid-min); min-width: 0; }
 .rb-stat-card__list { margin: 0; }
 .rb-stat-card__label { color: var(--rb-text-muted); font-size: var(--rb-text-small); }
-.rb-stat-card__value { margin: var(--rb-space-2) 0 0; font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); font-variant-numeric: tabular-nums; }
+.rb-stat-card__value { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); font-variant-numeric: tabular-nums; }
 .rb-empty-state { display: grid; justify-items: start; gap: var(--rb-space-4); padding: var(--rb-space-6); border: var(--rb-border-width) dashed var(--rb-border-control); border-radius: var(--rb-radius-card); color: var(--rb-text-primary); }
 .rb-empty-state .rb-description { margin: 0; }
 .rb-table-container { max-width: 100%; min-width: 0; overflow-x: auto; border: var(--rb-border-width) solid var(--rb-border-panel); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); color: var(--rb-text-primary); }
@@ -207,3 +207,17 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
 .rb-search .rb-search__clear:hover { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
 .rb-search .rb-search__clear:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: -2px; }
 .rb-search .rb-search__clear svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; }
+
+/* Secondary navigation (Manage pages, Requests): one hairline under the row, the current page in maroon with a short underline.
+   Links to separate URLs, so the current one carries aria-current. Scrolls sideways instead of wrapping on narrow screens. */
+.rb-subnav { display: flex; flex-wrap: nowrap; gap: var(--rb-space-1) var(--rb-space-6); margin: var(--rb-space-4) 0; padding: 0; border-bottom: var(--rb-border-width) solid var(--rb-border-warm); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; font-family: var(--rb-font-family); }
+.rb-subnav a { position: relative; flex: none; display: inline-flex; align-items: center; gap: var(--rb-space-2); min-height: var(--rb-control-height); padding: var(--rb-space-1) 0; border: 0; border-radius: 0; background: none; color: var(--rb-text-muted); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); line-height: var(--rb-leading-body); text-decoration: none; white-space: nowrap; }
+.rb-subnav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+.rb-subnav a:hover { color: var(--rb-color-deep); }
+.rb-subnav a:hover::after { background: var(--rb-border-control); opacity: .45; }
+.rb-subnav a[aria-current] { color: var(--rb-color-maroon); }
+.rb-subnav a[aria-current]::after, .rb-subnav a[aria-current]:hover::after { background: var(--rb-color-maroon); opacity: 1; }
+.rb-subnav a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: calc(-1 * var(--rb-focus-width)); border-radius: var(--rb-radius-control); }
+.rb-subnav a .count { flex: none; min-width: 1.5rem; padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-neutral-bg); color: var(--rb-neutral-text); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); line-height: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.rb-subnav a[aria-current] .count { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
+@media (max-width: 40rem) { .rb-subnav { gap: var(--rb-space-1) var(--rb-space-4); } }
