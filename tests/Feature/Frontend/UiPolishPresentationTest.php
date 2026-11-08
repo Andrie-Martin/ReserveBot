@@ -204,4 +204,73 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertMatchesRegularExpression('/\.rb-stat__value\s*\{[^}]*font-size:\s*inherit[^}]*line-height:\s*inherit/', $css);
         $this->assertMatchesRegularExpression('/\.rb-stat__label\s*\{[^}]*font-size:\s*inherit[^}]*line-height:\s*inherit/', $css);
     }
+
+    public function test_free_rooms_use_the_shared_wording_helpers_and_no_spreadsheet_remarks(): void
+    {
+        $room = $this->read('resources/views/rooms/_room.blade.php');
+        $this->assertStringContainsString('RoomCapacity::label', $room);
+        $this->assertStringContainsString('Unavailable all day — ', $room);
+        $this->assertStringNotContainsString('Seats not recorded', $room);
+        $this->assertStringNotContainsString('Blocked all day', $room);
+
+        $availability = $this->read('app/Services/RoomAvailability.php');
+        $this->assertStringContainsString('BlockedReason::text', $availability);
+        $this->assertStringNotContainsString('Blocked: ', $availability);
+
+        // Capacity wording is the same wherever a capacity is shown.
+        $this->assertStringContainsString('RoomCapacity::label', $this->read('resources/views/bookings/create.blade.php'));
+        $this->assertStringNotContainsString('not recorded', strtolower($this->read('resources/views/manage/rooms.blade.php')));
+    }
+
+    public function test_calendar_and_event_details_cards_share_a_height_with_an_internal_scroll(): void
+    {
+        $css = $this->read('public/css/availability.css');
+        $this->assertStringContainsString('.rb-availability__events-scroll', $css);
+        $this->assertMatchesRegularExpression('/\.rb-availability__events-scroll\s*\{[^}]*overflow-y:\s*auto/', $css);
+        $this->assertStringContainsString('align-items: stretch', $css);
+
+        $details = $this->read('resources/views/rooms/_calendar-details.blade.php');
+        $this->assertStringContainsString('rb-availability__events-scroll', $details);
+    }
+
+    public function test_booking_details_has_a_summary_and_one_at_a_time_move_and_cancel_panels(): void
+    {
+        $view = $this->read('resources/views/bookings/show.blade.php');
+        foreach (['booking-summary', 'bfacts', 'bequip', 'class="chips"', 'booking-actions'] as $needle) {
+            $this->assertStringContainsString($needle, $view);
+        }
+        // The old accordion is gone; two labelled toggles open one panel each.
+        $this->assertStringNotContainsString('Cancel or move this booking', $view);
+        $this->assertStringContainsString('data-rb-reveal="move-panel"', $view);
+        $this->assertStringContainsString('data-rb-reveal="cancel-panel"', $view);
+        $this->assertSame(2, substr_count($view, 'data-rb-reveal-group="change"'));
+        $this->assertSame(2, substr_count($view, 'data-rb-reveal-close'));
+
+        // Routes, method and CSRF are the existing ones, and the panels reopen with their own error bag.
+        $this->assertStringContainsString("route('bookings.move', \$reservation)", $view);
+        $this->assertStringContainsString("route('bookings.staff-cancel', \$reservation)", $view);
+        $this->assertGreaterThanOrEqual(2, substr_count($view, '@csrf'));
+        $this->assertSame(1, substr_count($view, 'method="post" action="{{ route(\'bookings.move\''));
+        $this->assertSame(1, substr_count($view, 'method="post" action="{{ route(\'bookings.staff-cancel\''));
+        $this->assertStringContainsString("getBag('move')", $view);
+        $this->assertStringContainsString("getBag('cancel')", $view);
+
+        // Cancelling needs an explicit confirmation that is required natively and never submitted.
+        $this->assertMatchesRegularExpression('/<input type="checkbox" id="staff-cancel-confirm" required>/', $view);
+        $this->assertStringNotContainsString('name="staff-cancel-confirm"', $view);
+        // Move uses the compact pickers; the native selects stay the submitted controls.
+        foreach (['name="date" data-rb-picker', 'name="from" data-rb-picker', 'name="to" data-rb-picker', 'name="room"'] as $needle) {
+            $this->assertStringContainsString($needle, $view);
+        }
+    }
+
+    public function test_panels_open_without_script_through_target_and_submit_once_with_script(): void
+    {
+        $css = $this->read('public/css/booking.css');
+        $this->assertStringContainsString('.change-panel.rb-reveal:target', $css);
+        $this->assertStringContainsString('.change-panel.rb-reveal.is-open', $css);
+        $js = $this->read('public/js/ui.js');
+        $this->assertStringContainsString('rbRevealGroup', $js);
+        $this->assertStringContainsString('form[data-rb-once]', $js);
+    }
 }

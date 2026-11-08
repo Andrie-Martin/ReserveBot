@@ -194,6 +194,74 @@ const ok = (name) => { passed++; console.log('  PASS', name); };
     await context.close();
   }
 
+  console.log('Free rooms wording and calendar (no data changed)');
+  {
+    const { context, page } = await login('rep');
+    await page.goto(base + '/rooms');
+    const text = await page.locator('main').innerText();
+    assert.ok(!/yellow on timetable/i.test(text) && !/Blocked all day/i.test(text) && !/Seats not recorded/i.test(text), 'no spreadsheet remarks or old wording');
+    ok('rooms page shows no "yellow on timetable", "Blocked all day" or "Seats not recorded"');
+    assert.ok(!/\b0 seats\b/.test(text), 'unknown capacity is never shown as zero');
+    ok('capacity reads "N seats" when recorded and "Capacity not specified" otherwise, never "0 seats"');
+    const counts = page.locator('.rb-availability__event-count');
+    if (await counts.count()) {
+      await counts.first().click();
+      await page.waitForTimeout(250);
+      const sizes = await page.evaluate(() => { const a = document.querySelector('.rb-availability__calendar-details').getBoundingClientRect(), b = document.querySelector('.rb-availability__cal-card').getBoundingClientRect(); return { dh: a.height, ch: b.height, dt: a.top, ct: b.top }; });
+      assert.ok(Math.abs(sizes.dh - sizes.ch) < 1.5 && Math.abs(sizes.dt - sizes.ct) < 1.5, 'calendar and event details cards are top-aligned and equal height');
+      ok('calendar card and event details card are top-aligned and the same height on desktop');
+    }
+    await context.close();
+  }
+
+  console.log('Booking details: summary, Move / Cancel panels (opens forms, never submits)');
+  {
+    const { context, page } = await login('staff');
+    let found = false;
+    for (let id = 1; id <= 80 && !found; id++) {
+      const response = await page.goto(`${base}/bookings/${id}`);
+      found = response.status() === 200 && (await page.locator('.change-toggle').count()) === 2;
+    }
+    assert.ok(found, 'a booking that staff can move or cancel exists in the seeded data');
+    assert.ok(!(await page.locator('#move-panel').isVisible()) && !(await page.locator('#cancel-panel').isVisible()), 'both panels start closed');
+    assert.equal(await overflow(page), 0);
+    await page.click('[data-rb-reveal="move-panel"]');
+    assert.ok(await page.locator('#move-panel').isVisible() && !(await page.locator('#cancel-panel').isVisible()));
+    assert.ok(await page.locator('#move-panel .rb-picker__button').count() >= 3, 'Move uses the compact pickers');
+    await page.click('[data-rb-reveal="cancel-panel"]');
+    assert.ok(await page.locator('#cancel-panel').isVisible() && !(await page.locator('#move-panel').isVisible()), 'only the selected form is shown');
+    ok('Move booking / Cancel booking open one panel at a time');
+    await page.click('#cancel-panel button[type=submit]');
+    await page.waitForTimeout(200);
+    assert.ok(new URL(page.url()).pathname.startsWith('/bookings/'), 'still on the booking');
+    assert.equal(await page.locator('#staff-cancel-confirm').evaluate((e) => e.checkValidity()), false);
+    ok('Cancel cannot be submitted without the reason and explicit confirmation');
+    await page.locator('#cancel-panel a[data-rb-reveal-close]').click();
+    assert.ok(!(await page.locator('#cancel-panel').isVisible()));
+    ok('Back closes the panel');
+    await context.close();
+    for (const [width, height, percent] of [[390, 844, 100], [320, 640, 200]]) {
+      const phone = await login('staff', { viewport: { width, height }, hasTouch: true, isMobile: true });
+      await phone.page.goto(page.url());
+      if (percent !== 100) await zoom(phone.page, percent);
+      await phone.page.click('[data-rb-reveal="move-panel"]');
+      assert.equal(await overflow(phone.page), 0, `no horizontal overflow at ${width}px / ${percent}%`);
+      await phone.page.click('[data-rb-reveal="cancel-panel"]');
+      assert.equal(await overflow(phone.page), 0);
+      ok(`Move and Cancel panels fit at ${width}px, text ${percent}%`);
+      await phone.context.close();
+    }
+    const plain = await login('staff', { javaScriptEnabled: false });
+    await plain.page.goto(page.url());
+    assert.ok(!(await plain.page.locator('#move-panel').isVisible()));
+    await plain.page.click('a[href="#move-panel"]');
+    assert.ok(await plain.page.locator('#move-panel').isVisible() && await plain.page.locator('#move-room').isVisible(), 'native selects without script');
+    await plain.page.click('a[href="#cancel-panel"]');
+    assert.ok(await plain.page.locator('#cancel-panel').isVisible() && !(await plain.page.locator('#move-panel').isVisible()));
+    ok('without JavaScript the toggles open the matching form through :target');
+    await plain.context.close();
+  }
+
   await browser.close();
   console.log(`\n${passed} checks passed`);
 })().catch((error) => { console.error('\nFAILED:', error.message); process.exit(1); });
