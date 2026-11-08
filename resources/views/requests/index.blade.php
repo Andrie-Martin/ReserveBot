@@ -32,41 +32,46 @@
       $span = TimeSlots::span($start->hour * 60 + $start->minute, $end->isSameDay($start) ? $end->hour * 60 + $end->minute : 1440);
       $bag = $errors->getBag('reject'.$r->id);
     @endphp
-    <article class="req" id="req-{{ $r->id }}">
-      <div class="req-main">
-        <p class="req-when"><strong>{{ $start->format('D, M j') }}</strong> · {{ $span }}
-          @if ($start->isPast())<span class="tag-warn">Already started</span>@elseif ($start->isToday())<span class="tag-today">Today</span>@endif
-        </p>
-        <p class="req-title">{{ $r->purpose }}</p>
-        <dl class="req-facts">
-          <dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd>
-          <dt>Needs</dt><dd>{{ $r->needLabel() }}</dd>
-          <dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd>
-          @if ($r->hasEquipment())
-            <dt>Items</dt><dd>{{ $r->itemsText() }}</dd>
-          @endif
-          <dt>Sent</dt><dd>{{ $r->created_at?->format('M j, g:i A') }}</dd>
-        </dl>
-      </div>
+    <article class="req" id="req-{{ $r->id }}" aria-labelledby="req-{{ $r->id }}-title">
+      <header class="req-head">
+        <div class="req-headline">
+          <h3 class="req-title" id="req-{{ $r->id }}-title">{{ $r->purpose }}</h3>
+          <p class="req-when"><strong>{{ $start->format('D, M j') }}</strong> · {{ $span }}
+            @if ($start->isPast())<span class="tag-warn">Already started</span>@elseif ($start->isToday())<span class="tag-today">Today</span>@endif
+          </p>
+        </div>
+        <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
+      </header>
+      <dl class="req-facts">
+        <div class="req-fact req-fact--who"><dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd></div>
+        <div class="req-fact"><dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd></div>
+        <div class="req-fact"><dt>Needs</dt><dd>{{ $r->needLabel() }}</dd></div>
+        @if ($r->hasEquipment())
+          <div class="req-fact req-fact--items"><dt>Items</dt><dd>{{ $r->itemsText() }}</dd></div>
+        @endif
+        <div class="req-fact"><dt>Sent</dt><dd>{{ $r->created_at?->format('M j, g:i A') }}</dd></div>
+      </dl>
       <div class="req-actions">
         <form method="post" action="{{ route('bookings.approve', $r) }}">
           @csrf
           <button type="submit" class="btn-approve">Approve<span class="sr-only"> booking #{{ $r->id }}</span></button>
         </form>
-        <details class="reject" @if ($bag->any()) open @endif>
-          <summary>Reject…</summary>
-          <form method="post" action="{{ route('bookings.reject', $r) }}">
-            @csrf
-            <label for="reason-{{ $r->id }}" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-            <textarea id="reason-{{ $r->id }}" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($bag->any()) autofocus aria-invalid="true" aria-describedby="reason-{{ $r->id }}-error" @endif>{{ $bag->any() ? old('reason') : '' }}</textarea>
-            @if ($bag->any())
-              <p class="field-error" id="reason-{{ $r->id }}-error">{{ $bag->first('reason') }}</p>
-            @endif
-            <button type="submit" class="btn-reject">Reject booking</button>
-          </form>
-        </details>
-        <a class="req-link" href="{{ route('bookings.show', $r) }}">Details</a>
+        <a class="btn-reject" href="#reject-{{ $r->id }}" data-rb-reveal="reject-{{ $r->id }}">Reject…<span class="sr-only"> booking #{{ $r->id }}</span></a>
+        <a class="btn-ghost req-link" href="{{ route('bookings.show', $r) }}">Details<span class="sr-only"> for booking #{{ $r->id }}</span></a>
       </div>
+      {{-- Full width beneath the booking: opens in place (script) or by #fragment (no script); a refused reason keeps it open. --}}
+      <form method="post" action="{{ route('bookings.reject', $r) }}" id="reject-{{ $r->id }}" @class(['req-reject', 'rb-reveal', 'is-open' => $bag->any()])>
+        @csrf
+        <label for="reason-{{ $r->id }}" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
+        <textarea id="reason-{{ $r->id }}" name="reason" rows="3" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($bag->any()) autofocus aria-invalid="true" aria-describedby="reason-{{ $r->id }}-error" @endif>{{ $bag->any() ? old('reason') : '' }}</textarea>
+        @if ($bag->any())
+          <p class="field-error" id="reason-{{ $r->id }}-error">{{ $bag->first('reason') }}</p>
+        @endif
+        <div class="req-reject__actions">
+          <button type="submit" class="btn-reject">Reject booking</button>
+          <a class="btn-ghost" href="#req-{{ $r->id }}" data-rb-reveal-close>Cancel</a>
+        </div>
+      </form>
     </article>
   @empty
     <p class="empty">Nothing is waiting for approval.</p>
@@ -78,13 +83,15 @@
     <h2>Recently decided</h2>
     <ul class="decided">
       @foreach ($decided as $r)
-        <li>
+        <li class="decided-row">
           <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
-          <a href="{{ route('bookings.show', $r) }}">{{ $r->purpose }}</a>
-          <span class="muted">· {{ $r->user->name }} · {{ $r->start_time->format('M j, g:i A') }} · by {{ $r->reviewer?->name }}</span>
-          @if ($r->status === 'Rejected' && filled($r->status_reason))
-            <span class="decided-why">“{{ $r->status_reason }}”</span>
-          @endif
+          <div class="decided-main">
+            <a class="decided-title" href="{{ route('bookings.show', $r) }}">{{ $r->purpose }}</a>
+            <p class="decided-meta"><span>{{ $r->user->name }}</span><span>{{ $r->start_time->format('M j, g:i A') }}</span><span>Decided by {{ $r->reviewer?->name }}</span></p>
+            @if ($r->status === 'Rejected' && filled($r->status_reason))
+              <p class="decided-why">“{{ $r->status_reason }}”</p>
+            @endif
+          </div>
         </li>
       @endforeach
     </ul>
