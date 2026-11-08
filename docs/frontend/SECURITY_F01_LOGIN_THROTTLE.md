@@ -1,6 +1,6 @@
 # Security correction F-01: login throttling
 
-**Contents.** The original Phase 12 implementation (`c74c9b4`) is described first, as shipped. Three follow-up corrections made after the independent security audit (`/tmp/reservebot-phase12-review.md`) come after it, each in its own commit: hashed keys (`305d0e2`, a cherry-pick of Phase 13's `553e0b3`), one counter for every spelling of an account (`404ffdd`) and atomic counting (`47fc419`). The sections "Current behaviour", "Follow-up fixes" and "Remaining risks" describe the code as it is now.
+**Contents.** The original Phase 12 implementation (`c74c9b4`) is described first, as shipped. Four follow-up corrections made after the independent security audit (`/tmp/reservebot-phase12-review.md`) come after it, each in its own commit: hashed keys (`305d0e2`, a cherry-pick of Phase 13's `553e0b3`), one counter for every spelling of an account (`404ffdd`), atomic counting (`47fc419`) and, last, turns and in-flight admission so that valid logins neither use up nor wait on the failure allowance (`f72709f`). The sections "Current behaviour", "Follow-up fixes" and "Remaining risks" describe the code as it is now; follow-up 3 describes an intermediate design that follow-up 4 replaced.
 
 Branch `feat/frontend-design-12-security` (from `feat/frontend-design-11-qa-fixes`). Source: `docs/frontend/INDEPENDENT_QA_REPORT.md`, F-01 (`POST /login` accepted unlimited wrong passwords). This is a reviewed backend change to authentication, made at the user's request. F-07 and all other findings are untouched.
 
@@ -106,9 +106,38 @@ Verified live on the database cache store after typing an email, a password-like
 
 **Cost.** One extra indexed lookup and two cache operations per attempt. Single-login latency, median of 12: wrong password 224 -> 230 ms, correct password 177 -> 203 ms (bcrypt cost 12 dominates). Legitimate bursts: 12 simultaneous correct logins over 5 accounts from one IP all signed in; 3 simultaneous same-account submissions all signed in; counters afterwards: account cleared, IP at 0.
 
-**Residual.** Attempts in flight are counted until they finish, so more than 5 *simultaneous* logins for one account can be refused even with the right password (8 parallel: 6 signed in, 2 refused), and more than 20 simultaneous attempts from one IP likewise. This needs more simultaneous requests than the server has workers in normal use. Counting is exact for the shared `database` store; a per-process store such as `array` or `file` without locking is not suitable.
+**Residual (found in the final concurrency review, fixed by follow-up 4).** Because every attempt was counted *before* the password check, attempts in flight, including correct logins, used the failure allowance until they finished: 8 simultaneous correct logins for one account had up to 3 refused, 12 had up to 7 refused, and with 19 failures on an IP 2 of 3 simultaneous correct logins were refused.
 
 **Tests** (gated): successes do not use the IP allowance (19 failures + 3 logins, the 20th failure is still allowed, the 21st refused); a refusal for the IP is not charged to the account or the IP counter; hammering a locked account does not raise the IP counter. True concurrency cannot be reproduced inside one PHPUnit process, so it was verified with the multi-worker bursts above (manual, not automated).
+
+### 4. Valid logins do not use up or wait on the allowance (`f72709f`)
+
+**Question.** Does counting attempts before authentication make legitimate logins consume the failure quota or block one another? **Yes**, while they are in flight. Measured on a 12-worker `php -S` server with the database cache (3 repeats each unless noted), design of follow-up 3:
+
+| Scenario (all simultaneous) | Policy | Follow-up 3 | Follow-up 4 |
+|---|---|---|---|
+| 8 correct logins, one account, no failures | all sign in | 5 / 8 / 7 signed in | **8, 8, 8** |
+| 12 correct logins, one account (2 repeats) | all sign in | 9 and 5 signed in | **12, 12** |
+| 5 wrong + 5 correct, one account | correct ones sign in, at most 5 wrong checked | 3-4 correct signed in, others refused | **5 correct signed in, 5 wrong checked** |
+| 6 wrong + 6 correct, one account | correct ones sign in | 3-4 correct signed in | **6 correct signed in** |
+| 40 wrong, one account | exactly 5 checked | 5 | **5** (3 repeats) |
+| 60 wrong across 60 emails, one IP | exactly 20 checked | 20 | **20** (2 repeats) |
+| 30 correct over 5 accounts, one IP | all sign in | 30 | **30** |
+| 10 earlier IP failures + 15 correct logins | all sign in | 15 | **15** |
+| 19 earlier IP failures + 3 correct logins | all sign in | 1 of 3 (both runs) | **3 of 3** |
+| 19 earlier IP failures + 10 wrong | exactly 1 checked | 1 | **1** |
+| 15 wrong (distinct emails) + 15 correct, one IP | all correct sign in | | **15 and 15** |
+
+**Design.**
+- *Account counter.* Attempts for one account (from one IP) take turns under a cache lock (`Cache::lock`, 10 s, polled every 50 ms, up to 5 s of waiting). Inside the turn the counter holds exactly the failures so far: it is checked, the password is verified, and one is added only if the check fails. Simultaneous wrong guesses cannot exceed 5 (the 6th waits its turn, sees 5 and is refused at once); a correct login never uses allowance and so cannot refuse another. Different accounts never wait for each other. A turn that cannot be had in 5 s is refused (fail closed). The turn is released on every path.
+- *IP counter.* Shared by many accounts, so it is not serialized (everyone behind one address would wait for each other). Two numbers are kept: recorded failures (`login-ip|<ip>`, failures only, exactly as in the original) and attempts in flight (`login-ip|<ip>:inflight`, short-lived). An attempt is admitted when failures + in-flight (itself included) is at most 20, which holds even if all of them fail; an attempt that does not fit yet waits up to 3 s for the in-flight ones to settle (each either succeeds, leaving no trace, or fails and is recorded) instead of being refused, and is refused immediately once 20 failures are recorded. The in-flight number is read after it is incremented and failures are recorded before it is decremented, so no attempt can be missed. A successful login never uses an IP slot, so successes are not refunded either.
+- Behaviour kept: thresholds 5 and 20, 60 s window from the first failure, wording, `Retry-After`, `Lockout` event, hashed account-identity keys, CSRF (419, not counted), session regeneration, onboarding, reset and authorization (re-checked live: 7 wrong gives 5 + refusals with `Retry-After`, correct password refused while locked, the zero-width and upper-case spellings refused while locked, success clears the account counter and 5 more failures are allowed, reset-password works, 0 cache rows or keys contain typed text, longest key 100 characters, no lock or in-flight counter left behind).
+
+**Cost.** Single login, median of 20: wrong password 236 ms, correct 210 ms (previous design 230 / 203 ms). Waiting is only for simultaneous attempts on the *same* account: 2 simultaneous correct logins (a double submit) finish in a median of 393 ms (slowest 518 ms); 12 simultaneous correct logins on one account take turns, median 1.8 s and slowest 3.3 s; 40 simultaneous wrong guesses on one account are all answered within 1.8 s (the first 5 are checked, the rest refused at once); 12 correct logins on 5 different accounts: median 435 ms.
+
+**Tests** (gated): the turn and the IP slot are released after a failure, a success, an account refusal and empty input; 12 successful logins in a row leave the whole allowance of 5 and only 5 failures on the IP counter; correct logins succeed with 19 failures on the IP and the 21st failure is still refused; an attempt that cannot get its account turn is refused, not let through; attempts in flight count against the IP limit (15 failures + 6 in flight: refused; + 4: admitted). They fail against the previous design and against mutants that never release the lock or the slot. True concurrency cannot be reproduced inside one PHPUnit process, so the table above is a manual measurement.
+
+**Trade-offs.** (1) Same-account simultaneous logins are serialized, so the 12th of 12 waits about 3 s; a normal double submit waits about 0.4 s. (2) A request waiting for a turn or an IP slot holds a PHP worker for up to 5 s (turn) or 3 s (IP admission); the waits end as soon as the attempts ahead finish, and under attack the refusals are immediate once the limit is recorded. (3) The lock needs a cache store with locks (the `database` store and its `cache_locks` table, Redis, array; not suitable for a per-process store such as `file` without locking). (4) The IP limit remains exact; the only legitimate logins that can still be delayed are those that arrive while failures + in-flight attempts from the same IP would exceed 20 (they wait up to 3 s, and are refused only if the others do not settle).
 
 ## Current behaviour
 
@@ -117,28 +146,28 @@ Verified live on the database cache store after typing an email, a password-like
 | Per account and IP | `login\|sha256(account:<id> or typed:<canonical address>)\|<ip>` | 5 failures per 60 s |
 | Per IP | `login-ip\|<ip>` | 20 failures per 60 s |
 
-Unchanged from the original: thresholds, the fixed 60 s window from the first failure, wording, `Retry-After`, `Lockout` event, CSRF, session regeneration, `is_active` handling and the role redirects. Verified again after the fixes on the corrected branch (real HTTP): the 6th failure for an account and the 21st for an IP are refused; a correct password is refused while locked; recovery after the window (still locked at 30 s, signed in at about 63 s); a success clears the account counter (5 more failures allowed, the 6th refused); IP counter not reduced by successes; other account and other IP unaffected; spoofed `X-Forwarded-For`, `X-Real-IP` and `Forwarded` headers do not change the counted IP; CSRF 419 and not counted.
+Flow now: take the account turn; refuse if 5 failures are recorded; admit by IP; verify the password; on failure record one failure on the account and the IP; on success clear the account counter; release. Unchanged from the original: thresholds, the fixed 60 s window from the first failure, wording, `Retry-After`, `Lockout` event, CSRF, session regeneration, `is_active` handling and the role redirects. Verified again after the fixes on the corrected branch (real HTTP): the 6th failure for an account and the 21st for an IP are refused; a correct password is refused while locked; recovery after the window (still locked at 30 s, signed in at about 63 s); a success clears the account counter (5 more failures allowed, the 6th refused); IP counter not reduced by successes; other account and other IP unaffected; spoofed `X-Forwarded-For`, `X-Real-IP` and `Forwarded` headers do not change the counted IP; CSRF 419 and not counted.
 
 Authentication regression (same seeded database, corrected branch against `origin/dev`): **0 differences** over 108 route-by-role cells and 22 flow checks (logins and redirects for rep, lab staff and admin, session regeneration, onboarding, logout and cookie replay, deactivated user, generic messages, forgot and reset password). Password reset: token consumed, old password rejected, new password signs in, token not reusable.
 
-## Test results (follow-up pass)
+## Test results (follow-up passes, final state)
 
 | Tree | Run | Result |
 |---|---|---|
-| Phase 12 corrected (`feat/frontend-design-12-security`) | gated, disposable MariaDB, all gates | 135 tests, **130 passed, 0 failures, 0 errors**, 5 skipped (photo tests, no GD), 2 risky (inherited from the Phase 11 base) |
-| Phase 12 corrected | default (gates off) | 135 tests, 87 passed, 48 skipped (DB-gated by design), 0 failures, 2 risky |
-| `origin/dev` (`5c14c79`) + Phase 12 corrected (temporary merge, no conflicts, no overlapping files) | gated | 139 tests, **134 passed, 0 failures, 0 errors**, 5 skipped, **0 risky** |
-| dev + Phase 12 | default | 139 tests, 88 passed, 51 skipped, 0 failures, 0 risky |
-| dev + Phase 12 | gated, reverse order and random seed 7 | 134 passed each |
+| Phase 12 (`feat/frontend-design-12-security`, `f72709f`) | gated, disposable MariaDB, all gates | 140 tests, **135 passed, 0 failures, 0 errors**, 5 skipped (photo tests, no GD), 2 risky (inherited from the Phase 11 base) |
+| Phase 12 | default (gates off) | 140 tests, 87 passed, 53 skipped (DB-gated by design), 0 failures, 2 risky |
+| `origin/dev` (`5c14c79`) + Phase 12 (temporary merge, parents verified, no conflicts, no overlapping files; only the 4 Phase 12 files differ from dev) | gated | 144 tests, **139 passed, 0 failures, 0 errors**, 5 skipped, **0 risky** |
+| dev + Phase 12 | default | 144 tests, 88 passed, 56 skipped, 0 failures, 0 risky |
+| dev + Phase 12 | gated, reverse order and random seed 7 | 139 passed each |
 
-23 tests were added to the original 112: 17 in `AuthWorkflowTest` (7 original, 1 long-address, 9 for spellings, keys and counting) and 6 in `tests/Unit/LoginThrottleKeyTest.php`.
+28 tests were added to the original 112: 22 in `AuthWorkflowTest` (7 original, 1 long-address, 9 for spellings, keys and counting, 5 for turns and in-flight admission) and 6 in `tests/Unit/LoginThrottleKeyTest.php`. The 5 skips are the photo tests.
 
 ## Remaining risks and limits
 
 - **Distributed attacks** across many IPs against one account are not limited (the per-account counter includes the IP). There is no account-wide lockout, CAPTCHA or alerting; the `Lockout` event has no listener, so nothing is logged.
 - **Shared IP.** The limiter uses `$request->ip()`; the app configures no trusted proxies (not changed here). Behind a reverse proxy, Docker/WSL gateway or campus NAT, everyone is one address: 20 failures per minute from anyone refuse every login from that address, valid passwords included, and an attacker on the same address can lock one account for that address for up to 60 s. Configure trusted proxies before production.
 - **IPv6.** The key uses the full address with no /64 grouping, so a client with a /64 can rotate source addresses to get fresh counters, and an IPv4-mapped address (`::ffff:a.b.c.d`) is a different key from plain IPv4. Not changed (needs a policy decision and interacts with the proxy settings).
-- **In-flight counting** (residual of follow-up 3): more than 5 simultaneous correct logins for one account, or 20 from one IP, can be refused.
+- **Waiting under simultaneity** (follow-up 4): simultaneous logins on the *same account* take turns (a double submit waits about 0.4 s; 12 at once, up to about 3 s); an attempt that cannot get a turn within 5 s, or an IP slot within 3 s, is refused (fail closed). Requests that wait hold a PHP worker meanwhile. The attempts that can still be delayed are those arriving while recorded failures plus in-flight attempts from one IP would exceed 20.
 - **A locked-out owner** stays blocked for the rest of the 60 s window even after a password reset or with the right password.
 - **Canonical form for unknown addresses** only approximates the collation (known accounts use the exact database lookup). A made-up address spelled with some exotic collation equivalence could get a separate counter; this has no effect on real accounts.
 - **Cache table housekeeping.** Counter rows are hashed (no personal data except the client IP) but expired rows are not purged by anything scheduled; a periodic delete of expired `cache` rows is advisable.
