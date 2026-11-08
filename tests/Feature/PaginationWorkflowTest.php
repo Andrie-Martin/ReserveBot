@@ -191,4 +191,3 @@ final class PaginationWorkflowTest extends TestCase
         $this->assertStringContainsString('action="'.route('bookings.approve', $equip).'"', $equipPart);
     }
 }
-
