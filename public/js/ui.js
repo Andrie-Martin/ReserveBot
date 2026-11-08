@@ -286,8 +286,12 @@
         const wanted = Math.min(popup.scrollHeight || 320, 320);
         const up = below < Math.min(wanted, 220) && above > below;
         const room = Math.max(120, up ? above : below);
-        const header = search ? search.offsetHeight + 16 : 0;
-        list.style.maxHeight = `${Math.max(96, Math.min(280, room - header))}px`;
+        // Chrome of the popup (search box, status, padding) counts against the room; on a phone the list also never covers
+        // more than about a third of the screen, so the page stays visible behind it.
+        const measured = popup.offsetHeight - list.offsetHeight; // real chrome height (search box, status, padding)
+        const header = Math.max(measured, (search ? search.offsetHeight + 8 : 0) + 24) + 4;
+        const cap = Math.min(280, Math.round(window.innerHeight * 0.34));
+        list.style.maxHeight = `${Math.max(88, Math.min(cap, room - header))}px`;
         popup.style.width = `${Math.max(rect.width, 0)}px`;
         popup.style.left = `${Math.min(Math.max(margin, rect.left), Math.max(margin, window.innerWidth - rect.width - margin))}px`;
         popup.style.top = up ? '' : `${rect.bottom + gap}px`;

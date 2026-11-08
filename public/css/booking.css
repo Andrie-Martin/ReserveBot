@@ -311,3 +311,6 @@
   .rb-booking .change-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   .rb-booking .change-toggle, .rb-booking .change-footer > * { width: 100%; box-sizing: border-box; }
 }
+
+/* 320px with enlarged text: the two action toggles share the row or stack, never wider than the screen. */
+.rb-booking .change-toggle { min-width: min(9rem, 100%); max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; text-align: center; }
