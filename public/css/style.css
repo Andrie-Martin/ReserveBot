@@ -222,14 +222,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visib
 .room-row.is-match { background: #F0FDF4; box-shadow: inset 4px 0 0 #16A34A; }
 .matchline { margin: 0 0 6px; color: #166534; font-size: 13.5px; font-weight: 700; }
 .clashline { margin: 0 0 6px; color: #9A3412; font-size: 13.5px; }
-.room-busy { margin-top: 6px; font-size: 13.5px; }
-.room-busy summary { width: fit-content; color: var(--muted); cursor: pointer; }
-.room-busy summary:hover { color: var(--brand); }
-.room-busy ul { margin: 6px 0 2px; padding: 0; list-style: none; }
-.room-busy li { display: flex; gap: 12px; margin: 0; padding: 6px 0; border-top: 1px dashed var(--line); }
-.room-busy .when { flex: 0 0 130px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.room-busy .st { margin-left: 4px; }
-.room-busy li.mine .what { color: var(--brand-dark); font-weight: 600; }
 .extra { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; }
 
 /* Tablets: narrower days, so each thing gets three short lines (time, what, room) */
@@ -266,8 +258,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visib
   .finder .btn-small { flex: 1 0 100%; }
   .room-row { grid-template-columns: minmax(0, 1fr); padding: 12px; }
   .room-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-  .room-busy li { flex-direction: column; gap: 0; }
-  .room-busy .when { flex: none; }
 }
 
 /* ---------- Booking (Phase 5) ---------- */

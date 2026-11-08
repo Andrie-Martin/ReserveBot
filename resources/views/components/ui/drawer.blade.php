@@ -6,9 +6,11 @@
     <div>
       @if ($kicker)<p class="rb-drawer__kicker">{{ $kicker }}</p>@endif
       <h2 class="rb-drawer__title" id="{{ $id }}-title">{{ $title }}</h2>
-      @if ($sub)<p class="rb-drawer__sub">{{ $sub }}</p>@endif
     </div>
     <a class="rb-button rb-button--secondary rb-button--compact rb-drawer__close" href="{{ $closeTo }}" data-rb-drawer-close>Close<span class="sr-only"> {{ $title }}</span></a>
   </div>
-  <div class="rb-drawer__body">{{ $slot }}</div>
+  <div class="rb-drawer__body">
+    @if ($sub)<p class="rb-drawer__sub">{{ $sub }}</p>@endif
+    {{ $slot }}
+  </div>
 </dialog>

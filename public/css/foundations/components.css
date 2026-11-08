@@ -99,10 +99,8 @@ textarea.rb-control { resize: vertical; }
 .rb-disclosure > summary:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-disclosure__content { min-width: 0; padding-block: var(--rb-space-2); }
 /* Native markers remain visible; state styling never changes disclosure geometry. */
-.rb-disclosure > summary:hover,
-.rb-availability__room-busy > summary:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
-.rb-disclosure[open] > summary,
-.rb-availability__room-busy[open] > summary { color: var(--rb-color-deep); text-decoration: underline; text-underline-offset: .25em; }
+.rb-disclosure > summary:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+.rb-disclosure[open] > summary { color: var(--rb-color-deep); text-decoration: underline; text-underline-offset: .25em; }
 
 /* ---- Native selects: a consistent arrow with room to its right (the no-script / fallback look of every list) ---- */
 html .rb-ui select:not([multiple]):not([size]), html select.rb-control:not([multiple]):not([size]) {
@@ -156,20 +154,22 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
   border: 0; border-left: var(--rb-border-width) solid var(--rb-border-warm); background: var(--rb-surface-panel); color: var(--rb-text-primary); box-shadow: -.5rem 0 2rem rgba(35, 32, 34, .2); overscroll-behavior: contain; }
 .rb-drawer::backdrop { background: rgba(35, 32, 34, .45); }
 .rb-drawer:not([open]) { display: none; }
-.rb-drawer:target:not([open]) { display: block; z-index: 70; }
-.rb-drawer:target:not([open])::before { content: ""; position: fixed; inset: 0; z-index: -1; background: rgba(35, 32, 34, .45); }
+/* No-script fallback: the dimming is a spread shadow OUTSIDE the panel, so it can never paint over the panel's own content. */
+.rb-drawer:target:not([open]) { display: block; z-index: 70; box-shadow: -.5rem 0 2rem rgba(35, 32, 34, .2), 0 0 0 100vmax rgba(35, 32, 34, .45); }
 .rb-drawer[open], .rb-drawer:target:not([open]) { display: flex; flex-direction: column; }
-.rb-drawer__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--rb-space-4); padding: var(--rb-space-4) var(--rb-space-6); border-bottom: var(--rb-border-width) solid var(--rb-border-warm); background: var(--rb-surface-canvas); }
+.rb-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); padding: var(--rb-space-2) var(--rb-space-6) var(--rb-space-2); border-bottom: var(--rb-border-width) solid var(--rb-border-warm); background: var(--rb-surface-canvas); }
 .rb-drawer__kicker { margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); letter-spacing: .06em; text-transform: uppercase; }
+.rb-drawer__head > div { min-width: 0; }
 .rb-drawer__title { margin: 0; font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); overflow-wrap: anywhere; }
-.rb-drawer__sub { margin: var(--rb-space-1) 0 0; color: var(--rb-text-muted); font-size: var(--rb-text-small); overflow-wrap: anywhere; }
-.rb-drawer__close { flex: none; }
+.rb-drawer__sub { margin: 0 0 var(--rb-space-4); color: var(--rb-text-muted); font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-drawer .rb-drawer__close { flex: none; min-height: min(var(--rb-control-height), 44px); min-width: 44px; }
 .rb-drawer__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--rb-space-4) var(--rb-space-6) var(--rb-space-8); }
 .rb-drawer__body > :first-child { margin-top: 0; }
 .rb-drawer .rb-button:focus-visible, .rb-drawer a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 @media (max-width: 40rem) {
   .rb-drawer { inset: 0; width: 100vw; border-left: 0; box-shadow: none; }
   .rb-drawer__head, .rb-drawer__body { padding-inline: var(--rb-space-4); }
+  .rb-drawer__title { font-size: var(--rb-text-h3); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .rb-drawer[open] { animation: rb-drawer-in .18s ease-out; }

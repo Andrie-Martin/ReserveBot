@@ -42,7 +42,7 @@ class AccountsController extends Controller
     public function index(Request $request): View
     {
         $admin = $request->user();
-        $accounts = User::with('section')->where('department_id', $admin->department_id)->get();
+        $accounts = User::with('section')->where('department_id', $admin->department_id)->orderBy('id')->get();
         $byName = fn (User $user) => Str::lower($user->name);
 
         // Same order as before (block reps, then lab staff, then admins), cut into pages of PER_PAGE people.

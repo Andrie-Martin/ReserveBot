@@ -79,10 +79,6 @@
 .rb-availability__clashline { color: var(--rb-warning-text); }
 .rb-availability__room-free { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
 .rb-availability__free-chip { background: var(--rb-success-bg); color: var(--rb-success-text); padding: var(--rb-space-1) var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: var(--rb-text-small); }
-.rb-availability__room-busy { margin-top: var(--rb-space-2); }
-.rb-availability__room-busy summary { cursor: pointer; padding: var(--rb-space-2) 0; min-height: var(--rb-control-height); color: var(--rb-color-maroon); }
-.rb-availability__room-busy ul { list-style: none; padding: 0; margin: 0; }
-.rb-availability__room-busy li { display: grid; gap: var(--rb-space-2); padding: var(--rb-space-2) 0; margin: 0; border-top: 1px solid var(--rb-border-warm); }
 .rb-availability__extra { display: block; }
 .rb-availability__mine .rb-availability__what { font-weight: var(--rb-weight-semibold); }
 @media (max-width: 64rem) { .rb-availability { grid-template-columns: minmax(0, 1fr); } }
@@ -174,10 +170,7 @@
 .rb-availability-track__free { position: absolute; top: 0; height: 100%; background: var(--rb-success-text); }
 .rb-availability__board .rb-availability__room-free { gap: 0 var(--rb-space-2); margin-top: var(--rb-space-1); }
 .rb-availability__board .rb-availability__free-chip { padding: 0; background: none; border-radius: 0; }
-.rb-availability__board .rb-availability__room-busy { margin: 0; }
 .rb-availability__room-actions { display: contents; }
-.rb-availability__board .rb-availability__room-busy[open] { grid-column: 1 / -1; }
-.rb-availability__board .rb-availability__room-busy summary { font-size: var(--rb-text-small); }
 .rb-availability__board .rb-availability__room-body p { margin: 0 0 var(--rb-space-1); }
 .rb-availability__timeline-legend { font-size: var(--rb-text-small); color: var(--rb-text-muted); margin: 0; }
 @container (max-width: 50rem) {
@@ -187,7 +180,6 @@
  .rb-availability__axis > strong { position: sticky; left: 0; width: 100cqi; max-width: 100%; box-sizing: border-box; }
  .rb-availability__board .rb-availability__room-name { display: flex; gap: var(--rb-space-2); }
  .rb-availability__board .rb-availability__room-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--rb-space-2); background: var(--rb-surface-panel); }
- .rb-availability__board .rb-availability__room-busy[open] { flex-basis: 100%; }
 }
 
 /* Phase 03B: prototype hierarchy. Presentation only; server data, URLs, forms and the shared timeline
@@ -253,26 +245,14 @@
   .rb-availability__agenda .rb-availability__when { flex-basis: 100%; white-space: normal; }
 }
 
-/* Phase 03D-2: expanded "What's on" disclosure. It spans the whole row, so it takes the same 1rem inset as the
-   room-name column, and its entries use the page's dense type scale as compact time | label rows. Only paddings
-   and type change: row, name and track boxes keep their pinned x/width. */
-.rb-availability__board .rb-availability__room-busy[open] { padding: 0 var(--rb-space-4) var(--rb-space-2); }
-.rb-availability__board .rb-availability__room-busy[open] > summary { padding-left: 0; }
-.rb-availability__room-busy li { grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr); align-items: baseline; gap: .125rem var(--rb-space-4); padding: var(--rb-space-2) 0; font-size: .8125rem; }
-.rb-availability__room-busy .rb-availability__when { font-size: .8125rem; overflow-wrap: anywhere; }
-.rb-availability__room-busy .rb-availability__what { display: flex; flex-wrap: wrap; align-items: center; gap: .125rem var(--rb-space-2); font-size: .8125rem; }
-.rb-availability__room-busy .rb-availability__extra { flex-basis: 100%; font-size: var(--rb-text-caption); }
+/* Narrow board: room text and actions share the room-name inset (the day's entries open in the schedule drawer, not in the row). */
 @container (max-width: 50rem) {
   /* Narrow board: the row's text, actions and axis heading share the room-name inset; tracks stay flush. */
   .rb-availability__board .rb-availability__room-body > p, .rb-availability__board .rb-availability__room-free,
   .rb-availability__board .rb-availability__room-actions { padding-inline: var(--rb-space-4); }
   /* Text lines wrap within the visible board width at rest; the track keeps its full scrollable width. */
   .rb-availability__board .rb-availability__room-body > p, .rb-availability__board .rb-availability__room-free { box-sizing: border-box; max-width: 100cqi; overflow-wrap: anywhere; }
-  .rb-availability__board .rb-availability__room-busy[open] { padding-inline: 0; }
   .rb-availability__axis > div > strong { padding-left: var(--rb-space-4); }
-}
-@container (max-width: 36rem) {
-  .rb-availability__room-busy li { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Phase 03D-3: the page-intro rule zeroed every paragraph margin, including the kicker's own spacing; restore it so the

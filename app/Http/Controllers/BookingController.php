@@ -216,7 +216,7 @@ class BookingController extends Controller
         // Past and closed: everything else, newest first, one page at a time (a page past the end shows the last page)
         $pastQuery = fn () => $mine()
             ->where(fn ($query) => $query->whereNotIn('status', Reservation::BLOCKING_STATUSES)->orWhere('end_time', '<', $now))
-            ->orderByDesc('start_time')->orderByDesc('id');
+            ->orderByDesc('start_time')->orderBy('id');
         $lastPage = max(1, (int) ceil($pastQuery()->count() / self::PAST_PER_PAGE));
         $past = $pastQuery()
             ->paginate(self::PAST_PER_PAGE, ['*'], 'past_page', min(max(1, (int) $request->query('past_page', 1)), $lastPage))

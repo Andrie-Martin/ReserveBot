@@ -19,6 +19,7 @@
     const clean = () => history.replaceState(history.state, '', location.pathname + location.search);
     const open = (dialog, trigger) => {
       if (!dialog || dialog.open || typeof dialog.showModal !== 'function') return;
+      $$('dialog.rb-drawer[open]').forEach(other => other.close()); // never stack two drawers
       opened.set(dialog, trigger || document.activeElement);
       dialog.showModal();
       trigger?.setAttribute('aria-expanded', 'true');
@@ -63,6 +64,8 @@
       }
     };
     fromHash();
+    // Changing #schedule-N in an already-open page (address bar, history) opens it too.
+    window.addEventListener('hashchange', fromHash);
   };
 
   /* ------------------------------------------------------------------ reveal panels */
