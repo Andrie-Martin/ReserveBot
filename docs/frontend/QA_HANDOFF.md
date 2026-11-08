@@ -1,19 +1,19 @@
-# Frontend redesign: QA handoff (phases 01-10)
+# Frontend redesign: QA handoff (phases 01-13)
 
-Status as of the Phase 10 QA corrections. Branch order and commit hashes are in `docs/frontend/OVERNIGHT_PROGRESS.md`.
+Status as of the Phase 13 integration branch (written on top of `dev` @ `208ff71`, PR #24). Branch order and commit hashes are in `docs/frontend/OVERNIGHT_PROGRESS.md`.
 
 ## What is merged and what is not
 
 | Work | State |
 |---|---|
-| Phases 01-09 (shell, auth, availability, booking, lab operations, accounts, rooms and equipment, timetable, class check and error pages, with their independent-QA corrections) | **Merged into `dev`** (latest merge: PR #21, Phase 09). |
-| Phase 10 (this branch: booking link colours, the colour scan, this handoff) | Local branch, **not merged**. |
-| Phase 11 (`feat/frontend-design-11-qa-fixes`): mobile calendar fit, shortcut label wrapping, roadmap card removal, test fixes | Local, **not merged**. |
-| Phase 12 (`feat/frontend-design-12-security`): login throttling per account+IP and per IP | Local, **not merged**. |
-| Phase 13 (`feat/frontend-design-13-booking-guard`): hand-out and no-show refused for bookings on a future day | Local, **not merged**. |
+| Phases 01-09 (shell, auth, availability, booking, lab operations, accounts, rooms and equipment, timetable, class check and error pages, with their independent-QA corrections) | **Merged into `dev`** (the Phase 09 merge was PR #21). |
+| Phase 10 (booking link colours, the colour scan, this handoff, final integration with `dev`) | **Merged into `dev`** (PR #22). |
+| Phase 11 (mobile calendar fit, shortcut label wrapping, roadmap card removal, test fixes, the database test runner) | **Merged into `dev`** (PR #23). |
+| Phase 12 (`feat/frontend-design-12-security`): login throttling per account+IP and per IP, with its audit follow-ups (hashed private keys, spelling-independent account identity, atomic counting, per-account turns and in-flight admission) | **Merged into `dev`** (PR #24). Details and remaining limits: `docs/frontend/SECURITY_F01_LOGIN_THROTTLE.md`. |
+| Phase 13: hand-out and no-show refused for bookings on a future calendar day | **Awaiting its pull request.** Use branch `feat/frontend-design-13-booking-guard-integration` (`dev` + only commit `9f5875e`). **Do not merge the original `feat/frontend-design-13-booking-guard`**: it is based on Phase 12's original commit, conflicts in six files, and resolving them in its favour would remove Phase 12's security. Details: `docs/frontend/BOOKING_F07_HANDOUT_GUARD.md`. |
 
-Phases 11-13 are stacked on Phase 10 and do not contain `dev`. **Nothing on Phases 10-13 is deployed.** Until they are merged and released,
-`dev` has no login throttling, still allows staff to hand out or mark no-show on a future-day booking, and still shows the Phase 11 defects.
+"Merged into `dev`" is not "deployed". Nothing here says what is released or running anywhere. Until the Phase 13 pull request is merged,
+`dev` still allows staff to hand out or mark no-show on a booking for a future day.
 The running Docker app serves the code baked into its image and was never used as test evidence.
 
 ## What has been tested, and how
@@ -21,23 +21,23 @@ The running Docker app serves the code baked into its image and was never used a
 - **Authenticated HTTP and browser testing has happened**, but only against disposable infrastructure (a throwaway MariaDB and `php artisan serve` on a private port),
   never against the running Docker app or its database (the Phase 08 and 09 records state a disposable app and MariaDB explicitly; the Phase 05-07 records mention authenticated checks but say less about the setup): the independent QA of Phases 05-09, and the Phase 10 audit (rep, lab staff and admin sessions, role/status matrix,
   forged and wrong-role POSTs, approve, reject, cancel, and rendering at 1438x900, 1438x638, 390x844 and 320x640 at 100% and genuine 200% text).
-- **PHPUnit** (all gates on, disposable MariaDB, Phase 10 tree): 109 tests, 102 passed, 1 failure, 1 error, 5 skipped, 2 risky. Merged with `dev`: 113 tests, 106 passed, 1 failure, 1 error, 5 skipped, 3 risky.
-  The two failures are **pre-existing on `dev`** and not caused by Phase 10: `AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls` (stale assertion) and
-  `FoundationsTest::test_presentation_contracts_without_database_access` (test-order pollution, "No hint path defined for [__components]"). Phase 11 (`719c09f`) fixes both; that is not merged.
-  A plain `phpunit` run skips the database-gated suites; use `tests/Support/run-db-tests.sh` (on Phase 11 and later) or an equivalent disposable database.
+- **PHPUnit** (all gates on, disposable MariaDB, through `tests/Support/run-db-tests.sh`, no `.env` needed): current `dev` (`208ff71`): 144 tests, 139 passed, 0 failures, 0 errors, 5 skipped, 0 risky.
+  Phase 13 integration branch: **162 tests, 157 passed, 0 failures, 0 errors, 5 skipped, 0 risky** (default run with the gates off: 162 tests, 92 passed, 70 skipped by design). The 5 skips are the photo tests (no GD extension).
+  A plain `phpunit` run skips the database-gated suites; use `tests/Support/run-db-tests.sh`, which also enables the staff booking-guard gate (`RB_STAFF_HTTP_TESTS`). A runner without that line would skip 14 tests and still look green.
+  History: the Phase 10 tree had 109 tests with 2 failures that were pre-existing on `dev` (a stale assertion and test-order pollution); both were fixed in Phase 11.
 - **Fixtures** (`tests/Support/*-runtime.php`, `render-*.php --check`, `*-browser.cjs`) need no database and are fast, but they prove rendering, not workflows.
 - **Never exercised:** real email delivery and real signed class-check links in a mail client.
 
-## Open risks and decisions (none introduced by Phase 10)
+## Open risks and decisions
 
 1. **`APP_DEBUG=true`** is the default in `.env.example` and the committed compose file. A real 500 then shows the exception class and SQL error text (observed in a throwaway server; the DB password and `APP_KEY` were not in the page).
    Needs a **deployment review**; this branch does not change configuration.
-2. **Login throttling** is addressed only on Phase 12 (local, not merged). On `dev` it is absent.
-3. **Future-day hand-out and no-show** are addressed only on Phase 13 (local, not merged). On `dev` staff can hand out a booking for tomorrow.
+2. **Login throttling** is on `dev` (Phase 12). Known limits (see the security document): no trusted-proxy configuration, so behind a reverse proxy or shared network address everyone shares one IP counter; IPv6 is keyed per full address; distributed attacks across many IPs are not limited; attempts for one account take turns, so simultaneous logins on the same account wait briefly; expired cache rows are not purged. **Configure trusted proxies and review `APP_DEBUG` before production.**
+3. **Future-day hand-out and no-show** are fixed on the Phase 13 integration branch (awaiting its PR). Until it is merged, `dev` lets staff hand out a booking for tomorrow. Policy once merged: calendar-day based in the app timezone; same-day hand-out is allowed even before the start; past-day approved bookings stay handable.
 4. **Future-dated semester availability is unresolved** and no branch addresses it. The class timetable blocks rooms only for dates inside a semester (`RoomAvailability::inTerm`). With the sample semester ending 2027-01-31,
    a Tuesday after that date shows no class blocks, so rooms look free during class hours and can be booked until the next semester is entered. Needs an owner decision (block, warn, or require a semester).
 5. **Legacy violet styling may still exist.** `public/css/style.css` still defines the old violet palette and rules; the redesigned screens override most of it. Known at the time of writing:
-   the class-check "Jump to the answer buttons" link (`a.check-jump`, added by Phase 09 QA) was violet on `dev` when focused; the Reject and Cancel reason fields and the busy-rooms hover were violet on `dev` too. All three are corrected on this branch (not on `dev` until it is merged).
+   the class-check "Jump to the answer buttons" link (`a.check-jump`, added by Phase 09 QA), the Reject and Cancel reason fields and the busy-rooms hover were violet; all three were corrected in Phase 10 and are on `dev` (PR #22).
 6. `/rep` at 1438x638: the first meeting-answer buttons start about 694px down (below the fold); visible at 1438x900. Follows the approved prototype order. Needs a human decision.
 
 ## What to review by hand (authenticated, real data)
