@@ -28,9 +28,14 @@ PORT="${RB_TEST_DB_PORT:-33399}"
 [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || die "RB_TEST_DB_PORT must be a port between 1024 and 65535."
 DB="reservebot_phpunit_test"
 case "$DB" in *_test) ;; *) die "the test schema name must end in _test." ;; esac
-if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
-  die "port $PORT is already in use; refusing to guess which server it is. Set RB_TEST_DB_PORT to a free port."
-fi
+# A container from a run that just ended can still be releasing its port; wait briefly, then refuse rather than guess.
+# Only an immediate "connection refused" counts as free: a successful connect or a timeout (a listener that never answers) means busy.
+port_busy() { local rc=0; timeout 2 bash -c 'exec 3<>"/dev/tcp/127.0.0.1/$1"' _ "$PORT" 2>/dev/null || rc=$?; [ "$rc" -eq 0 ] || [ "$rc" -eq 124 ]; }
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  port_busy || { PORT_FREE=1; break; }
+  sleep 1
+done
+[ "${PORT_FREE:-0}" = 1 ] || die "port $PORT is already in use; refusing to guess which server it is. Set RB_TEST_DB_PORT to a free port."
 
 NAME="rb-phpunit-db-$$-$RANDOM"
 SECRETS="$(mktemp)"                      # created with mode 0600
