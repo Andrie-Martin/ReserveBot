@@ -31,8 +31,8 @@
   @endif
   </div>
 
-  <div class="rb-booking__panel">
-  <h2>Past and closed <span class="count">{{ $past->count() }}</span></h2>
+  <div class="rb-booking__panel" id="past">
+  <h2>Past and closed <span class="count">{{ method_exists($past, 'total') ? $past->total() : $past->count() }}</span></h2>
   @if ($past->isEmpty())
     <p class="empty">None yet.</p>
   @else
@@ -41,7 +41,9 @@
         @include('bookings._row', ['b' => $b, 'rules' => $rules])
       @endforeach
     </ul>
-    <p class="hint">Shows your last 30.</p>
+    @if (method_exists($past, 'total'))
+      <x-ui.pager :paginator="$past" noun="bookings" />
+    @endif
   @endif
   </div>
 </section>

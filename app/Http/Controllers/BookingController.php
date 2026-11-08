@@ -25,6 +25,9 @@ use Illuminate\View\View;
  */
 class BookingController extends Controller
 {
+    /** Past and closed bookings shown per page on My bookings */
+    private const PAST_PER_PAGE = 10;
+
     /** The three kinds of booking */
     public const NEEDS = ['both' => 'Room and equipment', 'room' => 'Room only', 'equipment' => 'Equipment only'];
 
@@ -203,19 +206,25 @@ class BookingController extends Controller
         [$user, $rules] = $this->context($request);
         $now = CarbonImmutable::now();
 
-        $bookings = Reservation::with(['room', 'equipment', 'classSchedule.course'])
-            ->where('user_id', $user->id)
-            ->orderBy('start_time')
-            ->get();
+        $mine = fn () => Reservation::with(['room', 'equipment', 'classSchedule.course'])->where('user_id', $user->id);
 
         // Coming up: still holding its room or items, and not over yet
-        [$upcoming, $past] = $bookings->partition(
-            fn ($booking) => in_array($booking->status, Reservation::BLOCKING_STATUSES, true) && $booking->end_time->gte($now)
-        );
+        $upcoming = $mine()
+            ->whereIn('status', Reservation::BLOCKING_STATUSES)->where('end_time', '>=', $now)
+            ->orderBy('start_time')->get();
+
+        // Past and closed: everything else, newest first, one page at a time (a page past the end shows the last page)
+        $pastQuery = fn () => $mine()
+            ->where(fn ($query) => $query->whereNotIn('status', Reservation::BLOCKING_STATUSES)->orWhere('end_time', '<', $now))
+            ->orderByDesc('start_time')->orderByDesc('id');
+        $lastPage = max(1, (int) ceil($pastQuery()->count() / self::PAST_PER_PAGE));
+        $past = $pastQuery()
+            ->paginate(self::PAST_PER_PAGE, ['*'], 'past_page', min(max(1, (int) $request->query('past_page', 1)), $lastPage))
+            ->fragment('past')->withQueryString();
 
         return view('bookings.mine', [
-            'upcoming' => $upcoming->values(),
-            'past' => $past->sortByDesc('start_time')->take(30)->values(),
+            'upcoming' => $upcoming,
+            'past' => $past,
             'rules' => $rules,
         ]);
     }
