@@ -1,12 +1,12 @@
 @use('App\Support\TimeSlots')
 @use('App\Support\RoomCapacity')
-@use('App\Support\BlockedReason')
         @php $room = $row['room']; @endphp
         <li id="room-{{ $room->id }}" @class(['rb-availability__room-row', 'rb-availability__is-match' => $row['match'] === true, 'rb-availability__is-clash' => $row['match'] === false])>
           <div class="rb-availability__room-name">
             <strong>{{ $room->name }}</strong>
-            <span @class(['rb-availability__unspecified' => ! RoomCapacity::known($room->capacity)])>{{ RoomCapacity::label($room->capacity) }}</span>
-
+            @if (RoomCapacity::known($room->capacity))
+              <span>{{ RoomCapacity::label($room->capacity) }}</span>
+            @endif
           </div>
           <div class="rb-availability__room-body">
             @if ($row['match'] === true)
@@ -16,11 +16,11 @@
             @endif
 
             @if ($axisValid ?? false)
-              <x-ui.availability-track :ranges="$row['free']" :start="$axisStart" :end="$axisEnd" />
+              <x-ui.availability-track :ranges="$row['free']" :start="$axisStart" :end="$axisEnd" :blocked="(bool) $row['allDay']" />
             @endif
             <div class="rb-availability__room-free">
               @if ($row['allDay'])
-                <span @class(['rb-availability__none', 'rb-availability__unspecified' => $row['allDay'] === BlockedReason::UNKNOWN])>Unavailable all day — {{ $row['allDay'] }}</span>
+                <span class="rb-availability__none rb-availability__blocked">Unavailable all day — {{ $row['allDay'] }}</span>
               @elseif (! $row['free'])
                 <span class="rb-availability__none">No free time {{ $date->isToday() ? 'left today' : 'this day' }}</span>
               @elseif (! is_array($row['free']))
@@ -46,7 +46,7 @@
           </div>
 
         @if ($row['busy'] && ! $row['allDay'])
-          <x-ui.drawer :id="'schedule-'.$room->id" kicker="Room schedule" :title="$room->name" :sub="$date->format('l, F j').' · '.count($row['busy']).' scheduled · '.RoomCapacity::label($room->capacity)" :close-to="'#room-'.$room->id" class="rb-availability__schedule">
+          <x-ui.drawer :id="'schedule-'.$room->id" kicker="Room schedule" :title="$room->name" :sub="$date->format('l, F j').' · '.count($row['busy']).' scheduled'.(RoomCapacity::known($room->capacity) ? ' · '.RoomCapacity::label($room->capacity) : '')" :close-to="'#room-'.$room->id" class="rb-availability__schedule">
             <ul class="rb-availability__schedule-list">
               @foreach ($row['busy'] as $it)
                 <li @class(['rb-availability__mine' => $it['mine']])>

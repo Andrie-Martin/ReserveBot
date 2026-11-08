@@ -1,4 +1,4 @@
-@props(['ranges', 'start', 'end'])
+@props(['ranges', 'start', 'end', 'blocked' => false])
 @php
   $valid = is_int($start) && is_int($end) && $end > $start && is_array($ranges);
   $previous = $start;
@@ -13,7 +13,7 @@
   }
 @endphp
 @if ($valid)
-  <div {{ $attributes->class(['rb-availability-track']) }} aria-hidden="true" data-axis-start="{{ $start }}" data-axis-end="{{ $end }}">
+  <div {{ $attributes->class(['rb-availability-track', 'rb-availability-track--blocked' => $blocked]) }} aria-hidden="true" data-axis-start="{{ $start }}" data-axis-end="{{ $end }}">
     @foreach ($ranges as [$from, $to])
       <span class="rb-availability-track__free" data-from="{{ $from }}" data-to="{{ $to }}" style="left: {{ 100 * ($from - $start) / ($end - $start) }}%; width: {{ 100 * ($to - $from) / ($end - $start) }}%"></span>
     @endforeach

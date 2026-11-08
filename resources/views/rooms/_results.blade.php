@@ -16,7 +16,14 @@
         <p class="rb-availability__muted rb-availability__small">Times that have already started today aren’t shown as free.</p>
       @endif
       @if ($axisValid)
-        <p class="rb-availability__timeline-legend">Green: reported free. Neutral: not reported as free. Booking rules and final validation still apply.</p>
+        <div class="rb-availability__timeline-legend">
+          <ul class="rb-availability__keys" aria-label="What the bar colours mean">
+            <li><span class="rb-availability__key rb-availability__key--free" aria-hidden="true"></span>Reported free</li>
+            <li><span class="rb-availability__key rb-availability__key--none" aria-hidden="true"></span>Not reported as free</li>
+            <li><span class="rb-availability__key rb-availability__key--blocked" aria-hidden="true"></span>Unavailable all day</li>
+          </ul>
+          <p>Booking rules and final validation still apply.</p>
+        </div>
       @endif
     </div>
     <div @class(['rb-availability__board' => $axisValid]) @if ($axisValid) role="region" aria-label="Room availability timeline; scroll horizontally for all times and actions" tabindex="0" @endif>
