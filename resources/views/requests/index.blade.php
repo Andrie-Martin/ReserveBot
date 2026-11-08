@@ -25,25 +25,31 @@
 
   <div class="rb-booking__panel">
   <h2>Waiting <span class="count">{{ $waiting->count() }}</span></h2>
-  {{-- Presentation grouping only: the same waiting list, in the same soonest-first order, split by whether a room is asked for. --}}
+  {{-- Presentation grouping only: the same waiting list, in the same soonest-first order, split by whether a room is asked for.
+       The category is a query parameter (?tab=room|equipment), so the links work without a script, survive refresh and Back,
+       and a refused rejection (which redirects back to this URL) stays on the same category. --}}
   @php
     $requestGroups = [
-      ['key' => 'room', 'title' => 'Room requests', 'hint' => 'Room only, or room and equipment', 'items' => $waiting->filter(fn ($r) => (bool) $r->room_id)->values()],
-      ['key' => 'equipment', 'title' => 'Equipment-only requests', 'hint' => 'Items to borrow; no room is held', 'items' => $waiting->filter(fn ($r) => ! $r->room_id)->values()],
+      'room' => ['key' => 'room', 'title' => 'Room requests', 'hint' => 'Room only, or room and equipment', 'empty' => 'No room requests are waiting for approval.', 'items' => $waiting->filter(fn ($r) => (bool) $r->room_id)->values()],
+      'equipment' => ['key' => 'equipment', 'title' => 'Equipment-only requests', 'hint' => 'Items to borrow; no room is held', 'empty' => 'No equipment-only requests are waiting for approval.', 'items' => $waiting->filter(fn ($r) => ! $r->room_id)->values()],
     ];
+    $activeKey = request()->query('tab') === 'equipment' ? 'equipment' : 'room';
+    // A refused rejection must show its own form even if the address lost the category.
+    foreach ($requestGroups as $key => $candidate) {
+      foreach ($candidate['items'] as $candidateRequest) {
+        if ($errors->getBag('reject'.$candidateRequest->id)->any()) { $activeKey = $key; }
+      }
+    }
+    $group = $requestGroups[$activeKey];
+    $otherGroup = $requestGroups[$activeKey === 'room' ? 'equipment' : 'room'];
   @endphp
-  @if ($waiting->isEmpty())
-    <p class="empty">Nothing is waiting for approval.</p>
-  @else
-    <p class="muted req-note">Grouped by what is asked for; each group is soonest first. Grouping does not change who can approve or any booking rule.</p>
-  @endif
-  @foreach ($requestGroups as $group)
-    @continue($waiting->isEmpty())
-    <section class="req-group req-group--{{ $group['key'] }}" aria-labelledby="req-group-{{ $group['key'] }}">
-      <div class="req-group__head">
-        <h3 id="req-group-{{ $group['key'] }}">{{ $group['title'] }} <span class="count">{{ $group['items']->count() }}</span></h3>
-        <p class="req-group__hint">{{ $group['hint'] }}</p>
-      </div>
+  <nav class="rb-subnav req-tabs" aria-label="Request categories">
+    @foreach ($requestGroups as $key => $tab)
+      <a class="rb-subnav__link" id="req-tab-{{ $key }}" href="{{ route('requests', $key === 'room' ? [] : ['tab' => $key]) }}" @if ($key === $activeKey) aria-current="page" @endif>{{ $tab['title'] }} <span class="count">{{ $tab['items']->count() }}</span><span class="sr-only"> waiting</span></a>
+    @endforeach
+  </nav>
+  <section class="req-group req-group--{{ $group['key'] }}" aria-labelledby="req-tab-{{ $group['key'] }}">
+      <p class="req-group__hint">{{ $group['hint'] }}. Soonest first. Grouping does not change who can approve or any booking rule.</p>
       @forelse ($group['items'] as $r)
       @php
         $start = $r->start_time;
@@ -93,10 +99,9 @@
         </form>
       </article>
       @empty
-        <p class="req-group__none">None waiting.</p>
+        <p class="req-group__none" role="status">{{ $waiting->isEmpty() ? 'Nothing is waiting for approval.' : $group['empty'] }}@if ($waiting->isNotEmpty() && $otherGroup['items']->isNotEmpty()) @php $n = $otherGroup['items']->count(); $noun = ($otherGroup['key'] === 'room' ? 'room request' : 'equipment-only request').($n === 1 ? '' : 's'); @endphp<a href="{{ route('requests', $otherGroup['key'] === 'room' ? [] : ['tab' => $otherGroup['key']]) }}">{{ $n }} {{ $noun }} {{ $n === 1 ? 'is' : 'are' }} waiting.</a>@endif</p>
       @endforelse
     </section>
-  @endforeach
   </div>
 
   @if ($decided->isNotEmpty())
