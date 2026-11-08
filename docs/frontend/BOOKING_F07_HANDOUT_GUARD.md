@@ -1,6 +1,8 @@
 # F-07: hand-out and no-show guard for future-day bookings
 
-Branch `feat/frontend-design-13-booking-guard` (from `feat/frontend-design-12-security`). Source: `docs/frontend/INDEPENDENT_QA_REPORT.md`, F-07: staff could hand out (and return) a booking days before it started by posting to `/bookings/{id}/hand-out`.
+**Status: awaiting its pull request into `dev` as branch `feat/frontend-design-13-booking-guard-integration` (see "Integration with dev" at the end). Phase 12 (login throttling) is already merged into `dev` (PR #24). The original branch `feat/frontend-design-13-booking-guard` is based on Phase 12's *original* commit and must not be merged directly.**
+
+Original branch `feat/frontend-design-13-booking-guard` (from `feat/frontend-design-12-security` as it was at `c74c9b4`). Source: `docs/frontend/INDEPENDENT_QA_REPORT.md`, F-07: staff could hand out (and return) a booking days before it started by posting to `/bookings/{id}/hand-out`.
 
 ## The rule conflict, and the decisions taken
 
@@ -28,13 +30,15 @@ The code, docs and UI all said the opposite of the fix: `StaffRules` ("Hand out,
 - `tests/Feature/StaffBookingGuardTest.php` (new, 14 tests, DB-gated by `RB_STAFF_HTTP_TESTS`, same isolation guards as the other suites; `run-db-tests.sh` now sets it): crafted POST for future bookings (hand-out and no-show) leaves the status unchanged and writes no log row; same-day hand-out at 00:30, 09:00 and 23:00 (clock 09:05); past-day hand-out and no-show; Manila-midnight boundary; return on time, days late and with an odd date, with note validation preserved; full hand-out → return cycle; invalid transitions (Pending, InUse, Completed, NoShow, Cancelled, Rejected, double hand-out); guest redirected, rep 403, other department 404, admin bound by the same rule; UI note and hidden buttons on future days, buttons kept today and on the booking page.
 - **Negative check:** with the original production files restored, 5 of the 14 feature tests fail (the future-day cases and the UI test); the other 9 are preservation tests.
 
+Results of the **original branch**, before it was integrated with `dev` (superseded by the table in "Integration with dev"):
+
 | Run | Result |
 |---|---|
 | Gated, disposable MariaDB 10.11 (`tests/Support/run-db-tests.sh`) | 141 tests, **136 passed, 0 failures, 0 errors**, 5 skipped (no GD/zip) |
 | Default (gates off) | 141 tests, 88 passed, 53 skipped by design, 0 failures |
 | Booking, staff, class-check and availability filters, gated | 54 tests, 54 passed |
 
-The 2 pre-existing "risky" flags are unchanged. Class-check, booking and availability workflows are covered by the full green run above.
+The 2 "risky" flags on the original branch came from the Phase 11 base (dev has none). Class-check, booking and availability workflows are covered by the full green run above.
 
 ## Live check (disposable MariaDB + `php artisan serve` on 127.0.0.1:8124, real CSRF)
 
@@ -50,3 +54,35 @@ Screenshots (scratchpad `/tmp/claude-1000/-home-james-projects-ReserveBot/0274b1
 - Test-harness quirk (cause not determined): after a first request, switching to a second `actingAs()` user in the same PHPUnit test produced an unauthenticated request even with the guards reset, so each role test uses a single actor. The production behaviour for that role passes when tested this way.
 - Not changed: F-05, F-06 and other findings.
 - The rule treats "today" in the app timezone (`APP_TIMEZONE`, default `Asia/Manila`); a deployment with a different `APP_TIMEZONE` follows that setting.
+
+## Integration with dev
+
+**Why a separate branch.** `feat/frontend-design-13-booking-guard` has two commits on Phase 12's original commit `c74c9b4`: `553e0b3` (hashed login-throttle key) and `9f5875e` (this guard). `dev` now contains Phase 12 in its final form (PR #24: hashed keys, account identity that ignores invisible characters, atomic counting, per-account turns and in-flight admission). Merging the original branch conflicts in six files, and resolving them in favour of the branch would silently remove that security work (measured in the independent audit: 611 lines, with the branch's own tests still green because the Phase 12 tests would be deleted with it).
+
+**What was done.** `feat/frontend-design-13-booking-guard-integration` is a new branch from `origin/dev` (`208ff71`) with **only `9f5875e` cherry-picked** (`git cherry-pick -x`; the cherry-picked commit is `1293464`). `553e0b3` was not applied: its patch is identical to dev's `305d0e2`, and dev has three further corrections on top. The original Phase 13 branch and every earlier branch are untouched; no history was rewritten.
+
+**Conflicts (2) and their resolution.**
+| File | Resolution |
+|---|---|
+| `resources/views/today/index.blade.php` | Kept dev's markup (including the Phase 05 review fix that moved the Done block) and changed **only the first sentence of the footer hint** ("The buttons work at any time." -> "Hand out and no-show open on the booking's own day and stay open afterwards."). The result is identical to the original branch's hint line; the Done block appears exactly as often as on dev. |
+| `tests/Support/run-db-tests.sh` | Kept dev's runner whole (generated throwaway key and password, `DB_SOCKET`/`DB_URL` cleared, port checks, fail-closed isolation check, `RB_AUTH_*`, `RB_AVAILABILITY_*`, `RB_MANAGE_*`) and **added** `RB_STAFF_HTTP_TESTS=1 RB_STAFF_TEST_DATABASE="$DB"` and the header mention. Without that line the 14 `StaffBookingGuardTest` tests are silently skipped (a run then reports 162 tests, 143 passed, 19 skipped, still green). |
+
+**Preserved from dev, byte-identical:** `app/Http/Controllers/Auth/LoginController.php`, `tests/Feature/AuthWorkflowTest.php`, `tests/Unit/LoginThrottleKeyTest.php`, `docs/frontend/SECURITY_F01_LOGIN_THROTTLE.md`. The branch differs from dev in exactly 9 files: `TodayController.php`, `StaffRules.php`, `bookings/_staff_actions.blade.php`, `today/index.blade.php`, `SYSTEM_MAP.md`, this document, `StaffBookingGuardTest.php`, `StaffRulesTest.php`, `run-db-tests.sh`, plus `QA_HANDOFF.md` in the documentation commit.
+
+**Verification on the integration branch** (disposable MariaDB 10.11, throwaway keys; nothing from the real stack):
+
+| Run | Result |
+|---|---|
+| Gated, repository runner `tests/Support/run-db-tests.sh` (no `.env`, isolation check passed) | 162 tests, **157 passed, 0 failures, 0 errors**, 5 skipped (photo tests, no GD), **0 risky** |
+| Same through a manual gate harness | identical (162 / 157 / 5 / 0) |
+| `StaffBookingGuardTest` + `StaffRulesTest` through the runner | 22 of 22 passed (run, not skipped) |
+| Real HTTP, lab staff: 56 bookings (7 statuses x 8 start times) x hand-out and no-show = 112 requests | only approved bookings on yesterday or today were applied (including 23:59, hours before the start); tomorrow 00:00 and later refused; every other status refused; **0 deviations** |
+| State on refusal (booking, `status_reason`, `updated_at`, audit log, equipment rows, equipment table) | **0 changes**; on a success only the status and one log row change |
+| Authorization and malformed requests | rep 403; other-department staff and admin 404; guest redirected to login; no or bad CSRF token 419; invalid ids (`999999`, `0`, `-1`, `abc`, `1.5`) 404; forged fields ignored |
+| Pinned-clock tests in `Asia/Manila`, `UTC`, `America/Los_Angeles`, `Pacific/Kiritimati`, `Pacific/Pago_Pago`, `America/New_York` (DST day) | pass: the day is the application's local calendar day |
+| Booking detail and Today pages vs the server rule | 56 detail pages, **0 mismatches**; the Done block appears once; the new footer on every day |
+| Phase 12 live (12-worker server, database cache) | spelling bypass refused; limit boundaries 5 and 20 exact; 8 simultaneous valid logins all sign in; 40 simultaneous wrong: exactly 5 checked; 60 across emails: exactly 20; 0 typed text in limiter keys (longest 100 characters); no locks left; CSRF 419 |
+
+The calendar-day policy holds as designed: hand-out and no-show are allowed for approved bookings today and on earlier days, subject to the existing status rules, and refused from the next calendar day onward.
+
+**Remaining notes.** Moving an approved booking to today is a separate, logged staff action after which it can be handed out. A booking moved by another staff member in the instant between loading and updating could in theory still be handed out (not reproduced). Approved past-day bookings stay handable by policy. `QA_HANDOFF.md` was brought up to date in the same change.
