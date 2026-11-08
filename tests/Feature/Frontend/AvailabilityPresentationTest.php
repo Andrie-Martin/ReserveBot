@@ -28,17 +28,22 @@ final class AvailabilityPresentationTest extends TestCase
         $this->assertStringContainsString("'event' : 'events'", $day, 'The word must stay in the DOM for assistive technology.');
     }
 
-    /** QA F-03: shortcut labels must wrap by word at enlarged text, never letter by letter. */
+    /**
+     * QA F-03: the label must never be squeezed to nothing beside the icon. The cause was `flex: none` neighbours plus a
+     * label that could shrink to 0 on the same line; the label now has a real flex-basis, so the row wraps (label under
+     * the icon) before the label can shrink, and `overflow-wrap: anywhere` (which shrinks min-content to one letter) stays out.
+     */
     public function test_dashboard_shortcut_labels_cannot_shrink_to_nothing(): void
     {
         $css = file_get_contents(dirname(__DIR__, 3).'/public/css/dashboard.css');
         preg_match_all('/\.rb-dashboard__action-label\s*\{([^}]*)\}/', $css, $rules);
         $this->assertNotEmpty($rules[1]);
-        foreach ($rules[1] as $declarations) {
-            $this->assertStringNotContainsString('anywhere', $declarations);
-            $this->assertDoesNotMatchRegularExpression('/min-width:\s*0\s*[;}]/', $declarations);
-        }
+        $declarations = implode(' ', $rules[1]);
+        $this->assertStringNotContainsString('anywhere', $declarations);
+        $this->assertMatchesRegularExpression('/flex:\s*1\s+1\s+[1-9][\d.]*rem/', $declarations, 'The label needs a rem flex-basis so the row wraps before it shrinks.');
         $this->assertMatchesRegularExpression('/\.rb-dashboard__action\s*\{[^}]*flex-wrap:\s*wrap/', $css);
+        // Padding and icon are capped in px so they do not keep growing with the text size.
+        $this->assertMatchesRegularExpression('/\.rb-dashboard__links \.rb-dashboard__action\s*\{[^}]*padding:[^;]*min\(var\(--rb-space-4\),\s*\d+px\)/', $css);
     }
 
     /** QA F-04: internal roadmap copy must not be rendered to users. */
