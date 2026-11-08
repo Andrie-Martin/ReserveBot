@@ -120,3 +120,17 @@
   .rb-auth-card--message { padding: var(--rb-space-2); }
   .rb-auth-card--message .rb-alert { padding: var(--rb-space-2); }
 }
+
+/* Password page: the form beside a short guidance panel on wide screens, stacked on phones. */
+.rb-account-password-layout { display: grid; gap: var(--rb-section-gap); align-items: start; }
+.rb-account-password-layout > * { min-width: 0; }
+.rb-account-password-layout .rb-account-password-card { max-width: none; }
+.rb-account-guidance { display: grid; gap: var(--rb-space-4); align-content: start; background: var(--rb-surface-canvas); }
+.rb-account-guidance > .rb-heading--h2 { margin: 0; padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); font-size: var(--rb-text-h3); }
+.rb-account-guidance__list { display: grid; gap: var(--rb-space-2); margin: 0; padding-left: var(--rb-space-6); font-size: var(--rb-text-small); color: var(--rb-text-primary); }
+.rb-account-guidance__list li { padding-left: var(--rb-space-1); overflow-wrap: anywhere; }
+.rb-account-guidance .rb-account-fineprint { margin: 0; }
+@media (min-width: 64rem) {
+  .rb-account-password-layout { grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 1fr); }
+}
+.rb-account-password .rb-control { max-width: 28rem; }

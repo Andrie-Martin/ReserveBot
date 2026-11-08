@@ -217,7 +217,7 @@
           small.textContent = meta;
           element.append(small);
         }
-        const item = { option, element, group, text: `${title} ${meta} ${group || ''}`.toLowerCase(), shown: title };
+        const item = { option, element, group, text: `${title} ${meta} ${group || ''}`.toLowerCase(), shown: option.dataset.display || title };
         element.addEventListener('click', () => { if (!option.disabled) choose(item); });
         element.addEventListener('pointermove', () => { if (!element.classList.contains('is-active')) activate(item, false); });
         items.push(item);

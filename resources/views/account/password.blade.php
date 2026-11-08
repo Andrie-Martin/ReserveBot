@@ -10,6 +10,7 @@
 <section class="rb-account-page rb-ui rb-stack" aria-labelledby="account-heading">
   @include('account._hero', ['description' => 'Change the password for your current account.'])
   @include('account._tabs')
+  <div class="rb-account-password-layout">
   <x-ui.card class="rb-stack rb-account-password-card">
     <h2 class="rb-heading rb-heading--h2">Change your password</h2>
     <form method="post" action="{{ route('password.change') }}" class="rb-stack rb-account-password">
@@ -29,5 +30,16 @@
     </form>
     <p class="rb-description rb-account-fineprint">Any other device logged in to your account is logged out when you change it. Forgot your current password? Log out and use “Forgot your password?”, or ask your admin.</p>
   </x-ui.card>
+  <aside class="rb-card rb-account-guidance" aria-labelledby="password-guidance-title">
+    <h2 class="rb-heading rb-heading--h2" id="password-guidance-title">Choosing a password</h2>
+    <ul class="rb-account-guidance__list">
+      <li>Use <strong>at least 8 characters</strong> (up to 64), with letters and numbers.</li>
+      <li>It must be <strong>different from your current password</strong>.</li>
+      <li>A phrase you can remember is easier than a short, complicated word.</li>
+      <li>Do not reuse a password from another site, and do not share it. Your admin never needs it.</li>
+    </ul>
+    <p class="rb-description rb-account-fineprint">You will type it twice so a typing slip is caught before it is saved.</p>
+  </aside>
+  </div>
 </section>
 @endsection

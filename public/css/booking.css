@@ -205,3 +205,37 @@
 
 /* Phase 10 QA: the "busy rooms" disclosure on the booking steps still turned legacy violet on hover (style.css .busy-rooms summary:hover). */
 .rb-booking .busy-rooms summary:hover { color: var(--rb-color-maroon); }
+
+/* ---- Book: When card, equipment list (two columns on desktop, one on phones), steppers, summary ---- */
+.rb-booking .when-summary { background: var(--rb-surface-panel); border-color: var(--rb-border-warm); border-radius: var(--rb-radius-card); padding: var(--rb-space-4) var(--rb-space-6); }
+.rb-booking .when-summary .btn-ghost { align-self: center; }
+@media (max-width: 40rem) { .rb-booking .when-summary { padding: var(--rb-space-4); } }
+.rb-booking .eq-tools[hidden], .rb-booking .eq-summary[hidden], .rb-booking [data-eq-none][hidden], .rb-booking [data-eq-item][hidden], .rb-booking .eq-cat[hidden], .rb-booking .eq-summary__empty[hidden] { display: none; }
+.rb-booking .eq-tools { margin: var(--rb-space-4) 0 0; }
+.rb-booking .book-form .eq-tools__input { max-width: 32rem; }
+.rb-booking .eq-tools .hint { min-height: 1.25rem; margin: var(--rb-space-1) 0 0; }
+.rb-booking .eq-summary { margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+.rb-booking .eq-summary h3 { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__empty { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__list { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; padding: 0; list-style: none; }
+.rb-booking .eq-summary__list > li { display: inline-flex; align-items: center; gap: var(--rb-space-2); margin: 0; padding: .25rem var(--rb-space-2) .25rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__list strong { color: var(--rb-color-maroon); font-variant-numeric: tabular-nums; }
+.rb-booking .eq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-2) var(--rb-space-6); padding: var(--rb-space-2) var(--rb-space-4) var(--rb-space-4); }
+.rb-booking .eq-item { display: flex; align-items: center; justify-content: space-between; gap: var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+.rb-booking .eq-item.is-picked label { color: var(--rb-color-deep); font-weight: var(--rb-weight-bold); }
+.rb-booking .eq-item__info { display: grid; gap: .125rem; min-width: 0; }
+.rb-booking .eq-item__info label { margin: 0; font-weight: var(--rb-weight-semibold); }
+.rb-booking .eq-free { margin: 0; }
+.rb-booking .rb-stepper { display: inline-flex; align-items: center; flex: none; gap: var(--rb-space-1); }
+.rb-booking .rb-stepper .rb-stepper__btn { display: inline-grid; place-items: center; box-sizing: border-box; width: var(--rb-control-height); min-width: var(--rb-control-height); height: var(--rb-control-height); margin: 0; padding: 0; border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font: inherit; font-size: 1.25rem; font-weight: var(--rb-weight-bold); line-height: 1; cursor: pointer; }
+.rb-booking .rb-stepper .rb-stepper__btn[hidden] { display: none; }
+.rb-booking .rb-stepper .rb-stepper__btn:hover:not(:disabled) { background: var(--rb-surface-active); color: var(--rb-color-deep); border-color: var(--rb-color-maroon); }
+.rb-booking .rb-stepper .rb-stepper__btn:disabled { border-style: dashed; border-color: var(--rb-border-subtle); background: var(--rb-neutral-bg); color: var(--rb-text-muted); cursor: not-allowed; }
+.rb-booking .rb-stepper .rb-stepper__btn:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-booking .book-form .eq-item input.rb-stepper__input { box-sizing: border-box; width: 3.5rem; min-width: 0; padding: var(--rb-space-2) var(--rb-space-1); text-align: center; font-variant-numeric: tabular-nums; font-weight: var(--rb-weight-bold); }
+.rb-booking .rb-stepper--js .rb-stepper__input { -moz-appearance: textfield; appearance: textfield; }
+.rb-booking .rb-stepper--js .rb-stepper__input::-webkit-outer-spin-button, .rb-booking .rb-stepper--js .rb-stepper__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@media (max-width: 52rem) { .rb-booking .eq-grid { grid-template-columns: minmax(0, 1fr); } }
+/* Class picker. */
+.rb-booking .when-class .rb-picker { max-width: 40rem; }
+.rb-booking .when-class .rb-picker__option-title { font-weight: var(--rb-weight-semibold); }
