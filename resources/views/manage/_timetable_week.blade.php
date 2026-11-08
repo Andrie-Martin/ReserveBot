@@ -7,7 +7,7 @@
 @if (! $grid['count'])
   <p class="empty">Nothing on the timetable for {{ $grid['name'] }}.</p>
 @else
-  <div class="tt-week-scroll">
+  <div class="tt-week-scroll" role="region" tabindex="0" aria-label="{{ $grid['kind'] === 'room' ? $grid['name'] : 'Block '.$grid['name'] }}: the week, by day and hour; scroll horizontally on small screens">
     <div class="tt-week" style="--days: {{ count($grid['days']) }}; --tt-height: {{ count($grid['hours']) * $hour }}px; --tt-hour: {{ $hour }}px">
       <div class="tt-corner"></div>
       @foreach ($grid['days'] as $d => $items)

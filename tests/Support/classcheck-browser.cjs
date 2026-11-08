@@ -81,7 +81,7 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     const post = async click => {
       const n = submissions.length;
       await Promise.all([page.waitForRequest(r => r.method() === 'POST'), click()]);
-      await page.waitForLoadState();
+      await page.waitForFunction(() => document.title === 'intercepted'); await page.waitForLoadState('load'); // the stub page has committed: the next goto cannot collide with this navigation
       const s = submissions[n];
       return { path: s.path, body: decodeURIComponent(s.body.replace(/\+/g, ' ')) };
     };
@@ -95,8 +95,17 @@ const sizes = [[1438, 638], [1438, 900], [390, 844], [320, 640]];
     assert.equal(await page.locator('button[name=answer]').count(), 0, 'an ended class offers no answer');
     await visit('check-guest-booked');
     assert.equal(await page.locator('button[name=answer]').count(), 0, 'a booked class meeting offers no answer');
+    // The saved answer decides what is marked; the email button's ?answer= only shows while nothing is saved.
     await visit('check-guest-picked');
-    assert.equal(await page.locator('button.picked').count(), 1, 'the picked answer is marked');
+    assert.equal(await page.locator('button.picked').count(), 1, 'an unanswered class marks the email choice');
+    assert.equal(await page.locator('button.current').count(), 0, 'an unanswered class has no saved answer to mark');
+    assert.match(await page.locator('button.picked').innerText(), /Chosen in your email/, 'the email choice says so in text');
+    for (const stale of ['check-guest-mismatch', 'check-guest-stale']) {
+      await visit(stale);
+      assert.equal(await page.locator('button.picked').count(), 0, stale + ' a leftover ?answer= is not marked once an answer is saved');
+      assert.equal(await page.locator('button.current').count(), 1, stale + ' the saved answer is marked');
+      assert.match(await page.locator('button.current').innerText(), /Your answer/, stale + ' the saved answer says so in text');
+    }
     summary.push('intercepted POST answers carry answer=f2f / answer=online; closed states offer no buttons; GET never answers');
 
     // 4. Ordered form/field/link parity with the pre-change fixtures.

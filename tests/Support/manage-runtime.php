@@ -8,7 +8,7 @@ function manageCases(): array
     $cases = [];
     foreach ([['rooms', ['normal', 'empty', 'errors', 'long']], ['room-edit', ['normal', 'shared', 'off', 'errors', 'none', 'long']],
         ['equipment', ['normal', 'empty', 'errors', 'long']], ['equipment-edit', ['normal', 'over', 'off', 'errors', 'none', 'long']],
-        ['rules', ['normal', 'errors', 'long']]] as [$page, $states]) {
+        ['rules', ['normal', 'errors', 'term-error', 'long']]] as [$page, $states]) {
         foreach (['lab_staff', 'admin'] as $role) {
             foreach ($states as $s) {
                 $cases['manage-'.$page.'-'.$role.'-'.$s] = [$page, $role, $s];
@@ -131,6 +131,11 @@ function manageRender(array $case): string
     // rules
     $config = new App\Models\DepartmentConfig(App\Models\DepartmentConfig::DEFAULTS + ['department_id' => 73]);
     $terms = collect([['1st Semester', '2026-08-10', '2026-12-19'], ['2nd Semester', '2027-01-11', '2027-05-22']])->map(fn ($t, $i) => tap(new App\Models\Term(['name' => $t[0], 'start_date' => $t[1], 'end_date' => $t[2]]), fn ($m) => $m->id = $i + 1));
+    if ($state === 'term-error') {
+        // Only the Semester-dates form failed: its old input (and CSRF token) is flashed, the rules form's fields are not
+        $errors->put('term1', $bag(['end_date' => ['The last day has to be after the first day.']]));
+        $old = ['_token' => 'x', 'start_date' => '2026-12-01', 'end_date' => '2026-11-01'];
+    }
     if ($errs) {
         $errors->put('rules', $bag(['open_days' => ['Pick at least one open day.'], 'max_booking_minutes' => ['The longest booking can’t be shorter than the shortest.']]));
         $errors->put('term1', $bag(['end_date' => ['The last day has to be after the first day.']]));
@@ -150,6 +155,12 @@ function manageContracts(): int
         $html = manageRender($case);
         $x = foundationsDocument($html);
         $check($x->query('//main//h1')->length === 1, "$name one main heading");
+        $h1 = trim($x->query('//main//h1')->item(0)?->textContent ?? '');
+        $expectedHeading = ['rooms' => 'Manage rooms', 'equipment' => 'Manage equipment', 'rules' => 'Booking rules'][$case[0]] ?? null;
+        $check($expectedHeading ? $h1 === $expectedHeading : str_starts_with($h1, 'Edit '), "$name the heading names the page ($h1)");
+        if (str_ends_with($case[0], '-edit')) {
+            $check($x->query('//main//h2[normalize-space()="'.substr($h1, 5).'"]')->length === 0, "$name the item name is not repeated as a second heading");
+        }
         $ids = [];
         foreach ($x->query('//*[@id]') as $node) { $id = $node->getAttribute('id'); $check(! isset($ids[$id]), "$name unique ID $id"); $ids[$id] = true; }
         foreach ($x->query('//main//input[not(@type="hidden")]|//main//select|//main//textarea') as $node) {
@@ -163,6 +174,55 @@ function manageContracts(): int
         $check($x->query('//link[contains(@href,"css/manage.css?v=")]')->length === 1, "$name manage stylesheet");
         $check($x->query('//nav[@aria-label="Manage"]//a')->length === 4, "$name four manage tabs");
         $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")]')->length === 1, "$name one current tab");
+        // Empty states say what to do; populated states do not show them (and the empty rooms list has no blank table)
+        if (str_starts_with($name, 'manage-rooms-')) {
+            $isEmpty = str_ends_with($name, '-empty');
+            $check(($x->query('//main//p[contains(@class,"empty") and contains(.,"No rooms yet")]')->length === 1) === $isEmpty, "$name 'No rooms yet' message only when there are no rooms");
+            $check(($x->query('//main//table')->length === 0) === $isEmpty, "$name the rooms table is shown only when there are rooms");
+        }
+        if (str_starts_with($name, 'manage-equipment-') && ! str_starts_with($name, 'manage-equipment-edit-')) {
+            $isEmpty = str_ends_with($name, '-empty');
+            $check(($x->query('//main//p[contains(@class,"empty") and contains(.,"No equipment yet")]')->length === 1) === $isEmpty, "$name 'No equipment yet' message only when there are no categories");
+            $check(($x->query('//*[@id="item-category"]')->length === 0) === $isEmpty, "$name the add-item form is offered only when a category exists");
+        }
+        if (str_starts_with($name, 'manage-equipment-') && ! str_starts_with($name, 'manage-equipment-edit-')) {
+            $labels = [];
+            foreach ($x->query('//main//details[contains(@class,"rename")]/summary') as $summary) { $labels[] = preg_replace('/\s+/', ' ', trim($summary->textContent)); }
+            $check(count($labels) === count(array_unique($labels)), "$name every Rename control has a distinguishable accessible name");
+            $check(count(array_filter($labels, fn ($l) => $l === 'Rename')) === 0, "$name no Rename control is announced as just 'Rename'");
+        }
+        // Validation feedback: aria-describedby always points at something real; focus is only ever taken after a refused save
+        foreach ($x->query('//*[@aria-describedby]') as $node) {
+            $target = $node->getAttribute('aria-describedby');
+            $check($x->query('//*[@id="'.$target.'"]')->length === 1, "$name aria-describedby target $target exists");
+            $check($node->getAttribute('aria-invalid') === 'true', "$name only invalid fields carry aria-describedby ($target)");
+        }
+        $refused = str_ends_with($name, '-errors') || str_ends_with($name, '-term-error');
+        if ($refused) {
+            $check($x->query('//*[@autofocus]')->length >= 1, "$name a refused save moves focus to the error or the invalid field");
+        } else {
+            $check($x->query('//*[@autofocus]')->length === 0 && $x->query('//*[@aria-invalid]')->length === 0, "$name an ordinary load has no autofocus and no aria-invalid");
+        }
+        if (str_starts_with($name, 'manage-rules-')) {
+            // The approval checkbox and the open days belong to the rules form: only a failure of THAT form may change them.
+            $approval = $x->query('//input[@name="requires_approval"]')->item(0);
+            $ticked = $x->query('//input[@name="open_days[]" and @checked]')->length;
+            if (str_ends_with($name, '-term-error')) {
+                $check($approval->hasAttribute('checked'), "$name a failed semester-dates save keeps the saved approval ticked");
+                $check($ticked === 6, "$name a failed semester-dates save keeps the saved open days ticked");
+                $check($x->query('//input[@id="start-1" and @value="2026-12-01"]')->length === 1 && $x->query('//input[@id="end-1" and @value="2026-11-01"]')->length === 1, "$name the entered dates are kept");
+                $check($x->query('//input[@id="end-1" and @autofocus and @aria-invalid="true" and @aria-describedby="term-1-end_date-error"]')->length === 1, "$name the invalid last day takes focus and is described by its own message");
+                $check($x->query('//p[@id="term-1-end_date-error"][normalize-space()]')->length === 1, "$name the invalid last day has its message right beside it");
+                $check($x->query('//div[@id="term-1-errors"]//li')->length === 1, "$name the term error summary exists for aria-describedby");
+                $check($x->query('//*[@autofocus]')->length === 1, "$name exactly one autofocus (the invalid field)");
+            } elseif (str_ends_with($name, '-errors')) {
+                $check(! $approval->hasAttribute('checked'), "$name an intentionally unticked approval stays unticked after a failed rules save");
+                $check($ticked === 2, "$name the submitted open days (Mon, Fri) stay ticked after a failed rules save");
+            } else {
+                $check($approval->hasAttribute('checked') && $ticked === 6, "$name saved approval and open days shown");
+                $check($x->query('//*[@autofocus]')->length === 0 && $x->query('//*[@aria-invalid]')->length === 0, "$name an ordinary load has no autofocus and no aria-invalid");
+            }
+        }
     }
 
     return $count;

@@ -17,15 +17,37 @@
 .rb-check .st-wait { background: var(--rb-neutral-bg); color: var(--rb-neutral-text); }
 .rb-check .check-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); margin: 0 0 var(--rb-space-4); }
 .rb-check .check-choice button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--rb-space-1); width: 100%; min-height: 4.5rem; margin: 0; padding: var(--rb-space-4); border: 2px solid var(--rb-border-control); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: 1rem; font-weight: var(--rb-weight-bold); cursor: pointer; text-align: center; overflow-wrap: anywhere; }
-.rb-check .check-choice button span { color: var(--rb-text-secondary); font-size: .8125rem; font-weight: var(--rb-weight-medium); opacity: 1; }
+.rb-check .check-choice .check-sub { color: var(--rb-text-secondary); font-size: .8125rem; font-weight: var(--rb-weight-medium); opacity: 1; }
+/* The saved answer is named in text, not by tint alone; the email's choice (while nothing is saved) is a dashed card with a plain tag. Neither uses the focus-ring style. */
+.rb-check .check-choice .check-tag { margin-top: var(--rb-space-1); padding: .0625rem var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-color-maroon); color: var(--rb-color-white); font-size: .75rem; font-weight: var(--rb-weight-bold); }
+.rb-check .check-choice .check-tag--cue { border: 1px dashed var(--rb-text-secondary); background: transparent; color: var(--rb-text-primary); }
 .rb-check .check-choice .btn-f2f { border-color: var(--rb-success-text); background: var(--rb-surface-panel); }
 .rb-check .check-choice .btn-online { border-color: var(--check-info-text); background: var(--rb-surface-panel); }
 .rb-check .check-choice .btn-f2f:hover { background: var(--rb-success-bg); }
 .rb-check .check-choice .btn-online:hover { background: var(--check-info-bg); }
 .rb-check .check-choice .current { background: var(--rb-surface-active); }
-.rb-check .check-choice .picked { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+/* The pale tint behind the saved answer lowers the caption's contrast (4.48:1 at 13px): use the primary text colour there. */
+.rb-check .check-choice .current .check-sub { color: var(--rb-text-primary); }
+.rb-check .check-choice .picked { border-style: dashed; }
 .rb-check .check-choice button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-check .hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+/* A way on from the states that have no answer to give (ended, booked, not this block's rep). */
+.rb-check .check-next { display: inline-flex; align-items: center; min-height: var(--rb-control-height); margin-top: var(--rb-space-2); color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-check .check-next:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+/* Jump link: hidden until focused on a roomy screen, always visible when the window is short for its text size (rem breakpoint: 48rem is 768px at
+   100% and 1536px at 200%), where the answer buttons can be below the fold. The result message and the answers are focus targets (tabindex -1). */
+.rb-check .check-jump { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rb-check .check-jump:focus { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
+.rb-check .check-jump:is(:focus, :focus-visible) { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-check #check-result, .rb-check #check-answers { scroll-margin-top: var(--rb-space-4); }
+.rb-check [tabindex="-1"]:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
+@media (max-height: 48rem) {
+  .rb-check .check-jump { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; display: inline-flex; align-items: center; min-height: var(--rb-control-height); margin: var(--rb-space-1) 0 0; color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+  .rb-check.card.narrow { margin-block: var(--rb-space-4); padding-block: var(--rb-space-4); }
+  .rb-check h1 { font-size: 1.375rem; }
+  .rb-check .check-facts { margin-block: var(--rb-space-2); }
+  .rb-check .check-now { margin-bottom: var(--rb-space-2); }
+}
 @media (max-width: 30rem) {
   .rb-check.card.narrow { margin: var(--rb-space-4) 0; padding: var(--rb-space-4); }
   .rb-check .check-choice { grid-template-columns: minmax(0, 1fr); }

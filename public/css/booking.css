@@ -126,12 +126,17 @@
 /* Booking detail. */
 .rb-booking .booking-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: 0 0 var(--rb-space-4); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); }
 .rb-booking .booking-head > div { min-width: 0; }
-.rb-booking .booking-head h1 { margin: 0; font-size: 1.375rem; }
+.rb-booking .booking-head h1 { margin: 0; font-size: 1.375rem; overflow-wrap: break-word; }
 .rb-booking .facts { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr); gap: var(--rb-space-2) var(--rb-space-4); margin: 0; padding: 0; border: 0; }
 .rb-booking .facts dt { font-size: .8125rem; font-weight: var(--rb-weight-bold); color: var(--rb-text-secondary); }
 .rb-booking .facts dd { margin: 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
 .rb-booking .facts .item-list { margin: 0; padding-left: 1.25rem; }
-.rb-booking .facts .who-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .facts .who-cell { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .who-text { display: grid; min-width: 0; gap: 0; line-height: var(--rb-leading-body); }
+.rb-booking .who-name { min-width: 0; overflow-wrap: break-word; }
+.rb-booking .who-id { font-size: .75rem; color: var(--rb-text-secondary); overflow-wrap: anywhere; }
+/* An unbreakable unit: it drops to its own line before it ever splits, and only splits when even a whole line is too narrow. */
+.rb-booking .who-id-inline { display: inline-block; overflow-wrap: anywhere; }
 .rb-booking .review-actions, .rb-booking .change-grid { display: grid; gap: var(--rb-space-4); }
 .rb-booking .change-grid { grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); }
 .rb-booking .change-grid form, .rb-booking .reject form, .rb-booking .cancel-box form { display: grid; gap: var(--rb-space-2); min-width: 0; }

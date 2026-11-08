@@ -32,7 +32,7 @@ function authCases(): array
         foreach ([true, false] as $ok) $cases['link-'.$role.'-'.(int) $ok] = ['auth.email_link', $role, ['route' => 'email.connect', 'ok' => $ok]];
     }
     $cases['link-class-expired'] = ['auth.email_link', 'guest', ['ok' => false, 'message' => 'This link has expired (it works until the class ends) or isn’t complete. Reps can also answer on their home page.']];
-    foreach ([403, 404, 413, 419, 429, 500] as $code) {
+    foreach ([403, 404, 413, 419, 422, 429, 500] as $code) {
         foreach (['guest', 'rep', 'admin'] as $role) $cases['error-'.$code.'-'.$role] = ['errors.'.$code, $role, []];
     }
     return $cases;
@@ -108,6 +108,9 @@ function authContracts(): int
             }
             $expected = ['info', ...(($case[2]['connected'] ?? true) ? [] : ['email']), 'upload', ...(empty($case[2]['photo']) ? [] : ['remove'])];
             $check($order === $expected, "$name form order ".implode(',', $order)." expected ".implode(',', $expected));
+        }
+        if (str_starts_with($name, 'error-') || str_starts_with($name, 'link-')) {
+            $check($x->query('//*[contains(concat(" ", normalize-space(@class), " "), " rb-auth-card--message ")]')->length === 1, "$name card sizes its heading to its width");
         }
         if (str_starts_with($name, 'welcome-')) {
             $ask = in_array($case[1], ['rep', 'lab_staff']) && !isset($case[2]['school']);

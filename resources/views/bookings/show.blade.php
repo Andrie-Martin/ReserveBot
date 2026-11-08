@@ -26,8 +26,8 @@
   <div class="rb-booking__panel">
   <div class="booking-head">
     <div>
-      <p class="eyebrow">Booking #{{ $reservation->id }}</p>
-      <h1>{{ $reservation->needLabel() }}</h1>
+      <p class="eyebrow">Booking #{{ $reservation->id }} · {{ $reservation->needLabel() }}</p>
+      <h1>{{ $reservation->purpose }}</h1>
     </div>
     <span class="status-badge st-{{ strtolower($reservation->status) }}">{{ $reservation->statusLabel() }}</span>
   </div>
@@ -58,11 +58,9 @@
       </dd>
     @endif
 
-    <dt>Reason</dt>
-    <dd>{{ $reservation->purpose }}</dd>
 
     <dt>Booked by</dt>
-    <dd class="who-cell"><x-avatar :user="$booker" /> <span>{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif @if ($booker->school_id)<span class="muted small">· {{ $booker->school_id }}</span>@endif</span></dd>
+    <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
 
     <dt>Sent</dt>
     <dd>{{ $reservation->created_at?->format('F j, Y, g:i A') }}</dd>
@@ -93,9 +91,9 @@
           <form method="post" action="{{ route('bookings.reject', $reservation) }}">
             @csrf
             <label for="reject-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-            <textarea id="reject-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day">{{ $rejectErrors->any() ? old('reason') : '' }}</textarea>
+            <textarea id="reject-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($rejectErrors->any()) autofocus aria-invalid="true" aria-describedby="reject-reason-error" @endif>{{ $rejectErrors->any() ? old('reason') : '' }}</textarea>
             @if ($rejectErrors->any())
-              <p class="field-error">{{ $rejectErrors->first('reason') }}</p>
+              <p class="field-error" id="reject-reason-error">{{ $rejectErrors->first('reason') }}</p>
             @endif
             <button type="submit" class="btn-reject">Reject booking</button>
           </form>

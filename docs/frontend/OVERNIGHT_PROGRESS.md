@@ -18,9 +18,9 @@ path. Fixtures are rendered in a throwaway container from the working tree with 
 | `feat/frontend-design-04-rep-booking` | `feat/frontend-design-03-rep-availability` @ `4d108c0` (Phase 03 is not in `dev`, so this branch is stacked; it contains all Phase 03 commits) | complete, local, NOT merged |
 | `feat/frontend-design-05-lab-operations` | `feat/frontend-design-04-rep-booking` @ `6cb9c04` (stacked; contains Phases 03 and 04) | complete, local, NOT merged |
 | `feat/frontend-design-06-admin-accounts` | `feat/frontend-design-05-lab-operations` @ `204a337` (stacked; contains Phases 03-05) | complete, local, NOT merged |
-| `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete, local, NOT merged |
-| `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged |
-| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | complete, local, NOT merged |
+| `feat/frontend-design-07-rooms-equipment` | `feat/frontend-design-06-admin-accounts` @ `8e34b72` (stacked; contains Phases 03-06) | complete; merged to `dev` (PR #19) |
+| `feat/frontend-design-08-timetable` | `feat/frontend-design-07-rooms-equipment` @ `9aed410` (stacked; contains Phases 03-07) | complete, local, NOT merged; independent QA corrections applied (see Phase 08 below) |
+| `feat/frontend-design-09-system-pages` | `feat/frontend-design-08-timetable` @ `22c0885` (stacked; contains Phases 03-08) | complete, local, NOT merged; independent QA corrections applied (see Phase 09 below) |
 | `feat/frontend-design-10-integration-qa` | `feat/frontend-design-09-system-pages` @ `c30191b` (stacked; contains Phases 03-09 as they were then; `dev` has since merged Phases 03-09 plus their QA corrections) | complete, local, NOT merged; independent QA corrections applied (see Phase 10 below) |
 
 ## Phase 03 — Representative dashboard and Free Rooms
@@ -155,7 +155,31 @@ Verification (final tree):
 
 Real defect found by the new contrast guard and fixed in CSS only: the primary "Check and replace" link in the draft header rendered maroon text on a maroon button (a link rule outranked the button rule).
 
-Notes: no live data was touched; draft, check and apply logic come from fixtures only. NOT RUN: PHPUnit, authenticated live app, real upload/replace.
+Notes (as of 08A/08B): no live data was touched; draft, check and apply logic came from fixtures only. The "NOT RUN" items of that stage were run afterwards by the independent QA below.
+
+### Phase 08 independent QA and corrections
+
+Independent audit (functional, security, real-browser UX/accessibility, integration) rated Phase 08 **APPROVE WITH MINOR FIXES**; the backend was unchanged and correct. Corrections are presentation, accessibility and test tooling only: no route, controller, model, migration, validation, authorization, semester-replacement or availability code changed.
+
+| Finding | Commit | Correction |
+|---|---|---|
+| T-01/T-02 refused forms | `c5db6d4` | Add/edit row, semester and upload forms mark each bad field `aria-invalid` + `aria-describedby`, show its message above it, and autofocus the first visible bad field only in the answer to a refused submit. `public/js/timetable.js` (page-only) scrolls it into view with its message; a rem `scroll-margin` grows with text size; below `22rem` (narrow for the text size) nested card padding is compacted so messages keep a readable column. |
+| T-04 headings | `44d1c85` | h1 and title: Manage timetable, View timetable in use, Edit new timetable, Edit timetable row, Check and replace timetable. One h1 per page. |
+| T-05 navigation | `db3cecd` | Manage tabs carry `aria-current="page"`. |
+| T-06 touch targets | `86df353`, `9e73f5a` | "Open" booking links (overlap panel and check-page class-session list): at least 24px, 44x44px on narrow layouts and coarse pointers. |
+| T-07 scroll regions | `8fcfabc` | Week grid and New/Removed tables: `role="region"`, `aria-label`, `tabindex="0"`, visible focus; arrow keys scroll, Tab leaves. |
+| Browser-test race | `2ed94bf` | Post helpers wait for the intercepted stub page to commit (not just the request), in the timetable, manage, accounts, ops and booking suites. No delay. |
+| Fixtures | `b74a089` | Timetable isolated assertions 692 -> 892 cover the corrections. |
+| T-03 overflow at 200% text | none | Reproduced only on the standalone branch (max-length row, page 2005px > 1438px): the legacy `.rb-manage td.hide-sm { white-space: nowrap }` rule keeps the Instructor cell unbreakable. `origin/dev` scopes that rule to the accounts table, so the merged tree fits (1423px). No CSS change made for it. |
+
+Verification (disposable app and MariaDB; genuine browser text size, i.e. the profile default font size 32px, which persists across redirects):
+- Functional: 71/71 assertions plus the 72-row Guest/Rep/Lab staff/Admin x CSRF matrix, identical to the audit on the branch and on the merged tree.
+- Real browser: refused-form checks 72/72 (24/72 before), Open links 8/8 + 8/8, scroll regions 56/56 (32/56 before), at 1438x900, 1438x638, 390x844, 320x640 at 100% and 200%.
+- PHPUnit with the gated suites against disposable MariaDB: branch 109 tests, 102 passed, 1 failure, 1 error, 5 skipped; merged tree 112 tests, 102 passed, 1 failure, 1 error, 8 skipped; the untouched original has the same totals. Pre-existing: `AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls` (failure) and `FoundationsTest::test_presentation_contracts_without_database_access` (order-dependent error; passes alone).
+- Isolated render checks all PASS (timetable 892). Fixture-browser suites (timetable, ops, manage, accounts, booking) passed 19/19 repeated runs per tree with the committed scripts.
+- Merge into current `origin/dev`: clean, no conflicts; no Phase 05-07 file changed.
+
+Backend concern (not changed): replacing with a future-dated semester moves every class to the new term, so the current term's classes stop blocking rooms until its start date. The check page does state when the classes start counting.
 
 ## Phase 09 — Signed class check and the six error pages
 
@@ -176,6 +200,31 @@ Verification (final tree):
 Real defects found by the new test and fixed in CSS only: long unbroken course/room/rep names overflowed at 390px; the "Booked as a class session" badge overflowed at 320px with 200% text.
 
 Notes: the signed-URL, throttling and expiry behaviour is server-side and unchanged (NOT exercised here; no request is sent). NOT RUN: PHPUnit, authenticated live app, real email links.
+
+Notes (as of 09A/09B): the "NOT RUN" items of that stage (PHPUnit, authenticated app, real links) were run afterwards by the independent QA below.
+
+### Phase 09 independent QA and corrections
+
+Independent audit (functional, security, real-browser UX/accessibility, integration) rated Phase 09 **APPROVE WITH MINOR FIXES**; the backend was unchanged and correct. Corrections are views, CSS, one small page script and tests only: no route, controller, model, validation, authorization, signed-link or business-rule code changed.
+
+| Finding | Commit | Correction |
+|---|---|---|
+| F-02 stale highlight | `cc3bdc8` | The saved answer decides which card is marked, in text ("Your answer"). The email button's `?answer=` only marks a card while nothing is saved (dashed card, "Chosen in your email"); no focus-style ring. Fixtures 165 -> 295, plus a PHPUnit presentation test. |
+| F-03 422 page | `c684400` | `errors/422.blade.php` on the shared error card (rem type, header, recovery link). Status stays 422. It was byte-identical at 100% and 200% text. |
+| F-11 mid-word headings and alerts | `e7fd5d3`, then the follow-up commit that added the alert fix | Error and email-result cards size the h1 from their own width (`min(h2, 17cqw)`, `overflow-wrap: break-word`). "Something"/"connected" no longer break at 320px/200%. A later full-page check showed the alert text still broke ("connect-ed."); at narrow-for-the-text widths the card and alert now use less padding, keeping `overflow-wrap: anywhere` so a long address still wraps (break-word made one overflow). 224/224 page states keep ordinary words whole (218/224 before). |
+| F-01 answers and result below the fold | `db332ed` | "Jump to the answer buttons" link (visible on short windows), compact spacing, and the result message takes focus and is scrolled into view after an answer (`public/js/check.js`). |
+| F-07 dead ends | `9731953` | Ended, booked and not-this-rep states end with a real link ("Open My bookings" / "Go to my home page"). |
+| F-08 contrast | `33dbef1` | Caption on the saved-answer card 4.48:1 -> 14.11:1. |
+| Browser-test race | `b662617`, `5546131` | The timetable, ops, manage, accounts and booking browser scripts carried in this branch's tree raced: the POST helper waited for the request and then for load state, so the stub navigation was still in flight at the next `goto`. On this branch they passed 1 of 10 runs, every failure "Navigation ... interrupted by another navigation". Each helper now waits for the stub document to commit (a line byte-identical to `origin/dev`'s Phase 08 fix, so the merge does not conflict on it): classcheck 5/5, timetable 5/5, ops 5/5, manage 3/3, accounts 3/3, booking 3/3 as committed. Phase 09's own `classcheck-browser.cjs` has the same pattern but never failed (23+ runs, stub delays 0-350ms), so its change (`5546131`) is defensive. |
+
+Not changed (backend/config/shell, reported separately and not Phase 09 UX defects): `APP_DEBUG=true` in `.env.example` and the committed compose file (debug page on any 500); the 500 page's "check storage/logs/laravel.log" copy; unsigned requests answer 403/404 by id before the signature check; the maintenance (503) page is still the framework default; the shell's bottom-nav labels break mid-word at 320px/200%.
+
+Verification (disposable app and MariaDB; genuine browser text size):
+- Real browser at 1438x900, 1438x638, 390x844, 320x640 at 100% and 200%: error/email pages 52/52 (46 before), answer visibility/jump link/result focus 64/64 (10 before), accessible names agree with the visual state in the stale-highlight scenario (5/5).
+- HTTP/permission/CSRF/status-code scripts: class-check 62/62, email results 9/9, error pages 32/34 (the 2 are the intended `APP_DEBUG=true` leak), on the branch and on the merged tree.
+- PHPUnit (gated against disposable MariaDB): branch 110 tests, 103 passed, 1 failure, 1 error, 5 skipped; merged tree 113, 103, 1, 1, 8; same two pre-existing tests as `origin/dev` (`AvailabilityWorkflowTest::test_dashboard_data_shortcuts_and_answer_controls`, `FoundationsTest::test_presentation_contracts_without_database_access`).
+- Render suites all pass (auth 1390, class check 414). Fixture-browser suites on the merged tree: 17/17 runs; Phase 02 auth browser 3/3 (63 cases).
+- Merge into current `origin/dev`: one documentation conflict in this file (branch-map rows and the Phase 08 notes); resolve by keeping dev's text and adding Phase 09's row and section. Code merges cleanly; 36/36 pages identical to dev apart from the new card class.
 
 ## Phase 10 — Link colour consistency, colour scan and QA handoff (no new feature scope)
 

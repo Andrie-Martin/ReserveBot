@@ -15,9 +15,14 @@
 .rb-tt button.btn-small.btn-danger:hover { background: var(--rb-danger-bg); filter: none; }
 .rb-tt button.link { display: inline-flex; align-items: center; min-height: var(--rb-control-height); padding: 0 var(--rb-space-1); background: none; color: var(--rb-color-maroon); font: inherit; font-size: .8125rem; font-weight: var(--rb-weight-semibold); text-decoration: underline; cursor: pointer; }
 .rb-tt button.link.tt-delete { color: var(--rb-danger-text); }
-.rb-tt :is(a, button, summary, select, input):focus-visible { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); }
+.rb-tt :is(a, button, summary, select, input, [role=region][tabindex]):focus-visible { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); }
 .rb-tt .tt-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
 .rb-tt .rb-booking__intro .error { margin: var(--rb-space-4) 0 0; }
+
+/* A field the server refused: marked in red, and when it takes focus the message above it stays in view (scroll margin in rem, so it grows with text size). */
+.rb-tt [aria-invalid="true"] { scroll-margin-block: 17rem 3rem; }
+.rb-tt .mform :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+.rb-tt [id$="-errors"][tabindex="-1"]:focus { outline: var(--tt-focus); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
 
 /* Overview: in use, attention, draft. */
 .rb-tt .tt-now, .rb-tt .tt-draft, .rb-tt .tt-attention { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--rb-space-4) 1.25rem; margin: 0 0 var(--rb-space-4); padding: var(--rb-space-4) 1.25rem; border-radius: var(--rb-radius-card); }
@@ -30,6 +35,11 @@
 .rb-tt .tt-attention h2 { margin: 0 0 var(--rb-space-1); color: var(--rb-warning-text); font-size: 1rem; letter-spacing: -.02em; }
 .rb-tt .tt-attention > p { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
 .rb-tt .tt-clashes { background: var(--rb-surface-panel); border-radius: var(--rb-radius-control); padding: 0 var(--rb-space-4); }
+/* "Open" on a booking (overlap panel, and the check page's class-session list): at least 24px tall everywhere, a full 44px target on touch layouts. The link and its destination are unchanged. */
+.rb-tt :is(.tt-clashes, .mlist) a { display: inline-flex; align-items: center; justify-content: center; min-height: 1.75rem; }
+@media (max-width: 40rem), (pointer: coarse) {
+  .rb-tt :is(.tt-clashes, .mlist) a { min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+}
 .rb-tt .tt-draft { display: block; border: 1px solid var(--rb-color-maroon); background: var(--rb-surface-active); }
 .rb-tt .tt-draft-title { margin: var(--rb-space-1) 0 0; font-size: 1.0625rem; font-weight: var(--rb-weight-bold); overflow-wrap: anywhere; }
 .rb-tt .tt-draft .hint { margin: var(--rb-space-1) 0 var(--rb-space-4); }
@@ -171,4 +181,12 @@
   .rb-tt .tt-table td.hide-sm { display: none; }
   .rb-tt .tt-table .show-sm { display: block; }
   .rb-tt .tt-backup-actions { width: 100%; }
+}
+
+/* Narrow for the text size (a phone, or large text on a phone): the nested cards give up padding so forms and messages keep a readable column.
+   rem breakpoints follow the browser's own text-size setting, so 22rem is 352px at 100% and 704px at 200%. */
+@media (max-width: 22rem) {
+  .rb-tt .rb-booking__panel, .rb-tt .add-box form, .rb-tt :is(.tt-now, .tt-draft, .tt-attention, .tt-way, .tt-replace, .tt-box) { padding: var(--rb-space-2); }
+  .rb-tt .tt-final fieldset { padding: var(--rb-space-2); }
+  .rb-tt .field-error, .rb-tt .error { padding: var(--rb-space-1) var(--rb-space-2); }
 }

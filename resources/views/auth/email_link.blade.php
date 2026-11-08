@@ -6,7 +6,7 @@
 @endpush
 
 @section('content')
-<x-ui.auth-card>
+<x-ui.auth-card class="rb-auth-card--message">
   <x-slot:heading><h1 class="rb-heading rb-heading--h1">{{ $ok ? 'Email connected' : 'This link isn’t working' }}</h1></x-slot:heading>
   <x-ui.alert :tone="$ok ? 'success' : 'danger'" role="status">{{ $message }}</x-ui.alert>
   <x-slot:footer>

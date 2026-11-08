@@ -85,12 +85,12 @@
   .rb-masthead__full { display: none; }
   .rb-masthead__short { display: block; }
   .rb-header { flex-wrap: wrap; gap: var(--rb-space-2); padding: .75rem var(--rb-space-4); min-height: 4.25rem; }
-  .rb-brand { gap: .625rem; flex-shrink: 1; min-width: 0; }
+  .rb-brand { gap: .625rem; flex-shrink: 1; min-width: 0; min-height: var(--rb-control-height); }
   .rb-brand__monogram { width: 2.25rem; height: 2.25rem; flex-shrink: 0; font-size: var(--rb-text-small); }
   .rb-brand__name { font-size: var(--rb-text-body); }
   .rb-brand__college { max-width: 12rem; line-height: 1.25; }
   .rb-header__description, .rb-role-card { display: none; }
-  .rb-menu-toggle { margin-left: auto; padding: var(--rb-space-2); flex-shrink: 0; }
+  .rb-menu-toggle { margin-left: auto; padding: var(--rb-space-2); flex-shrink: 0; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
   .rb-account { flex-basis: 100%; flex-wrap: wrap; margin: var(--rb-space-2) 0 0; gap: var(--rb-space-4); }
   .rb-account form { order: 0; }
   .rb-shell[data-menu-ready][data-menu-open='false'] .rb-account,
@@ -116,3 +116,5 @@
   .rb-sidebar { padding-block: var(--rb-space-2); gap: var(--rb-space-4); }
   .rb-role-card { display: none; }
 }
+/* Touch devices: 44px navigation rows (the desktop sidebar keeps its compact 40px rows for pointers). */
+@media (pointer: coarse) { .rb-nav-item { min-height: var(--rb-control-height); } }
