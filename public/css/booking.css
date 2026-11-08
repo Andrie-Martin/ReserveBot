@@ -239,3 +239,10 @@
 /* Class picker. */
 .rb-booking .when-class .rb-picker { max-width: 40rem; }
 .rb-booking .when-class .rb-picker__option-title { font-weight: var(--rb-weight-semibold); }
+
+/* Large text on a phone: the item name and its stepper wrap onto two lines instead of widening the page. */
+.rb-booking .eq-item { flex-wrap: wrap; }
+.rb-booking .eq-item__info { flex: 1 1 9rem; }
+/* Stepper targets stay 44px even when text is enlarged, so the control still fits a phone's width. */
+.rb-booking .rb-stepper .rb-stepper__btn { width: min(var(--rb-control-height), 44px); min-width: min(var(--rb-control-height), 44px); height: min(var(--rb-control-height), 44px); }
+.rb-booking .book-form .eq-item input.rb-stepper__input { width: min(3.5rem, 56px); min-height: min(var(--rb-control-height), 44px); }

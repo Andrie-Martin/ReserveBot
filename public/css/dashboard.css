@@ -134,3 +134,5 @@
 /* Dashboard counter: shared compact statistic (staff, admin). */
 .rb-dashboard--staff .rb-stat, .rb-dashboard__intro .rb-stat { margin-top: var(--rb-space-4); }
 .rb-drawer.rb-dashboard__timetable-drawer { width: min(46rem, 100vw); }
+.rb-dashboard__preview-list > li { grid-template-areas: "when status" "what status"; grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 40rem) { .rb-dashboard__preview-list > li { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "what" "status"; } }

@@ -146,7 +146,7 @@ function foundationsContracts(): int
     $check($one('//select[@id="example-select"]/option[@selected and @value="two"]'), 'Select option semantics changed');
     $check($one('//textarea[@id="example-notes" and @name="notes"]'), 'Textarea attributes missing');
     $check($x->evaluate('string(//textarea[@id="example-notes"])') === '<example & notes>', 'Textarea escaping changed');
-    $check($x->query('//script[not(@src) or not(contains(@src,"/js/layout.js?"))]')->length === 0 && $x->query('//img[@onerror]')->length === 0, 'Content was not escaped');
+    $check($x->query('//script[not(@src) or not(contains(@src,"/js/layout.js?") or contains(@src,"/js/ui.js?"))]')->length === 0 && $x->query('//img[@onerror]')->length === 0, 'Content was not escaped');
     $check(str_contains($html, '&lt;script&gt;sample&lt;/script&gt;'), 'Badge label must be escaped');
     $check(! str_contains($html, 'Other form error must remain isolated.'), 'Named error bag leaked');
     $check($one('//*[@id="summary"]//*[@role="alert"]'), 'Composed error summary must have one alert');

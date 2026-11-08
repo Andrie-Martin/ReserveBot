@@ -188,7 +188,8 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
 .rb-pager__nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
 .rb-pager__page { padding-inline: var(--rb-space-2); font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); white-space: nowrap; }
 .rb-pager .rb-button[aria-disabled="true"] { border-style: dashed; border-color: var(--rb-border-control); background: var(--rb-neutral-bg); color: var(--rb-text-muted); cursor: not-allowed; }
-@media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; flex-wrap: nowrap; } }
+@media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; } }
+.rb-pager__nav > * { min-width: 0; }
 
 /* ---- Compact statistic (dashboards): number and label share one baseline; the number never changes the card's height ---- */
 .rb-stat { display: inline-flex; width: fit-content; justify-self: start; align-items: baseline; gap: var(--rb-space-2) var(--rb-space-4); max-width: 100%; margin: 0; padding: .75rem var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }

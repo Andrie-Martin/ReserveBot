@@ -61,19 +61,24 @@
     @endif
     @if ($otherMeetings->isNotEmpty())
       <div class="rb-dashboard__preview" data-meetings="other">
-        <h3>Next up ({{ $otherMeetings->count() }} more)</h3>
-        <ul class="mlist meet-list" data-meetings="preview">
+        <h3>Coming up ({{ $otherMeetings->count() }})</h3>
+        <ul class="mlist meet-list rb-dashboard__preview-list" data-meetings="preview">
           @foreach ($otherMeetings->take(3) as $m)
-            @include('home._meeting')
+            @php $freed = in_array($m['state'], ['online', 'freed'], true); @endphp
+            <li @class(['freed' => $freed])>
+              <span class="mlist-when">{{ $m['start']->isToday() ? 'Today' : ($m['start']->isTomorrow() ? 'Tomorrow' : $m['start']->format('D, M j')) }} · {{ TimeSlots::span($m['start']->hour * 60 + $m['start']->minute, $m['end']->hour * 60 + $m['end']->minute) }}</span>
+              <span class="mlist-what">{{ $m['class']->course?->code ?? 'Class' }} · {{ $m['class']->room->name }}</span>
+              <span class="st {{ ClassChecks::BADGES[$m['state']] }}">{{ ClassChecks::LABELS[$m['state']] }}</span>
+            </li>
           @endforeach
         </ul>
         <p class="rb-dashboard__more">
-          <x-ui.link-button variant="secondary" size="compact" href="#meetings-all" data-rb-drawer="meetings-all">View all {{ $meetings ? count($meetings) : 0 }} meetings</x-ui.link-button>
+          <x-ui.link-button variant="secondary" size="compact" href="#meetings-all" data-rb-drawer="meetings-all">View all {{ $otherMeetings->count() }} upcoming meetings<span class="sr-only"> and answer face-to-face or online</span></x-ui.link-button>
         </p>
       </div>
-      <x-ui.drawer id="meetings-all" kicker="Face-to-face this week?" title="All upcoming meetings" sub="Your block's classes in the next 7 days, soonest first." close-to="#face-to-face">
+      <x-ui.drawer id="meetings-all" kicker="Face-to-face this week?" title="Upcoming meetings" sub="The rest of your block's classes in the next 7 days, soonest first. Answer here." close-to="#face-to-face">
         <ul class="mlist meet-list rb-dashboard__meetings" data-meetings="all">
-          @foreach (collect($meetings)->sortBy(fn ($meeting) => $meeting['start']->getTimestamp()) as $m)
+          @foreach ($otherMeetings as $m)
             @include('home._meeting')
           @endforeach
         </ul>
@@ -93,9 +98,9 @@
         $clockNow = now();
         $nextClasses = $classes->map(function ($class) use ($isoDay, $clockNow) {
             $offset = (($isoDay[$class->day_of_week] ?? 1) - $clockNow->dayOfWeekIso + 7) % 7;
-            if ($clockNow->copy()->startOfDay()->addDays($offset)->setTimeFromTimeString($class->end_time)->lte($clockNow)) $offset += 7;
+            if (isset($class->end_time) && $clockNow->copy()->startOfDay()->addDays($offset)->setTimeFromTimeString($class->end_time)->lte($clockNow)) $offset += 7;
             return ['class' => $class, 'offset' => $offset];
-        })->sort(fn ($a, $b) => [$a['offset'], $a['class']->start_time] <=> [$b['offset'], $b['class']->start_time])->take(4);
+        })->sort(fn ($a, $b) => [$a['offset'], (string) ($a['class']->start_time ?? '')] <=> [$b['offset'], (string) ($b['class']->start_time ?? '')])->take(4);
       @endphp
       <div class="rb-dashboard__preview">
         <h3>Next classes</h3>
