@@ -112,6 +112,394 @@ final class AuthWorkflowTest extends TestCase
         }
     }
 
+    // ---- QA F-01: login throttling (5 failures/min per email+IP, 20/min per IP) ----
+
+    private function loginAs(string $email, string $password, string $ip = '203.0.113.10'): \Illuminate\Testing\TestResponse
+    {
+        return $this->withServerVariables(['REMOTE_ADDR' => $ip])->from('/login')->post('/login', ['email' => $email, 'password' => $password]);
+    }
+
+    private function assertWrongLogin(\Illuminate\Testing\TestResponse $response): void
+    {
+        $response->assertRedirect('/login')->assertSessionHasErrors(['email' => 'Wrong email or password.']);
+        $this->assertGuest();
+    }
+
+    /** Asserts the throttled reply and returns the message shown to the visitor. */
+    private function assertThrottled(\Illuminate\Testing\TestResponse $response): string
+    {
+        $response->assertRedirect('/login')->assertSessionHasErrors('email');
+        $message = session('errors')->first('email');
+        $this->assertMatchesRegularExpression('/^Too many login attempts\. Please try again in \d+ seconds?\.$/', $message);
+        $this->assertGreaterThan(0, (int) $response->headers->get('Retry-After'));
+        $this->assertGuest();
+
+        return $message;
+    }
+
+    public function test_repeated_failures_are_throttled_and_even_the_right_password_is_blocked_while_locked(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123'));
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123'));
+        // Typing the same address differently (case, spaces) shares the same counter.
+        $this->assertThrottled($this->loginAs(' '.strtoupper($user->email).' ', 'Starting123'));
+    }
+
+    public function test_unknown_accounts_are_throttled_identically_so_nothing_reveals_which_emails_exist(): void
+    {
+        $real = $this->user();
+        $ghost = 'nobody-'.Str::lower(Str::random(10)).'@gmail.com';
+        foreach ([$real->email, $ghost] as $email) {
+            for ($i = 0; $i < 5; $i++) {
+                $this->assertWrongLogin($this->loginAs($email, 'Wrong123', $email === $ghost ? '203.0.113.20' : '203.0.113.21'));
+            }
+        }
+        $realMessage = $this->assertThrottled($this->loginAs($real->email, 'Wrong123', '203.0.113.21'));
+        $ghostMessage = $this->assertThrottled($this->loginAs($ghost, 'Wrong123', '203.0.113.20'));
+        // Same wording and same format for a real and a made-up account (seconds may differ by a tick).
+        $this->assertSame(preg_replace('/\d+/', 'N', $realMessage), preg_replace('/\d+/', 'N', $ghostMessage));
+    }
+
+    public function test_one_locked_account_or_ip_does_not_lock_other_users(): void
+    {
+        $alice = $this->user();
+        $bob = $this->user();
+        for ($i = 0; $i < 6; $i++) {
+            $this->loginAs($alice->email, 'Wrong123', '203.0.113.30');
+        }
+        $this->assertThrottled($this->loginAs($alice->email, 'Starting123', '203.0.113.30'));
+
+        // A different account from the same IP, and the same account from another IP, are unaffected.
+        $this->loginAs($bob->email, 'Starting123', '203.0.113.30')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($bob);
+        $this->post('/logout');
+        $this->loginAs($alice->email, 'Starting123', '203.0.113.31')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($alice);
+    }
+
+    public function test_successful_login_clears_the_failure_count_and_keeps_session_behaviour(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+        $this->withSession(['probe' => 'x']);
+        $oldId = session()->getId();
+        $this->loginAs($user->email, 'Starting123')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotSame($oldId, session()->getId());
+        $this->post('/logout')->assertRedirect('/login');
+        // The counter restarted: four more failures are still plain "wrong password", not throttled.
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123'));
+        }
+    }
+
+    public function test_login_works_again_after_the_retry_window(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 6; $i++) {
+            $this->loginAs($user->email, 'Wrong123');
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123'));
+        $this->assertLessThanOrEqual(60, (int) $this->loginAs($user->email, 'Starting123')->headers->get('Retry-After'));
+
+        $this->travel(61)->seconds();
+        $this->loginAs($user->email, 'Starting123')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_one_ip_spraying_many_emails_is_throttled_but_other_ips_are_not(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', '203.0.113.40'));
+        }
+        $this->assertThrottled($this->loginAs('fresh-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', '203.0.113.40'));
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', '203.0.113.40'));
+        $this->loginAs($user->email, 'Starting123', '203.0.113.41')->assertRedirect('/rep');
+    }
+
+    public function test_throttled_visitor_sees_the_retry_message_on_the_login_page_and_it_is_shown_once(): void
+    {
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($user->email, 'Wrong123');
+        }
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])->followingRedirects()->from('/login')
+            ->post('/login', ['email' => $user->email, 'password' => 'Wrong123'])
+            ->assertOk()->assertSee('Too many login attempts. Please try again in')->assertSee('name="password"', false);
+        $this->get('/login')->assertOk()->assertDontSee('Too many login attempts');
+    }
+
+    public function test_a_very_long_email_is_still_throttled(): void
+    {
+        $long = str_repeat('x', 400).'@example.com';
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($long, 'Wrong123', '203.0.113.50'));
+        }
+        $this->assertThrottled($this->loginAs($long, 'Wrong123', '203.0.113.50'));
+    }
+
+    /**
+     * Spellings of one address that the database (utf8mb4_unicode_ci) accepts as the same account but that differ as strings:
+     * zero-width and bidi characters, control characters and combining marks inside the address, plus case and spaces.
+     *
+     * @return array<string, string>
+     */
+    private function spellingsOf(string $email): array
+    {
+        [$local, $domain] = explode('@', $email, 2);
+        $mid = intdiv(strlen($local), 2);
+        $at = fn (string $inserted) => substr($local, 0, $mid).$inserted.substr($local, $mid).'@'.$domain;
+
+        return [
+            'upper case' => strtoupper($email),
+            'surrounding spaces' => "  \t".$email." \n",
+            'zero-width space' => $at("\u{200B}"),
+            'several zero-width spaces' => $at(str_repeat("\u{200B}", 5)),
+            'zero-width non-joiner' => $at("\u{200C}"),
+            'zero-width joiner' => $at("\u{200D}"),
+            'word joiner' => $at("\u{2060}"),
+            'byte order mark' => $at("\u{FEFF}"),
+            'left-to-right mark' => $at("\u{200E}"),
+            'control character' => $at("\u{0001}"),
+            'combining acute accent' => $at("\u{0301}"),
+            'accented letter' => preg_replace('/e/', "\u{00E9}", $email, 1),
+            'full-width letters' => preg_replace('/a/', "\u{FF41}", $email, 1),
+        ];
+    }
+
+    public function test_the_database_really_treats_these_spellings_as_the_same_account(): void
+    {
+        // Guard against a vacuous lockout test: if the database did not accept the altered spellings they could not bypass anything.
+        $accepted = [];
+        foreach ($this->spellingsOf($this->user()->email) as $name => $spelling) {
+            $user = $this->user();
+            $spelling = $this->spellingsOf($user->email)[$name];
+            $this->loginAs($spelling, 'Starting123', '203.0.113.60');
+            if ($this->isAuthenticated()) {
+                $accepted[] = $name;
+                $this->post('/logout');
+            }
+        }
+        $this->assertContains('zero-width space', $accepted);
+        $this->assertContains('combining acute accent', $accepted);
+        $this->assertContains('upper case', $accepted);
+    }
+
+    public function test_no_alternate_spelling_can_bypass_an_active_lockout(): void
+    {
+        foreach (array_keys($this->spellingsOf('someone@example.com')) as $name) {
+            $user = $this->user();
+            for ($i = 0; $i < 5; $i++) {
+                $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', '203.0.113.61'));
+            }
+            $this->assertThrottled($this->loginAs($user->email, 'Wrong123', '203.0.113.61'));
+
+            $spelling = $this->spellingsOf($user->email)[$name];
+            // Wrong and correct passwords through the altered spelling are both refused, and nothing is signed in.
+            $this->assertThrottled($this->loginAs($spelling, 'Wrong123', '203.0.113.61'));
+            $this->assertThrottled($this->loginAs($spelling, 'Starting123', '203.0.113.61'));
+            $this->assertGuest();
+            RateLimiter::clear('login-ip|203.0.113.61');
+        }
+    }
+
+    public function test_failures_through_different_spellings_share_one_counter(): void
+    {
+        $user = $this->user();
+        $spellings = array_values($this->spellingsOf($user->email));
+        // Five failures typed five different ways use up the one account counter; the sixth, in yet another spelling, is blocked.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($spellings[$i + 2], 'Wrong123', '203.0.113.62'));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', '203.0.113.62'));
+    }
+
+    public function test_spellings_of_an_unknown_address_behave_exactly_like_those_of_a_real_one(): void
+    {
+        // No enumeration through spellings: for a made-up address, too, the variants share a counter and the sixth is blocked.
+        $ghost = 'nobody-'.Str::lower(Str::random(10)).'@gmail.com';
+        $spellings = array_values($this->spellingsOf($ghost));
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($spellings[$i + 2], 'Wrong123', '203.0.113.63'));
+        }
+        $this->assertThrottled($this->loginAs($ghost, 'Wrong123', '203.0.113.63'));
+    }
+
+    public function test_different_accounts_are_never_merged_by_the_spelling_rules(): void
+    {
+        $alice = $this->user();
+        $bob = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($alice->email, 'Wrong123', '203.0.113.64');
+        }
+        $this->assertThrottled($this->loginAs($this->spellingsOf($alice->email)['zero-width space'], 'Starting123', '203.0.113.64'));
+        // Bob, typed with the same kind of decoration, is a different account and still signs in.
+        $this->loginAs($this->spellingsOf($bob->email)['zero-width space'], 'Starting123', '203.0.113.64')->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($bob);
+    }
+
+    public function test_successful_logins_do_not_use_up_the_ip_allowance(): void
+    {
+        // Attempts are counted before the password check; a success must give its slot back so only FAILURES count against the IP.
+        $ip = '203.0.113.66';
+        for ($i = 0; $i < 19; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        for ($i = 0; $i < 3; $i++) {
+            $user = $this->user();
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->assertAuthenticatedAs($user);
+            $this->post('/logout');
+        }
+        $this->assertSame(19, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip));
+        $this->assertWrongLogin($this->loginAs('twentieth-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));   // the 20th failure is still allowed
+        $this->assertThrottled($this->loginAs('twenty-first-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+    }
+
+    public function test_an_attempt_refused_for_the_ip_is_not_charged_to_the_account(): void
+    {
+        $ip = '203.0.113.67';
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        $user = $this->user();
+        for ($i = 0; $i < 3; $i++) {
+            $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        }
+        $key = \App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id);
+        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get($key, 0), 'Refusals caused by the IP limit must not use up the account allowance.');
+        $this->assertSame(20, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Refused attempts do not raise the IP counter either.');
+    }
+
+    public function test_an_attempt_refused_for_the_account_does_not_raise_the_ip_counter(): void
+    {
+        $ip = '203.0.113.68';
+        $user = $this->user();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        for ($i = 0; $i < 4; $i++) {
+            $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Hammering a locked account must not push the whole IP towards its limit.');
+    }
+
+    private function assertNoLeftoverTurnOrSlot(string $email, string $ip, ?int $accountId): void
+    {
+        $key = \App\Http\Controllers\Auth\LoginController::accountKey($email, $ip, $accountId);
+        $lock = \Illuminate\Support\Facades\Cache::lock('login-lock|'.$key, 5);
+        $this->assertTrue($lock->get(), 'The account turn must be released after every attempt.');
+        $lock->release();
+        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip.':inflight', 0), 'The in-flight slot must be given up after every attempt.');
+    }
+
+    public function test_the_account_turn_and_the_ip_slot_are_released_on_every_path(): void
+    {
+        $ip = '203.0.113.70';
+        $user = $this->user();
+        $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));            // failure
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');            // success
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->post('/logout');
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($user->email, 'Wrong123', $ip);
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));              // refused for the account
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->loginAs('', '', $ip);                                                         // empty input
+        $this->assertNoLeftoverTurnOrSlot('', $ip, null);
+    }
+
+    public function test_a_run_of_successful_logins_never_uses_the_failure_allowance(): void
+    {
+        $ip = '203.0.113.71';
+        $user = $this->user();
+        for ($i = 0; $i < 12; $i++) {
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->assertAuthenticatedAs($user);
+            $this->post('/logout');
+        }
+        // The full allowance of 5 failures is still there, and only the 6th is refused.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
+        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Only the 5 failures are on the IP counter.');
+    }
+
+    public function test_valid_logins_still_succeed_when_the_ip_has_19_failures(): void
+    {
+        $ip = '203.0.113.72';
+        for ($i = 0; $i < 19; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        foreach ([$this->user(), $this->user(), $this->user()] as $user) {
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->post('/logout');
+        }
+        $this->assertWrongLogin($this->loginAs('twentieth-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        $this->assertThrottled($this->loginAs('extra-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+    }
+
+    public function test_an_attempt_that_cannot_get_its_account_turn_is_refused_not_let_through(): void
+    {
+        // Another request is holding this account's turn (held here by hand). Waiting attempts must fail closed.
+        $ip = '203.0.113.73';
+        $user = $this->user();
+        $held = \Illuminate\Support\Facades\Cache::lock('login-lock|'.\App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id), 30);
+        $this->assertTrue($held->get());
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        $this->assertGuest();
+        $held->release();
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+    }
+
+    public function test_attempts_already_in_flight_count_against_the_ip_limit_so_a_burst_cannot_exceed_it(): void
+    {
+        // 15 recorded failures plus 6 attempts that have not finished: even if all of them fail the limit of 20 would be passed,
+        // so a further attempt is not admitted (after waiting briefly for them to settle).
+        $ip = '203.0.113.74';
+        for ($i = 0; $i < 15; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 6, 30);
+        $user = $this->user();
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        $this->assertGuest();
+        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 4, 30);   // 15 + 4 + this one = 20: exactly at the limit, admitted
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+    }
+
+    public function test_limiter_keys_hold_no_typed_address_or_password_and_fit_the_cache_column(): void
+    {
+        $user = $this->user();
+        $secret = 'My-Secret-Pass-9';
+        $typed = [$user->email, $secret, 'nobody-'.Str::lower(Str::random(8)).'@gmail.com', str_repeat("\u{200B}", 400).$user->email, str_repeat('x', 5000)];
+        foreach ($typed as $input) {
+            $this->loginAs($input, 'Wrong123', '203.0.113.65');
+        }
+
+        $keys = (fn () => array_keys($this->storage))->call(\Illuminate\Support\Facades\Cache::getStore());
+        $this->assertNotEmpty($keys);
+        foreach ($keys as $key) {
+            $this->assertLessThan(200, strlen($key), 'Keys must fit the 255-character cache column with the store prefix and ":timer" suffix.');
+            $this->assertStringNotContainsString('@', $key);
+            $this->assertStringNotContainsString(Str::lower($secret), Str::lower($key));
+            $this->assertStringNotContainsString('gmail', $key);
+        }
+        // One counter per distinct identity (account, made-up address, the secret, the long padded one is the account again, the 5000 x's) plus the IP counter.
+        $accountKeys = array_filter($keys, fn ($k) => str_contains($k, 'login|') && ! str_contains($k, ':timer'));
+        $this->assertCount(4, $accountKeys);
+    }
+
     public function test_disabled_session_and_onboarding_gates(): void
     {
         $user = $this->user('rep', ['is_active' => false]);
