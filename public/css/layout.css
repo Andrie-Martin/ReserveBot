@@ -51,6 +51,8 @@
 .rb-email-notice p { margin: 0; overflow-wrap: anywhere; }
 .rb-email-notice form { margin-top: var(--rb-space-2); }
 .rb-menu-toggle[hidden] { display: none; }
+/* Without scripting the toggle could do nothing, and the account/navigation stay open (see the mobile block below). */
+@media (scripting: none) { .rb-menu-toggle { display: none; } }
 .rb-skip-link { position: fixed; top: var(--rb-space-2); left: var(--rb-space-2); transform: translateY(-200%); z-index: 20; padding: var(--rb-space-2) var(--rb-space-4); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font-family: var(--rb-font-family); }
 .rb-skip-link:focus { transform: none; }
 .rb-brand:focus-visible, .rb-nav-item:focus-visible, .rb-account__link:focus-visible, .rb-skip-link:focus-visible, .rb-shell__main:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
@@ -95,6 +97,12 @@
   .rb-account form { order: 0; }
   .rb-shell[data-menu-ready][data-menu-open='false'] .rb-account,
   .rb-shell--workspace:not(.rb-shell--rep)[data-menu-ready][data-menu-open='false'] .rb-sidebar { display: none; }
+  /* Collapsed from the first paint when scripting is on (layout.js only toggles data-menu-open afterwards), so the page
+     does not render expanded and then jump when the deferred script runs. Without scripting the menu stays open. */
+  @media (scripting: enabled) {
+    .rb-shell:not([data-menu-open]) .rb-account,
+    .rb-shell--workspace:not(.rb-shell--rep):not([data-menu-open]) .rb-sidebar { display: none; }
+  }
   .rb-sidebar { border-right: 0; border-bottom: 1px solid var(--rb-border-warm); padding: var(--rb-space-4); }
   .rb-sidebar .rb-workspace-note { display: none; }
   .rb-shell--workspace .rb-shell__main, .rb-shell--workspace .rb-shell__main.wide { padding: var(--rb-space-6) var(--rb-space-4) var(--rb-space-8); }

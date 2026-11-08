@@ -5,26 +5,35 @@
   src: url("../../fonts/inter/Inter-Regular.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: optional;
 }
 @font-face {
   font-family: "ReserveBot Inter";
   src: url("../../fonts/inter/Inter-Medium.woff2") format("woff2");
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: optional;
 }
 @font-face {
   font-family: "ReserveBot Inter";
   src: url("../../fonts/inter/Inter-SemiBold.woff2") format("woff2");
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: optional;
 }
 @font-face {
   font-family: "ReserveBot Inter";
   src: url("../../fonts/inter/Inter-Bold.woff2") format("woff2");
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+  font-display: optional;
+}
+/* Metric-matched local fallback: text laid out before Inter arrives takes the same space, so the font swap does not reflow the page. */
+@font-face {
+  font-family: "ReserveBot Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  size-adjust: 107.4%;
+  ascent-override: 90.2%;
+  descent-override: 22.5%;
+  line-gap-override: 0%;
 }

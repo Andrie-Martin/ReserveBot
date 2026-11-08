@@ -6,8 +6,8 @@
     @hasSection('title')
       <p class="rb-header__crumb"><span>Workspace</span><span class="rb-header__crumb-sep" aria-hidden="true">›</span><strong>@yield('title')</strong></p>
     @endif
-    <x-ui.button variant="quiet" class="rb-menu-toggle" id="rb-menu-toggle" aria-expanded="true"
-        :aria-controls="$representative ? 'rb-account-controls' : 'rb-account-controls rb-navigation'" hidden>
+    <x-ui.button variant="quiet" class="rb-menu-toggle" id="rb-menu-toggle" aria-expanded="false"
+        :aria-controls="$representative ? 'rb-account-controls' : 'rb-account-controls rb-navigation'">
       <span aria-hidden="true">☰</span><span class="sr-only">Account{{ $representative ? '' : ' and navigation' }} menu</span>
     </x-ui.button>
   @endif
