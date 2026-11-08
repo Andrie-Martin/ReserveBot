@@ -55,7 +55,7 @@ function availabilityRender(array $case, ?callable $transform = null): string
         }
         return view('home',[
             'title'=>'Home','user'=>$user,'intro'=>$role==='rep'?'Book rooms and equipment for your block, and check which rooms are free.':'Example staff introduction.',
-            'stat'=>$role==='rep'?null:['value'=>3,'label'=>'Example current reservations'],
+            'stat'=>null,'stats'=>$role==='rep'?null:[['label'=>'Example waiting requests','value'=>3,'note'=>'Example note'],['label'=>'Example bookings today','value'=>2,'note'=>'Example note'],['label'=>'Example units in use','value'=>0,'note'=>'Example note']],
             'classes'=>$role==='rep'?collect($state==='empty'?[]:$classRows):null,'meetings'=>$meetings,
             'ready'=>$role==='rep'?[
                 ['label'=>'See which rooms are free','url'=>route('rooms')],

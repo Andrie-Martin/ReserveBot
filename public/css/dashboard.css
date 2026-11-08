@@ -133,3 +133,14 @@
 .rb-drawer.rb-dashboard__timetable-drawer { width: min(46rem, 100vw); }
 .rb-dashboard__preview-list > li { grid-template-areas: "when status" "what status"; grid-template-columns: minmax(0, 1fr) auto; }
 @media (max-width: 40rem) { .rb-dashboard__preview-list > li { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "what" "status"; } }
+
+/* Staff and admin statistics: three equal cards across the page, two then one column on narrower screens. Each shows the
+   label, a large figure and a short line saying what is counted. */
+.rb-dashboard__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rb-space-4); min-width: 0; }
+.rb-dashboard__stats .rb-stat-card { display: flex; flex-direction: column; justify-content: space-between; gap: var(--rb-space-2); min-width: 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); overflow-wrap: anywhere; }
+.rb-dashboard__stats .rb-stat-card__list { display: flex; flex-direction: column; gap: var(--rb-space-1); margin: 0; }
+.rb-dashboard__stats .rb-stat-card__label { color: var(--rb-text-primary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); line-height: var(--rb-leading-body); }
+.rb-dashboard__stats .rb-stat-card__value { margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-display); font-weight: var(--rb-weight-bold); line-height: 1.1; letter-spacing: -.03em; }
+.rb-dashboard__stats .rb-stat-card__note { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); line-height: var(--rb-leading-body); }
+@media (max-width: 56rem) { .rb-dashboard__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 40rem) { .rb-dashboard__stats { grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-2); } }

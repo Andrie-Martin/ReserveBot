@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reservation;
+use App\Services\DeskStats;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -12,19 +12,11 @@ class AdminController extends Controller
     {
         $user = $request->user()->load('department', 'section');
 
-        // Requests from this department waiting for approval
-        $pending = Reservation::where('status', 'Pending')
-            ->whereRelation('user', 'department_id', $user->department_id)
-            ->count();
-
         return view('home', [
             'title' => 'Admin',
             'user' => $user,
             'intro' => 'Approve requests, run the day, and manage the department and its accounts.',
-            'stat' => [
-                'value' => $pending,
-                'label' => $pending === 1 ? 'request waiting for approval' : 'requests waiting for approval',
-            ],
+            'stats' => DeskStats::for($user),
             'classes' => null,
             'ready' => [
                 ['label' => 'Review requests', 'url' => route('requests')],
