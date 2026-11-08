@@ -1,5 +1,7 @@
 # QA Correction Pass 1 (and the follow-up pass after the independent Phase 11 review)
 
+> **Historical (Phase 11, merged as PR #23).** F-01 and F-07, listed below as deferred, were fixed afterwards in PRs #24 and #25. Current state: [QA_HANDOFF.md](QA_HANDOFF.md). The text below is unchanged.
+
 Branch `feat/frontend-design-11-qa-fixes`, created from `feat/frontend-design-10-integration-qa` (`5e3b5e4`). Source: `docs/frontend/INDEPENDENT_QA_REPORT.md`. Out of scope and untouched: F-01 (login throttling), F-07 (hand-out/return date guard). No backend, route, controller, model, migration, `.env` or Docker file was changed. `docker-compose.yml` and `docker-compose.yml.save` were never staged.
 
 ## Commits (one per finding)

@@ -1,5 +1,7 @@
 # ReserveBot V2 — Source-aware frontend implementation roadmap
 
+> **Historical planning draft, not carried out as written.** No implementation phase was approved from this roadmap, and `feat/frontend-v2-01-shell` has no commits beyond `dev`. The redesign was delivered as design phases 01-13 (see [QA_HANDOFF.md](QA_HANDOFF.md)). The statuses below ("awaiting human review", "awaiting visual review") are as of 2026-11-06. The text below is unchanged.
+
 **Status:** V2-00 planning draft for human review. **No implementation phase is approved.**
 
 **Purpose:** A *second-pass visual redesign* of an existing Laravel/Blade reservation system. This roadmap does not replace `docs/frontend/PHASE_PLAN.md`, historical `docs/codex/` reports, existing designs, tests, or backend functionality.

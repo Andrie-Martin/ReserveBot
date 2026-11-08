@@ -1,5 +1,7 @@
 # ReserveBot — Independent QA & UX Audit
 
+> **Historical audit of the Phase 10 tree (2026-11-07).** Its verdict ("not release-ready") and findings describe that tree. Since then F-01, F-02, F-03, F-04, F-07 and F-08 have been fixed on `dev`; F-05 and F-06 are still open. Current state: [QA_HANDOFF.md](QA_HANDOFF.md) section 3. The text below is unchanged.
+
 Audit only. No application source, `.env`, `docker-compose.yml*`, Git state or existing data was changed. Date: 2026-11-07. Branch audited: `feat/frontend-design-10-integration-qa` (HEAD `5e3b5e4`, Phase 10).
 
 ## 1. Executive summary

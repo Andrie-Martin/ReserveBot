@@ -1,5 +1,7 @@
 # Overnight autonomous frontend progress log
 
+> **Historical build log (design phases 01-10).** Statuses in the branch table below, such as "complete, local, NOT merged", were true when written. All of these phases are now merged into `dev` (PRs #11-#25; see [QA_HANDOFF.md](QA_HANDOFF.md) for the current table). Paths under `/tmp/...` are the author's scratch folders and are not in the repository. The text below is unchanged.
+
 Local commits only. Nothing is pushed, merged, rebased or force-pushed. Protected and never staged:
 `docker-compose.yml`, `docker-compose.yml.save`, `.env`.
 

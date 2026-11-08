@@ -1,5 +1,7 @@
 # ReserveBot Codex frontend starter kit
 
+> **Archived 2026-11-08.** This was the root `START_HERE.md` of the original Codex frontend starter kit. The setup steps are finished and some of the listed files have since been filled in or superseded. Kept for history; current guidance is in [../README.md](../README.md) and [../frontend/QA_HANDOFF.md](../frontend/QA_HANDOFF.md).
+
 **This is a documentation/planning starter kit, not a completed architecture audit.** The author's earlier code snapshot predates new changes pulled on November 3, 2026. The CURRENT repository checkout is authoritative.
 
 ## What is inside

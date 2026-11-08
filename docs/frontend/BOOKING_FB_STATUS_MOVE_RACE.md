@@ -1,5 +1,7 @@
 # Booking audit F-B: hand-out / no-show versus a concurrent move
 
+**Status: merged into `dev` as PR #26 (merge commit `17720fb`, 2026-11-08).** Fix commit `f68510c`, tests `249203c`, this record `4d05ef0`.
+
 ## Defect
 `TodayController::handOut` and `noShow` checked the calendar-day rule on the route-bound booking, then `StaffDesk::setStatus` updated
 `WHERE id AND status = 'Confirmed'`. Nothing re-read `start_time`. A `Bookings::move` that committed in between left a booking on a future day
