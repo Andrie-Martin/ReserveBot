@@ -37,7 +37,6 @@
 .rb-dashboard h3 { font-size: var(--rb-text-h3); margin: var(--rb-space-4) 0 var(--rb-space-2); }
 .rb-dashboard__meetings .mlist { border: 0; border-radius: 0; overflow: visible; }
 .rb-dashboard__meetings .mlist > li { padding: var(--rb-space-2) 0; }
-.rb-dashboard__other { margin-top: var(--rb-space-4); }
 .rb-dashboard__classes .rb-table-container { border: 0; border-radius: 0; }
 @media (max-width: 50rem) { .rb-dashboard__links { grid-template-columns: minmax(0, 1fr); } }
 
@@ -94,8 +93,6 @@
 /* Phase 05: the staff/admin dashboard shares the /rep structure (kicker, banner, icon tiles). The section keeps the
    legacy .card class for its untouched meetings/classes blocks, so neutralise that frame here. */
 .card.rb-dashboard--staff { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.rb-dashboard--staff .stat { margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
-.rb-dashboard--staff .stat strong { margin-right: var(--rb-space-1); font-size: var(--rb-text-h2); color: var(--rb-color-maroon); }
 
 /* QA F-03: shortcut labels wrap by word. `overflow-wrap: anywhere` let the label shrink to ~0 beside the fixed icon and
    arrow, so enlarged text broke letter by letter. The row now wraps (label drops under the icon when it cannot fit

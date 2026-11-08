@@ -381,6 +381,22 @@
     $$('select[data-rb-picker]').forEach(enhance);
   };
 
-  const start = () => { drawers(); reveals(); pickers(); };
+  /* ------------------------------------------------------------------ search boxes with an application-styled clear button */
+  const searches = () => {
+    $$('.rb-search').forEach(box => {
+      const input = $('input', box), clear = $('.rb-search__clear', box);
+      if (!input || !clear) return;
+      const sync = () => { clear.hidden = !input.value; };
+      input.addEventListener('input', sync);
+      clear.addEventListener('click', () => {
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+      });
+      sync();
+    });
+  };
+
+  const start = () => { drawers(); reveals(); pickers(); searches(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

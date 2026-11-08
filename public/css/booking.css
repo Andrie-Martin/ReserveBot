@@ -212,7 +212,7 @@
 @media (max-width: 40rem) { .rb-booking .when-summary { padding: var(--rb-space-4); } }
 .rb-booking .eq-tools[hidden], .rb-booking .eq-summary[hidden], .rb-booking [data-eq-none][hidden], .rb-booking [data-eq-item][hidden], .rb-booking .eq-cat[hidden], .rb-booking .eq-summary__empty[hidden] { display: none; }
 .rb-booking .eq-tools { margin: var(--rb-space-4) 0 0; }
-.rb-booking .book-form .eq-tools__input { max-width: 32rem; }
+.rb-booking .book-form .rb-search input.rb-search__input { width: 100%; padding: var(--rb-space-2) 2.75rem var(--rb-space-2) var(--rb-space-4); }
 .rb-booking .eq-tools .hint { min-height: 1.25rem; margin: var(--rb-space-1) 0 0; }
 .rb-booking .eq-summary { margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
 .rb-booking .eq-summary h3 { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }

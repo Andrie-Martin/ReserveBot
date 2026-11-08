@@ -206,7 +206,10 @@
         {{-- Script-only helpers (hidden without script): find an item, and see what has been picked so far. --}}
         <div class="eq-tools" data-eq-tools hidden>
           <label class="field-label" for="eq-search">Find an item</label>
-          <input type="search" id="eq-search" class="eq-tools__input" placeholder="Search equipment, e.g. HDMI" autocomplete="off" aria-controls="eq-list" aria-describedby="eq-search-status">
+          <div class="rb-search">
+            <input type="search" id="eq-search" class="rb-search__input" placeholder="Search equipment, e.g. HDMI" autocomplete="off" aria-controls="eq-list" aria-describedby="eq-search-status">
+            <button type="button" class="rb-search__clear" aria-label="Clear search" aria-controls="eq-search" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+          </div>
           <p class="hint" id="eq-search-status" role="status" aria-live="polite" data-eq-status></p>
         </div>
         <section class="eq-summary" data-eq-summary hidden aria-labelledby="eq-summary-title">

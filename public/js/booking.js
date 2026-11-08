@@ -100,7 +100,7 @@
     search.addEventListener('input', run);
     search.addEventListener('keydown', event => {
       if (event.key === 'Enter') event.preventDefault(); // never submits the booking
-      if (event.key === 'Escape' && search.value) { search.value = ''; run(); }
+      if (event.key === 'Escape' && search.value) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
     });
   }
 })();

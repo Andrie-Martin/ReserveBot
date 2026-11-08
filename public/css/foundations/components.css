@@ -191,7 +191,19 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
 @media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; } }
 .rb-pager__nav > * { min-width: 0; }
 
-/* ---- Compact statistic (dashboards): number and label share one baseline; the number never changes the card's height ---- */
-.rb-stat { display: inline-flex; width: fit-content; justify-self: start; align-items: baseline; gap: var(--rb-space-2) var(--rb-space-4); max-width: 100%; margin: 0; padding: .75rem var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
-.rb-stat__value { order: -1; min-width: 2ch; margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); line-height: 1.1; font-variant-numeric: tabular-nums; text-align: center; }
-.rb-stat__label { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-small); line-height: var(--rb-leading-body); overflow-wrap: anywhere; }
+/* ---- Compact statistic (dashboards): one card, number and label at the same size and line height, grouped on one line.
+   The number is set apart by weight, colour and a soft tint only, so 0, 7 and 1234 all sit on the same baseline and the card never changes height. ---- */
+.rb-stat { display: inline-flex; align-items: center; gap: var(--rb-space-2) .75rem; width: fit-content; justify-self: start; max-width: 100%; margin: 0; padding: .5rem var(--rb-space-4) .5rem .5rem; border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font-size: var(--rb-text-body); line-height: var(--rb-leading-body); }
+.rb-stat__value { flex: none; box-sizing: border-box; min-width: 2.25rem; margin: 0; padding: 0 .5rem; border-radius: var(--rb-radius-pill); background: var(--rb-surface-active); color: var(--rb-color-maroon); font-size: inherit; font-weight: var(--rb-weight-bold); line-height: inherit; font-variant-numeric: tabular-nums; text-align: center; }
+.rb-stat__label { min-width: 0; margin: 0; color: var(--rb-text-muted); font-size: inherit; line-height: inherit; overflow-wrap: anywhere; }
+
+/* ---- Search field with an application-styled clear control (replaces the browser's generic search X) ---- */
+.rb-search { position: relative; display: block; width: 100%; min-width: 0; }
+.rb-search .rb-search__input { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) 2.75rem var(--rb-space-2) var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); -webkit-appearance: none; appearance: none; }
+.rb-search .rb-search__input::-webkit-search-cancel-button, .rb-search .rb-search__input::-webkit-search-decoration { display: none; -webkit-appearance: none; }
+.rb-search .rb-search__input:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-color: var(--rb-border-control); }
+.rb-search .rb-search__clear { position: absolute; top: 0; right: 0; display: grid; place-items: center; box-sizing: border-box; width: 2.75rem; min-width: 2.75rem; height: 100%; min-height: var(--rb-control-height); margin: 0; padding: 0; border: 0; border-radius: 0 var(--rb-radius-control) var(--rb-radius-control) 0; background: transparent; color: var(--rb-text-muted); cursor: pointer; }
+.rb-search .rb-search__clear[hidden] { display: none; }
+.rb-search .rb-search__clear:hover { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
+.rb-search .rb-search__clear:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: -2px; }
+.rb-search .rb-search__clear svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; }
