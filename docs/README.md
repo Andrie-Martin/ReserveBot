@@ -1,7 +1,7 @@
 # ReserveBot documentation index
 
 Frontend redesign status as of `origin/dev` @ `0a30297` (2026-11-08): design phases 01-13 and correction PRs #26, #27 and #28 are merged.
-**Reviewing the frontend? Start with [frontend/QA_HANDOFF.md](frontend/QA_HANDOFF.md).** For running the app, see the [project README](../README.md).
+**Reviewing the frontend? Start with [frontend/QA_HANDOFF.md](frontend/QA_HANDOFF.md).** For running the app, see the [project README](../README.md). The latest UI polish pass is described in [frontend/UI_POLISH_ROOM_CONTROLS.md](frontend/UI_POLISH_ROOM_CONTROLS.md).
 
 How to read this folder: files marked **Current** describe how things are now. Files marked **Historical** are reports written at a point in time; they are kept as evidence
 and are *not* edited to look current (several carry a status banner pointing to what superseded them). When a historical report and `QA_HANDOFF.md` disagree, `QA_HANDOFF.md` and Git history win.
