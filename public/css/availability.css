@@ -291,3 +291,13 @@
   .rb-availability__mon { display: block; font-size: .6875rem; }
   .rb-availability__event-count { padding-inline: var(--rb-space-1); justify-content: center; }
 }
+
+/* QA follow-up: the seven day columns share about 256px at 320px, so a 44px-wide target per column is impossible. Give the
+   calendar the whole card width on the narrowest phones (smaller card padding, 1px gaps) so each column, and the event-count
+   link that fills it, is as wide as it can be while all seven columns stay visible. */
+@media (max-width: 22.5rem) {
+  .rb-availability .rb-availability__cal-card { padding-inline: var(--rb-space-2); }
+  .rb-availability__calendar { border-spacing: 1px; }
+  .rb-availability__cell { padding-inline: 2px; }
+  .rb-availability__event-count { padding-inline: 0; }
+}
