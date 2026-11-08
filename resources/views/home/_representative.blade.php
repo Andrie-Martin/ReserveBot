@@ -9,7 +9,7 @@
   </p>
 
   @if ($stat)
-    <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
+    <p class="rb-stat"><strong class="rb-stat__value">{{ $stat['value'] }}</strong> <span class="rb-stat__label">{{ $stat['label'] }}</span></p>
   @endif
 
 </header>
@@ -60,24 +60,60 @@
       </ul>
     @endif
     @if ($otherMeetings->isNotEmpty())
-      <x-ui.disclosure :summary="'Other upcoming meetings ('.$otherMeetings->count().')'" class="rb-dashboard__other">
-        <ul class="mlist meet-list" data-meetings="other">
-          @foreach ($otherMeetings as $m)
+      <div class="rb-dashboard__preview" data-meetings="other">
+        <h3>Next up ({{ $otherMeetings->count() }} more)</h3>
+        <ul class="mlist meet-list" data-meetings="preview">
+          @foreach ($otherMeetings->take(3) as $m)
             @include('home._meeting')
           @endforeach
         </ul>
-      </x-ui.disclosure>
+        <p class="rb-dashboard__more">
+          <x-ui.link-button variant="secondary" size="compact" href="#meetings-all" data-rb-drawer="meetings-all">View all {{ $meetings ? count($meetings) : 0 }} meetings</x-ui.link-button>
+        </p>
+      </div>
+      <x-ui.drawer id="meetings-all" kicker="Face-to-face this week?" title="All upcoming meetings" sub="Your block's classes in the next 7 days, soonest first." close-to="#face-to-face">
+        <ul class="mlist meet-list rb-dashboard__meetings" data-meetings="all">
+          @foreach (collect($meetings)->sortBy(fn ($meeting) => $meeting['start']->getTimestamp()) as $m)
+            @include('home._meeting')
+          @endforeach
+        </ul>
+      </x-ui.drawer>
     @endif
     </x-ui.card>
   @endif
 
   @if ($classes !== null)
     <x-ui.card class="rb-dashboard__classes">
-    <h2>Your block's classes this semester</h2>
-    <x-ui.disclosure :summary="'Complete timetable ('.$classes->count().' classes)'" class="rb-dashboard__timetable">
+    <h2 id="timetable-heading">Your block's classes this semester</h2>
     @if ($classes->isEmpty())
       <p class="muted">No classes found for your block this semester.</p>
     @else
+      @php
+        $isoDay = ['Mon' => 1, 'Tue' => 2, 'Wed' => 3, 'Thu' => 4, 'Fri' => 5, 'Sat' => 6, 'Sun' => 7];
+        $clockNow = now();
+        $nextClasses = $classes->map(function ($class) use ($isoDay, $clockNow) {
+            $offset = (($isoDay[$class->day_of_week] ?? 1) - $clockNow->dayOfWeekIso + 7) % 7;
+            if ($clockNow->copy()->startOfDay()->addDays($offset)->setTimeFromTimeString($class->end_time)->lte($clockNow)) $offset += 7;
+            return ['class' => $class, 'offset' => $offset];
+        })->sort(fn ($a, $b) => [$a['offset'], $a['class']->start_time] <=> [$b['offset'], $b['class']->start_time])->take(4);
+      @endphp
+      <div class="rb-dashboard__preview">
+        <h3>Next classes</h3>
+        <ul class="rb-dashboard__next">
+          @foreach ($nextClasses as $next)
+            @php $class = $next['class']; @endphp
+            <li>
+              <span class="rb-dashboard__next-when">{{ $next['offset'] === 0 ? 'Today' : ($next['offset'] === 1 ? 'Tomorrow' : $class->day_of_week) }} · {{ $class->time_range }}</span>
+              <span class="rb-dashboard__next-what">{{ $class->course->code }}@if ($class->course->title) · {{ $class->course->title }}@endif</span>
+              <span class="rb-dashboard__next-where">{{ $class->room->name }}@if ($class->instructor) · {{ $class->instructor }}@endif</span>
+            </li>
+          @endforeach
+        </ul>
+        <p class="rb-dashboard__more">
+          <x-ui.link-button variant="secondary" size="compact" href="#timetable-all" data-rb-drawer="timetable-all">View full timetable ({{ $classes->count() }} classes)</x-ui.link-button>
+        </p>
+      </div>
+      <x-ui.drawer id="timetable-all" kicker="This semester" title="Your block's timetable" :sub="$classes->count().' classes this semester.'" close-to="#timetable-heading" class="rb-dashboard__timetable-drawer">
       <x-ui.table-container label="Your block’s semester class schedule">
       <table>
         <thead>
@@ -96,8 +132,9 @@
         </tbody>
       </table>
       </x-ui.table-container>
+      </x-ui.drawer>
     @endif
-    </x-ui.disclosure>
+
     </x-ui.card>
   @endif
 

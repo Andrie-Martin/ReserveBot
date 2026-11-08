@@ -191,6 +191,6 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
 @media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; flex-wrap: nowrap; } }
 
 /* ---- Compact statistic (dashboards): number and label share one baseline; the number never changes the card's height ---- */
-.rb-stat { display: inline-flex; align-items: baseline; gap: var(--rb-space-2) var(--rb-space-4); max-width: 100%; margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
+.rb-stat { display: inline-flex; width: fit-content; justify-self: start; align-items: baseline; gap: var(--rb-space-2) var(--rb-space-4); max-width: 100%; margin: 0; padding: .75rem var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
 .rb-stat__value { order: -1; min-width: 2ch; margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); line-height: 1.1; font-variant-numeric: tabular-nums; text-align: center; }
 .rb-stat__label { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-small); line-height: var(--rb-leading-body); overflow-wrap: anywhere; }

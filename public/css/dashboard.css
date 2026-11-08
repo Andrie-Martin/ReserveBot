@@ -106,3 +106,31 @@
    pushing the page into horizontal scrolling. */
 .rb-dashboard__action-label { flex: 1 1 7rem; min-width: 0; }
 @media (max-width: 40rem) { .rb-dashboard__action-arrow { display: none; } }
+
+/* Compact previews with a "View all" action (the full lists open in a drawer / full-screen panel). */
+.rb-dashboard__preview > h3 { margin: var(--rb-space-4) 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-dashboard__more { margin: var(--rb-space-2) 0 0; }
+.rb-dashboard__next { margin: 0; padding: 0; list-style: none; }
+.rb-dashboard__next > li { display: grid; grid-template-columns: 14rem minmax(0, 1fr) auto; gap: .125rem var(--rb-space-4); align-items: baseline; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: var(--rb-text-small); }
+.rb-dashboard__next > li:first-child { border-top: 0; }
+.rb-dashboard__next-when { font-weight: var(--rb-weight-semibold); font-variant-numeric: tabular-nums; }
+.rb-dashboard__next-what { min-width: 0; overflow-wrap: anywhere; }
+.rb-dashboard__next-where { color: var(--rb-text-secondary); text-align: right; overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .rb-dashboard__next > li { grid-template-columns: minmax(0, 1fr); }
+  .rb-dashboard__next-where { text-align: left; }
+}
+.rb-drawer .rb-dashboard__meetings .mlist > li, .rb-drawer.rb-dashboard__timetable-drawer .mlist > li { margin: 0; }
+.rb-drawer .rb-dashboard__meetings.mlist > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "when status" "what status" "answer answer"; gap: 0 var(--rb-space-4); padding: var(--rb-space-4) 0; border-top: 1px solid var(--rb-border-warm); }
+.rb-drawer .rb-dashboard__meetings.mlist > li:first-child { border-top: 0; }
+.rb-drawer .rb-dashboard__meetings.mlist .mlist-when { grid-area: when; font-weight: var(--rb-weight-semibold); }
+.rb-drawer .rb-dashboard__meetings.mlist .mlist-what { grid-area: what; color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-drawer .rb-dashboard__meetings.mlist > li > .st { grid-area: status; justify-self: end; }
+.rb-drawer .rb-dashboard__meetings.mlist > li > .answer-buttons { grid-area: answer; margin-top: var(--rb-space-2); }
+.rb-drawer .mlist { margin: 0; padding: 0; list-style: none; }
+.rb-drawer .rb-table-container table { font-size: var(--rb-text-small); }
+.rb-drawer .rb-table-container th, .rb-drawer .rb-table-container td { padding: var(--rb-space-2); }
+
+/* Dashboard counter: shared compact statistic (staff, admin). */
+.rb-dashboard--staff .rb-stat, .rb-dashboard__intro .rb-stat { margin-top: var(--rb-space-4); }
+.rb-drawer.rb-dashboard__timetable-drawer { width: min(46rem, 100vw); }

@@ -26,7 +26,7 @@
   </div>
 
   @if ($stat)
-    <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
+    <p class="rb-stat"><strong class="rb-stat__value">{{ $stat['value'] }}</strong> <span class="rb-stat__label">{{ $stat['label'] }}</span></p>
   @endif
 
   @if (! empty($meetings))
