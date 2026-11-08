@@ -19,6 +19,8 @@ function foundationsRelease(): void
     // Component keeps the first app's view factory and compiled-string views in statics.
     Illuminate\View\Component::flushCache();
     Illuminate\View\Component::forgetFactory();
+    // The leaked state behind "No hint path defined for [__components]" was exactly this static view factory: it stays
+    // bound to the first standalone app's view finder, so the next test's own app resolves components against it.
     foreach ($GLOBALS['foundationsSavedEnv'] ?? [] as $key => [$env, $envArray, $server]) {
         $env === false ? putenv($key) : putenv($key.'='.$env);
         foreach (['_ENV' => $envArray, '_SERVER' => $server] as $bag => $value) {
@@ -35,6 +37,9 @@ function foundationsApplication(): Illuminate\Foundation\Application
 {
     $root = dirname(__DIR__, 2);
     require_once $root.'/vendor/autoload.php';
+    // Start from a clean slate: a previous standalone boot in this process (for example a test class that has no
+    // tearDown) must not leave its facade root, container or Component view factory behind.
+    foundationsRelease();
     $cache = sys_get_temp_dir().'/reservebot-foundations-'.getmypid();
     if (! is_dir($cache)) {
         mkdir($cache, 0700, true);
