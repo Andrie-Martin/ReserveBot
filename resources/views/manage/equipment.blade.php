@@ -83,7 +83,10 @@
   @if ($categories->isNotEmpty())
     <div class="rb-booking__panel eq-search" data-eq-search hidden>
       <label for="eq-filter" class="field-label">Find equipment</label>
-      <input id="eq-filter" type="search" class="eq-search__input" placeholder="Search by item or category" autocomplete="off" aria-controls="eq-categories" aria-describedby="eq-filter-status">
+      <div class="rb-search">
+        <input id="eq-filter" type="search" class="rb-search__input" placeholder="Search by item or category" autocomplete="off" aria-controls="eq-categories" aria-describedby="eq-filter-status">
+        <button type="button" class="rb-search__clear" aria-label="Clear search" aria-controls="eq-filter" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+      </div>
       <p class="hint" id="eq-filter-status" role="status" aria-live="polite"></p>
     </div>
   @endif
@@ -99,8 +102,12 @@
     @php $renameBag = $errors->getBag('category'.$category->id); @endphp
     <section class="mcat rb-booking__panel" data-eq-section>
       <div class="mcat-head">
-        <h2 class="mcat-title" id="cat-title-{{ $category->id }}" data-rb-rename="cat-rename-{{ $category->id }}"><span class="mcat-name" data-eq-category>{{ $category->name }}</span> <span class="count">{{ $category->equipment->count() }}</span></h2>
-        <a class="mcat-edit" href="#cat-rename-{{ $category->id }}" data-rb-reveal="cat-rename-{{ $category->id }}"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.5 2.5l2 2-8 8-3 1 1-3 8-8z"/></svg>Rename<span class="sr-only"> {{ $category->name }}</span></a>
+        <h2 class="mcat-title" id="cat-title-{{ $category->id }}">
+          <a class="mcat-name-link" href="#cat-rename-{{ $category->id }}" data-rb-rename="cat-rename-{{ $category->id }}" aria-describedby="cat-hint-{{ $category->id }}" title="Double-click to rename"><span class="mcat-name" data-eq-category>{{ $category->name }}</span><svg class="mcat-pencil" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.5 2.5l2 2-8 8-3 1 1-3 8-8z"/></svg></a>
+          <span class="count">{{ $category->equipment->count() }}</span>
+        </h2>
+        <span class="mcat-hint" aria-hidden="true"><span class="mcat-hint__fine">Double-click the name to rename</span><span class="mcat-hint__coarse">Tap the name to rename</span></span>
+        <span class="sr-only" id="cat-hint-{{ $category->id }}">Rename this category: double-click it, tap it, or press Enter or F2.</span>
         <form method="post" action="{{ route('manage.categories.update', $category) }}" id="cat-rename-{{ $category->id }}" @class(['mcat-rename', 'rb-reveal', 'is-open' => $renameBag->any()]) data-original="{{ $category->name }}" novalidate>
           @csrf
           @method('PUT')

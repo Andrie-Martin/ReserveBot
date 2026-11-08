@@ -36,7 +36,7 @@
     };
     input.addEventListener('input', run);
     input.addEventListener('search', run);
-    input.addEventListener('keydown', e => { if (e.key === 'Escape' && input.value) { input.value = ''; run(); } });
+    input.addEventListener('keydown', e => { if (e.key === 'Escape' && input.value) { input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); } });
     if (input.value) run();
   }
 
@@ -59,12 +59,24 @@
     form.addEventListener('rb-reveal', event => {
       if (!event.detail.open) { input.value = original; showError(''); }
     });
-    // Desktop shortcut: double-click the name. The visible Rename control is the route for touch and keyboard.
+    // The category name is the rename target: double-click with a mouse; tap with touch or pen; Enter, Space or F2 from the keyboard.
     const title = document.querySelector(`[data-rb-rename="${form.id}"]`);
-    title?.addEventListener('dblclick', event => {
-      event.preventDefault();
-      getSelection()?.removeAllRanges();
-      window.rbReveal?.setOpen(form, true);
-    });
+    if (title) {
+      let pointer = 'mouse';
+      const open = () => { getSelection()?.removeAllRanges(); window.rbReveal?.setOpen(form, true); };
+      title.setAttribute('role', 'button');
+      title.addEventListener('pointerdown', event => { pointer = event.pointerType || 'mouse'; });
+      title.addEventListener('click', event => {
+        event.preventDefault();                                  // never navigate to the #fragment fallback
+        if (event.detail === 0 || pointer !== 'mouse') open();   // keyboard / assistive technology / touch / pen
+        else { title.classList.add('is-hinting'); setTimeout(() => title.classList.remove('is-hinting'), 2500); }
+      });
+      title.addEventListener('dblclick', event => { event.preventDefault(); open(); });
+      title.addEventListener('keydown', event => {
+        if (event.key === 'F2' || event.key === ' ') { event.preventDefault(); open(); }
+      });
+      // Returning from Save-less closing (Cancel / Escape) puts focus back on the name.
+      form.addEventListener('rb-reveal', event => { if (!event.detail.open) setTimeout(() => title.focus(), 0); });
+    }
   });
 })();

@@ -137,11 +137,6 @@
 .rb-manage .mcat-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: 0 0 var(--rb-space-2); }
 .rb-manage .mcat-head h2 { margin: 0; }
 .rb-manage .mcat > .mtable, .rb-manage .mcat > .empty { margin-top: var(--rb-space-2); }
-.rb-manage .rename > summary { display: inline-flex; align-items: center; min-height: var(--rb-control-height); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-bold); cursor: pointer; }
-.rb-manage .rename > summary:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
-.rb-manage .rename .inline-form { margin-top: var(--rb-space-1); }
-.rb-manage .rename .inline-form input { flex: 1 1 12rem; width: auto; min-width: 0; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-small); }
-.rb-manage .rename .inline-form button { white-space: normal; }
 .rb-manage .add-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--rb-space-4); }
 .rb-manage .add-row .add-box { flex: 1 1 18rem; min-width: 0; }
 .rb-manage .mlist li.over { background: var(--rb-danger-bg); }
@@ -162,7 +157,6 @@
 .rb-manage .rb-booking__panel .mform + h2, .rb-manage .rb-booking__panel ul.mlist, .rb-manage .rb-booking__panel > .error { margin-top: var(--rb-space-2); }
 @media (max-width: 40rem) {
   .rb-manage .mcat-head > * { min-width: 0; max-width: 100%; }
-  .rb-manage .rename .inline-form input { flex-basis: 100%; }
   .rb-manage .mcat .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .rb-manage .mcat .mtable, .rb-manage .mcat .mtable tbody { display: block; }
   .rb-manage .mcat .mtable tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-1) var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
@@ -222,10 +216,6 @@
 .rb-manage .add-row .add-box[open] { flex: 1 1 100%; }
 .rb-manage .add-box > summary { min-height: var(--rb-control-height); align-items: center; cursor: pointer; }
 .rb-manage .eq-search[hidden] { display: none; }
-.rb-manage .eq-search { padding-block: var(--rb-space-4); }
-.rb-manage .eq-search__input { display: block; box-sizing: border-box; width: 100%; max-width: 32rem; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-small); }
-.rb-manage .eq-search__input:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
-.rb-manage .eq-search .hint { min-height: 1.25rem; margin: var(--rb-space-1) 0 0; }
 .rb-manage [data-eq-section][hidden], .rb-manage [data-eq-row][hidden], .rb-manage [data-eq-none][hidden] { display: none; }
 .rb-manage .eq-table { table-layout: fixed; }
 .rb-manage .eq-table .c-item { width: 40%; }
@@ -239,15 +229,8 @@
 .rb-manage a.row-edit:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
 .rb-manage a.row-edit:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .mcat-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2) var(--rb-space-4); justify-content: flex-start; }
-.rb-manage .mcat-title { min-width: 0; margin: 0; overflow-wrap: anywhere; cursor: text; }
-.rb-manage .mcat-edit { display: inline-flex; align-items: center; gap: var(--rb-space-1); min-height: var(--rb-control-height); padding: 0 .5rem; border-radius: var(--rb-radius-control); font-size: .8125rem; font-weight: var(--rb-weight-bold); color: var(--rb-color-maroon); text-decoration: none; }
-.rb-manage .mcat-edit svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
-.rb-manage .mcat-edit:hover { background: var(--rb-surface-active); }
-.rb-manage .mcat-edit:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .mcat-rename { flex: 1 1 100%; align-items: center; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; }
 .rb-manage .mcat-rename.is-open, .rb-manage .mcat-rename:target { display: flex; }
-.rb-manage .mcat-head:has(.mcat-rename.is-open) > :is(.mcat-title, .mcat-edit), .rb-manage .mcat-head:has(.mcat-rename:target) > :is(.mcat-title, .mcat-edit) { display: none; }
-.rb-manage .mcat-rename input { flex: 1 1 14rem; box-sizing: border-box; width: auto; min-width: 0; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-body); font-weight: var(--rb-weight-bold); }
 .rb-manage .mcat-rename input:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .mcat-rename input[aria-invalid="true"] { border-color: var(--rb-danger-text); }
 .rb-manage .mcat-rename button.btn-small { margin: 0; }
@@ -280,29 +263,59 @@
   .rb-manage .rooms-table td:last-child { text-align: left; }
 }
 
-/* ---- Booking rules: every section (approval, days, hours, length, timing, each semester) is the same white card ---- */
-.rb-manage .rb-booking__panel:has(> .rules-form) { padding: 0; border: 0; background: none; }
-.rb-manage .rb-booking__panel:has(> .term-form) { padding: 0; border: 0; background: none; }
+/* ---- Equipment: the category name is the rename target ---- */
+.rb-manage .mcat-title { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.rb-manage .mcat-name-link { display: inline-flex; align-items: center; gap: .375rem; max-width: 100%; margin: -.125rem -.375rem; padding: .125rem .375rem; border-radius: var(--rb-radius-control); color: inherit; text-decoration: none; cursor: text; }
+.rb-manage .mcat-name-link:hover { background: var(--rb-surface-active); }
+.rb-manage .mcat-name-link:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-manage .mcat-pencil { flex: none; width: .875rem; height: .875rem; fill: none; stroke: var(--rb-text-secondary); stroke-width: 1.5; stroke-linejoin: round; opacity: .65; }
+.rb-manage .mcat-name-link:is(:hover, :focus-visible, .is-hinting) .mcat-pencil { stroke: var(--rb-color-maroon); opacity: 1; }
+.rb-manage .mcat-hint { font-size: var(--rb-text-caption); color: var(--rb-text-secondary); opacity: 0; transition: opacity .12s ease; }
+.rb-manage .mcat-hint__coarse { display: none; }
+.rb-manage .mcat-head:has(.mcat-name-link:is(:hover, :focus-visible, .is-hinting)) .mcat-hint { opacity: 1; }
+@media (pointer: coarse) {
+  .rb-manage .mcat-hint { opacity: 1; }
+  .rb-manage .mcat-hint__fine { display: none; }
+  .rb-manage .mcat-hint__coarse { display: inline; }
+  .rb-manage .mcat-name-link { min-height: var(--rb-control-height); }
+}
+.rb-manage .mcat-head:has(.mcat-rename.is-open) > :is(.mcat-title, .mcat-hint), .rb-manage .mcat-head:has(.mcat-rename:target) > :is(.mcat-title, .mcat-hint) { display: none; }
+/* Rename field: full width on its own line on phones (percentage width has no minimum content size, so it can never widen the page);
+   inline with Save and Cancel on wider screens. */
+.rb-manage .mcat-rename { min-width: 0; }
+.rb-manage .mcat-rename input[name="name"] { flex: 1 1 100%; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-body); font-weight: var(--rb-weight-bold); }
+@media (min-width: 40rem) { .rb-manage .mcat-rename input[name="name"] { flex: 1 1 18rem; width: auto; } }
+
+/* ---- Search box (shared markup: input + application-styled clear control) ---- */
+.rb-manage .eq-search { padding-block: var(--rb-space-4); }
+.rb-manage .eq-search .field-label { margin-bottom: var(--rb-space-2); }
+.rb-manage .eq-search .hint { margin: var(--rb-space-2) 0 0; }
+.rb-manage .eq-search .hint:empty { margin: 0; }
+
+/* ---- Booking rules and semester dates: one white card each; Save lives in the card's own footer ---- */
+.rb-manage .rb-booking__panel:has(> .rules-form), .rb-manage .rb-booking__panel:has(> .term-form) { padding: 0; border: 0; background: none; }
 .rb-manage .rb-booking__panel:has(> .term-form) > h2 { margin: var(--rb-space-2) 0 var(--rb-space-1); font-size: var(--rb-text-h2); }
-.rb-manage .rules-form { gap: var(--rb-space-4); }
-.rb-manage .rules-form fieldset, .rb-manage .term-form {
-  box-sizing: border-box; min-width: 0; margin: 0; padding: var(--rb-space-4) var(--rb-space-6) var(--rb-space-6);
-  border: var(--rb-border-width) solid var(--rb-border-panel); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel);
-}
+.rb-manage .rules-form, .rb-manage .term-form { box-sizing: border-box; display: grid; gap: 0; min-width: 0; margin: 0; padding: 0; border: var(--rb-border-width) solid var(--rb-border-panel); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
 .rb-manage .term-form { margin-top: var(--rb-space-4); }
-.rb-manage .rules-form legend, .rb-manage .term-form .term-name {
-  float: left; box-sizing: border-box; width: 100%; margin: 0 0 var(--rb-space-4); padding: 0;
-  font-size: var(--rb-text-h3); font-weight: var(--rb-weight-bold); line-height: var(--rb-leading-heading); color: var(--rb-text-primary);
-}
+.rb-manage .rules-form > #rules-errors, .rb-manage .term-form > [id$="-errors"] { margin: var(--rb-space-4) var(--rb-space-6) 0; }
+.rb-manage .rules-form fieldset { box-sizing: border-box; min-width: 0; margin: 0; padding: var(--rb-space-4) var(--rb-space-6) var(--rb-space-6); border: 0; border-top: var(--rb-border-width) solid var(--rb-border-warm); border-radius: 0; background: none; }
+.rb-manage .rules-form > fieldset:first-of-type, .rb-manage .rules-form > #rules-errors + fieldset { border-top: 0; }
+.rb-manage .rules-form legend, .rb-manage .term-form .term-name { float: left; box-sizing: border-box; width: 100%; margin: 0 0 var(--rb-space-4); padding: 0; font-size: var(--rb-text-h3); font-weight: var(--rb-weight-bold); line-height: var(--rb-leading-heading); color: var(--rb-text-primary); }
 .rb-manage .rules-form legend .optional { display: block; margin-top: .125rem; font-size: var(--rb-text-small); font-weight: var(--rb-weight-regular); color: var(--rb-text-secondary); }
-.rb-manage .rules-form legend + *, .rb-manage .term-form .term-name + * { clear: both; }
-.rb-manage .term-form > .term-name + * { margin-top: 0; }
+.rb-manage .rules-form legend + * { clear: both; }
+.rb-manage .term-form > .term-name { float: none; width: auto; margin: var(--rb-space-4) var(--rb-space-6) var(--rb-space-4); }
+.rb-manage .term-form > .mgrid { margin: 0 var(--rb-space-6) var(--rb-space-6); }
 .rb-manage .rules-form .field-label, .rb-manage .term-form .field-label { display: block; margin: 0 0 var(--rb-space-1); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); }
 .rb-manage .rules-form .field-label .optional, .rb-manage .term-form .field-label .optional { font-weight: var(--rb-weight-regular); color: var(--rb-text-secondary); }
 .rb-manage .rules-form .mgrid, .rb-manage .term-form .mgrid { align-items: start; gap: var(--rb-space-4) var(--rb-space-6); }
-.rb-manage .term-form .btn-small, .rb-manage .rules-form > .btn-small { margin-top: var(--rb-space-2); }
-.rb-manage .term-form { display: grid; gap: var(--rb-space-4); }
-.rb-manage .term-form > * { margin-top: 0; }
+.rb-manage .mform-footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--rb-space-2); margin: 0; padding: var(--rb-space-4) var(--rb-space-6); border-top: var(--rb-border-width) solid var(--rb-border-warm); border-radius: 0 0 var(--rb-radius-card) var(--rb-radius-card); background: var(--rb-surface-canvas); }
+.rb-manage .mform .mform-footer button.btn-small { justify-self: auto; margin: 0; }
 @media (max-width: 40rem) {
-  .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
+  .rb-manage .rules-form fieldset { padding: var(--rb-space-4); }
+  .rb-manage .rules-form > #rules-errors, .rb-manage .term-form > [id$="-errors"] { margin-inline: var(--rb-space-4); }
+  .rb-manage .term-form > .term-name { margin-inline: var(--rb-space-4); }
+  .rb-manage .term-form > .mgrid { margin-inline: var(--rb-space-4); }
+  .rb-manage .mform-footer { padding: var(--rb-space-4); }
+  .rb-manage .mform-footer button.btn-small { width: 100%; }
 }
+.rb-manage .rules-form .mgrid { align-items: end; }

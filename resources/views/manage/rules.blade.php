@@ -110,7 +110,7 @@
       </div>
     </fieldset>
 
-    <button type="submit" class="btn-small">Save rules</button>
+    <div class="mform-footer"><button type="submit" class="btn-small">Save rules</button></div>
   </form>
   </div>
 
@@ -142,7 +142,7 @@
           <input id="end-{{ $term->id }}" name="end_date" type="date" required {!! $termInvalid('end_date') !!} value="{{ $termBag->any() ? old('end_date') : $term->end_date->toDateString() }}">
         </div>
       </div>
-      <button type="submit" class="btn-small">Save dates</button>
+      <div class="mform-footer"><button type="submit" class="btn-small">Save dates</button></div>
     </form>
   @endforeach
   </div>
