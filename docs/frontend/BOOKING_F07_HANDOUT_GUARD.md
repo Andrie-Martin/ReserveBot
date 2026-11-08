@@ -1,6 +1,8 @@
 # F-07: hand-out and no-show guard for future-day bookings
 
-**Status: awaiting its pull request into `dev` as branch `feat/frontend-design-13-booking-guard-integration` (see "Integration with dev" at the end). Phase 12 (login throttling) is already merged into `dev` (PR #24). The original branch `feat/frontend-design-13-booking-guard` is based on Phase 12's *original* commit and must not be merged directly.**
+**Status update (2026-11-08): merged into `dev` as PR #25 (merge commit `b1c104d`); the follow-up race fix is in `BOOKING_FB_STATUS_MOVE_RACE.md` (PR #26). The status line that follows is the original text, written before the merge.**
+
+**Original status: awaiting its pull request into `dev` as branch `feat/frontend-design-13-booking-guard-integration` (see "Integration with dev" at the end). Phase 12 (login throttling) is already merged into `dev` (PR #24). The original branch `feat/frontend-design-13-booking-guard` is based on Phase 12's *original* commit and must not be merged directly.**
 
 Original branch `feat/frontend-design-13-booking-guard` (from `feat/frontend-design-12-security` as it was at `c74c9b4`). Source: `docs/frontend/INDEPENDENT_QA_REPORT.md`, F-07: staff could hand out (and return) a booking days before it started by posting to `/bookings/{id}/hand-out`.
 

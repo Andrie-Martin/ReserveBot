@@ -243,10 +243,11 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | `app/Http/Middleware/` | Keeps each role to its own pages, logs out turned-off accounts, asks for a new password first |
 | `app/Models/` | One class per table |
 | `resources/views/` | HTML templates (Blade) |
-| `public/css/style.css` | Styles |
+| `public/css/` | Styles: `style.css` is the older base; `foundations/` (tokens, fonts, shared components), `layout.css` (shell) and one file per screen group restyle it |
 | `database/migrations/` | Table definitions |
 | `database/seeders/` | BSCpE data, test accounts, template for a new department |
 | `tests/` | Automatic tests (`php artisan test`) |
+| `docs/` | Architecture notes, the design system, and the frontend redesign reports. Start at [docs/README.md](docs/README.md); frontend reviewers: [docs/frontend/QA_HANDOFF.md](docs/frontend/QA_HANDOFF.md) |
 | `routes/api.php` | Addresses other programs call: the Messenger webhook and `/test-db` |
 | `Dockerfile`, `docker-compose.yml`, `docker/` | The Docker setup |
 | `storage/app/private/photos/` | Profile photos (never committed) |

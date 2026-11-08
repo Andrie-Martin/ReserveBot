@@ -1,5 +1,7 @@
 # ReserveBot frontend roadmap — Phase 00 baseline
 
+> **Historical baseline plan (Phase 00, 2026-11-03).** The phase numbers and branch names below belong to the first wave of work (merged as PRs #3-#10). The later "design phases 01-13" (PRs #11-#25) use a different numbering; see [QA_HANDOFF.md](QA_HANDOFF.md) and the [documentation index](../README.md). Statements such as "do not start Phase 01 during this task" applied to that audit task only. The text below is unchanged.
+
 Baseline: **2026-11-03**, source commit **`e07be8f939ae6b1932150483d3770be3af2c64d9`**. The user approved documenting the audited system and separating timetable management into **Phase 08**, with final QA in **Phase 09**. This is not approval to implement any phase.
 
 Read [SYSTEM_MAP.md](../architecture/SYSTEM_MAP.md), [SCREEN_INVENTORY.md](SCREEN_INVENTORY.md), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), the current phase brief, and [PR_CHECKLIST.md](../codex/PR_CHECKLIST.md) before implementation. Source and tests govern behavior; Figma governs approved visuals only. Figma coverage remains **UNVERIFIED** until accessible designs are independently reviewed. Backend comments referring to Phases 4–11 belong to the earlier backend roadmap, not these frontend phase numbers.
