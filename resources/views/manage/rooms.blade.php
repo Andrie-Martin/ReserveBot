@@ -71,7 +71,7 @@
         <tr @class(['off' => ! $room->is_active])>
           <td><strong>{{ $room->name }}</strong>@if ($room->departments_count > 1) <span class="tag-shared">shared</span>@endif</td>
           <td class="hide-sm">{{ $room->building ?? '—' }}</td>
-          <td>{{ $room->capacity ?? 'Not recorded' }}</td>
+          <td>{{ $room->capacity ?? 'Not specified' }}</td>
           <td class="hide-sm note">{{ $room->fixed_equipment_note }}</td>
           <td><span @class(['status-badge', 'st-confirmed' => $room->is_active, 'st-cancelled' => ! $room->is_active])>{{ $room->is_active ? 'On' : 'Off' }}</span></td>
           <td class="room-edit"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a></td>

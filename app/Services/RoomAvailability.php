@@ -8,6 +8,7 @@ use App\Models\DepartmentConfig;
 use App\Models\Reservation;
 use App\Models\Term;
 use App\Models\User;
+use App\Support\BlockedReason;
 use App\Support\ClassCheckRules;
 use App\Support\TimeSlots;
 use Carbon\CarbonImmutable;
@@ -81,9 +82,11 @@ class RoomAvailability
             $end = DepartmentConfig::minutes($entry->end_time);
 
             if ($entry->entry_type === 'Blocked') {
-                $note = $entry->note ?: 'Not available';
+                // Wording only (see BlockedReason): the stored note, the block and its times are unchanged.
+                $reason = BlockedReason::text($entry->note);
+                $label = 'Unavailable — '.$reason;
                 $busy[$entry->room_id][] = ['kind' => 'blocked', 'start' => $start, 'end' => $end,
-                    'status' => null, 'mine' => false, 'label' => $note, 'detail' => [$note],
+                    'status' => null, 'mine' => false, 'label' => $label, 'reason' => $reason, 'detail' => [$label],
                     'schedule_id' => $entry->id, 'reservation_id' => null];
 
                 continue;

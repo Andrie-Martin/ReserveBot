@@ -193,7 +193,7 @@ class AvailabilityController extends Controller
     {
         foreach ($items as $item) {
             if ($item['kind'] === 'blocked' && $item['start'] <= $opens && $item['end'] >= $closes) {
-                return $item['label'];
+                return $item['reason'] ?? $item['label'];
             }
         }
 

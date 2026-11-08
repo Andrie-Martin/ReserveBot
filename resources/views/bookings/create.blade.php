@@ -180,7 +180,7 @@
                 @php $room = $row['room']; @endphp
                 <label class="room-opt">
                   <input type="radio" name="room" value="{{ $room->id }}" @checked($pickedRoom === $room->id)>
-                  <span class="room-opt-name"><strong>{{ $room->name }}</strong>{{ $room->capacity ? $room->capacity.' seats' : '' }}</span>
+                  <span class="room-opt-name"><strong>{{ $room->name }}</strong>{{ \App\Support\RoomCapacity::label($room->capacity) }}</span>
                   <span class="room-opt-state free">Free</span>
                 </label>
               @endforeach
