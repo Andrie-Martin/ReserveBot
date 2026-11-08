@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,9 @@ class LoginController extends Controller
     public const MAX_FAILURES_PER_ACCOUNT_AND_IP = 5;   // same email from the same IP
     public const MAX_FAILURES_PER_IP = 20;              // one IP trying many emails
     public const DECAY_SECONDS = 60;
+    private const LOCK_SECONDS = 10;        // longest one attempt may hold its account's turn
+    private const LOCK_WAIT_SECONDS = 5;    // longest an attempt waits for its turn before being refused
+    private const ADMISSION_WAIT_SECONDS = 3.0;   // longest an attempt waits for in-flight attempts from its IP to settle
 
     /**
      * What the account counter is keyed on, for an address that matches no account: the typed address in a
@@ -67,49 +71,70 @@ class LoginController extends Controller
         $accountKey = self::accountKey($email, (string) $request->ip(), $accountId === null ? null : (int) $accountId);
         $ipKey = 'login-ip|'.$request->ip();
 
-        // Count first, then decide. Checking the counters and only recording the failure after the (slow) password check let
-        // every request that arrived together pass the check, so a burst got far more than the limit. Each increment is
-        // atomic in the cache, so each request gets its own number and only the first N run the password check.
-        $accountAttempts = $this->count($accountKey);
-        $ipAttempts = 0;
-        if ($accountAttempts <= self::MAX_FAILURES_PER_ACCOUNT_AND_IP) {
-            $ipAttempts = $this->count($ipKey);
-            if ($ipAttempts > self::MAX_FAILURES_PER_IP) {
-                $this->refund($accountKey);   // refused for the IP, so neither counter is charged
-                $this->refund($ipKey);
+        // Attempts for one account (from one IP) run one at a time. Under the lock the account counter holds exactly the failures
+        // so far: each attempt checks it, runs the password check and, only if that fails, adds one. Simultaneous wrong guesses
+        // therefore cannot exceed the limit (the 6th waits, sees 5 failures and is refused at once), and a correct password never
+        // uses any of the allowance, so simultaneous correct logins cannot refuse one another. Different accounts do not wait.
+        $lock = Cache::store(config('cache.limiter'))->lock('login-lock|'.$accountKey, self::LOCK_SECONDS)
+            ->betweenBlockedAttemptsSleepFor(50);   // a waiting attempt looks again every 50 ms (default 250 ms)
+        try {
+            $lock->block(self::LOCK_WAIT_SECONDS);
+        } catch (LockTimeoutException) {
+            return $this->tooManyAttempts($request, $email, $accountKey, $ipKey);   // fail closed
+        }
+
+        $admitted = false;
+        try {
+            if (RateLimiter::tooManyAttempts($accountKey, self::MAX_FAILURES_PER_ACCOUNT_AND_IP)) {
+                return $this->tooManyAttempts($request, $email, $accountKey, $ipKey);
             }
+
+            // The IP counter is shared by many accounts, so it cannot be serialized without making everyone behind one address
+            // wait for each other. Instead an attempt is admitted only if the recorded failures plus the attempts already in
+            // flight still fit the limit, which holds even if every one of them fails. A successful login never uses an IP slot.
+            if (! $this->admitIp($ipKey)) {
+                return $this->tooManyAttempts($request, $email, $accountKey, $ipKey);
+            }
+            $admitted = true;
+
+            // Turned-off accounts (is_active = 0) can't log in. Same message whether the
+            // email or the password is wrong, so nobody can probe for accounts.
+            $ok = $email !== '' && $password !== ''
+                && Auth::attempt(['email' => $email, 'password' => $password, 'is_active' => true]);
+
+            if (! $ok) {
+                $this->count($accountKey);   // record the failure on both counters before the in-flight slot is given up
+                $this->count($ipKey);
+
+                return back()
+                    ->withErrors(['email' => 'Wrong email or password.'])
+                    ->withInput(['email' => $email]);
+            }
+
+            // Only failures count: a success clears the account counter and leaves the IP counter alone.
+            RateLimiter::clear($accountKey);
+        } finally {
+            if ($admitted) {
+                $this->leaveIp($ipKey);
+            }
+            $lock->release();
         }
-
-        if ($accountAttempts > self::MAX_FAILURES_PER_ACCOUNT_AND_IP || $ipAttempts > self::MAX_FAILURES_PER_IP) {
-            event(new Lockout($request));
-            $seconds = max(RateLimiter::availableIn($accountKey), RateLimiter::availableIn($ipKey), 1);
-
-            return back()
-                ->withErrors(['email' => 'Too many login attempts. Please try again in '.$seconds.' '.Str::plural('second', $seconds).'.'])
-                ->withInput(['email' => $email])
-                ->header('Retry-After', $seconds);
-        }
-
-        // Turned-off accounts (is_active = 0) can't log in. Same message whether the
-        // email or the password is wrong, so nobody can probe for accounts.
-        $ok = $email !== '' && $password !== ''
-            && Auth::attempt(['email' => $email, 'password' => $password, 'is_active' => true]);
-
-        if (! $ok) {
-            // Already counted above.
-            return back()
-                ->withErrors(['email' => 'Wrong email or password.'])
-                ->withInput(['email' => $email]);
-        }
-
-        // Only failures count: a success clears the account counter and gives its IP slot back.
-        RateLimiter::clear($accountKey);
-        $this->refund($ipKey);
 
         // New session ID on every login (stops "session fixation" attacks)
         $request->session()->regenerate();
 
         return redirect($request->user()->homeUrl());
+    }
+
+    private function tooManyAttempts(Request $request, string $email, string $accountKey, string $ipKey): RedirectResponse
+    {
+        event(new Lockout($request));
+        $seconds = max(RateLimiter::availableIn($accountKey), RateLimiter::availableIn($ipKey), 1);
+
+        return back()
+            ->withErrors(['email' => 'Too many login attempts. Please try again in '.$seconds.' '.Str::plural('second', $seconds).'.'])
+            ->withInput(['email' => $email])
+            ->header('Retry-After', $seconds);
     }
 
     /**
@@ -132,12 +157,43 @@ class LoginController extends Controller
         return (int) $total;
     }
 
-    /** Gives one count back (never below zero, and nothing if the counter has already expired). */
-    private function refund(string $key): void
+    /**
+     * Admission to the password check for one IP. Two numbers are kept: the failures recorded so far (the "login-ip" counter,
+     * which is what the limit is about) and the attempts in flight right now (a short-lived counter). An attempt is admitted when
+     * failures + in-flight (itself included) <= the limit; otherwise it waits a little for the in-flight ones to finish, because
+     * each either succeeds (leaves no trace) or fails (is recorded) and then the answer is certain. With the limit already reached
+     * it is refused at once. The in-flight number is read after incrementing and failures are recorded before it is decremented,
+     * so no attempt can slip through unseen.
+     */
+    private function admitIp(string $ipKey): bool
     {
         $cache = Cache::store(config('cache.limiter'));
-        if ((int) $cache->get($key, 0) > 0) {
-            $cache->decrement($key);
+        $inFlightKey = $ipKey.':inflight';
+        $deadline = microtime(true) + self::ADMISSION_WAIT_SECONDS;
+        do {
+            $cache->add($inFlightKey, 0, self::LOCK_SECONDS * 2);
+            $inFlight = (int) $cache->increment($inFlightKey);
+            $failures = (int) $cache->get($ipKey, 0);
+            if ($failures < self::MAX_FAILURES_PER_IP && $failures + $inFlight <= self::MAX_FAILURES_PER_IP) {
+                return true;
+            }
+            $this->leaveIp($ipKey);
+            if ($failures >= self::MAX_FAILURES_PER_IP) {
+                return false;
+            }
+            usleep(100000);
+        } while (microtime(true) < $deadline);
+
+        return false;
+    }
+
+    /** Gives up this attempt's in-flight place (never below zero; nothing if the short-lived counter has expired). */
+    private function leaveIp(string $ipKey): void
+    {
+        $cache = Cache::store(config('cache.limiter'));
+        $inFlightKey = $ipKey.':inflight';
+        if ((int) $cache->get($inFlightKey, 0) > 0) {
+            $cache->decrement($inFlightKey);
         }
     }
 

@@ -391,6 +391,93 @@ final class AuthWorkflowTest extends TestCase
         $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Hammering a locked account must not push the whole IP towards its limit.');
     }
 
+    private function assertNoLeftoverTurnOrSlot(string $email, string $ip, ?int $accountId): void
+    {
+        $key = \App\Http\Controllers\Auth\LoginController::accountKey($email, $ip, $accountId);
+        $lock = \Illuminate\Support\Facades\Cache::lock('login-lock|'.$key, 5);
+        $this->assertTrue($lock->get(), 'The account turn must be released after every attempt.');
+        $lock->release();
+        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip.':inflight', 0), 'The in-flight slot must be given up after every attempt.');
+    }
+
+    public function test_the_account_turn_and_the_ip_slot_are_released_on_every_path(): void
+    {
+        $ip = '203.0.113.70';
+        $user = $this->user();
+        $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));            // failure
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');            // success
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->post('/logout');
+        for ($i = 0; $i < 5; $i++) {
+            $this->loginAs($user->email, 'Wrong123', $ip);
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));              // refused for the account
+        $this->assertNoLeftoverTurnOrSlot($user->email, $ip, $user->id);
+        $this->loginAs('', '', $ip);                                                         // empty input
+        $this->assertNoLeftoverTurnOrSlot('', $ip, null);
+    }
+
+    public function test_a_run_of_successful_logins_never_uses_the_failure_allowance(): void
+    {
+        $ip = '203.0.113.71';
+        $user = $this->user();
+        for ($i = 0; $i < 12; $i++) {
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->assertAuthenticatedAs($user);
+            $this->post('/logout');
+        }
+        // The full allowance of 5 failures is still there, and only the 6th is refused.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));
+        }
+        $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
+        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Only the 5 failures are on the IP counter.');
+    }
+
+    public function test_valid_logins_still_succeed_when_the_ip_has_19_failures(): void
+    {
+        $ip = '203.0.113.72';
+        for ($i = 0; $i < 19; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        foreach ([$this->user(), $this->user(), $this->user()] as $user) {
+            $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+            $this->post('/logout');
+        }
+        $this->assertWrongLogin($this->loginAs('twentieth-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        $this->assertThrottled($this->loginAs('extra-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+    }
+
+    public function test_an_attempt_that_cannot_get_its_account_turn_is_refused_not_let_through(): void
+    {
+        // Another request is holding this account's turn (held here by hand). Waiting attempts must fail closed.
+        $ip = '203.0.113.73';
+        $user = $this->user();
+        $held = \Illuminate\Support\Facades\Cache::lock('login-lock|'.\App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id), 30);
+        $this->assertTrue($held->get());
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        $this->assertGuest();
+        $held->release();
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+    }
+
+    public function test_attempts_already_in_flight_count_against_the_ip_limit_so_a_burst_cannot_exceed_it(): void
+    {
+        // 15 recorded failures plus 6 attempts that have not finished: even if all of them fail the limit of 20 would be passed,
+        // so a further attempt is not admitted (after waiting briefly for them to settle).
+        $ip = '203.0.113.74';
+        for ($i = 0; $i < 15; $i++) {
+            $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
+        }
+        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 6, 30);
+        $user = $this->user();
+        $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
+        $this->assertGuest();
+        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 4, 30);   // 15 + 4 + this one = 20: exactly at the limit, admitted
+        $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
+    }
+
     public function test_limiter_keys_hold_no_typed_address_or_password_and_fit_the_cache_column(): void
     {
         $user = $this->user();
