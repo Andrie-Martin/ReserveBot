@@ -5,6 +5,7 @@
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/manage.css') }}?v={{ filemtime(public_path('css/manage.css')) }}">
+  <script src="{{ asset('js/manage.js') }}?v={{ filemtime(public_path('js/manage.js')) }}" defer></script>
 @endpush
 
 @section('content')
@@ -16,52 +17,6 @@
 
   <p class="muted">Stock is how many the department has. “Most per booking” is the most one booking can ask for. An item that’s off can’t be booked; bookings already made keep it.</p>
   </header>
-
-  @if ($categories->isEmpty())
-    <div class="rb-booking__panel">
-      <p class="empty">No equipment yet. Add a category first (for example “Audiovisual Equipment”), then add items to it.</p>
-    </div>
-  @endif
-
-  @foreach ($categories as $category)
-    @php $renameBag = $errors->getBag('category'.$category->id); @endphp
-    <section class="mcat rb-booking__panel">
-      <div class="mcat-head">
-        <h2>{{ $category->name }} <span class="count">{{ $category->equipment->count() }}</span></h2>
-        <details class="rename" @if ($renameBag->any()) open @endif>
-          <summary>Rename<span class="sr-only"> {{ $category->name }}</span></summary>
-          @if ($renameBag->any())
-            <p class="field-error" id="cat-{{ $category->id }}-error">{{ $renameBag->first('name') }}</p>
-          @endif
-          <form method="post" action="{{ route('manage.categories.update', $category) }}" class="inline-form">
-            @csrf
-            @method('PUT')
-            <label for="cat-{{ $category->id }}" class="sr-only">New name for {{ $category->name }}</label>
-            <input id="cat-{{ $category->id }}" name="name" maxlength="60" required @if ($renameBag->any()) autofocus aria-invalid="true" aria-describedby="cat-{{ $category->id }}-error" @endif value="{{ $renameBag->any() ? old('name') : $category->name }}">
-            <button type="submit" class="btn-small">Save</button>
-          </form>
-        </details>
-      </div>
-      @if ($category->equipment->isEmpty())
-        <p class="empty">No items yet.</p>
-      @else
-        <table class="mtable">
-          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr></thead>
-          <tbody>
-            @foreach ($category->equipment as $item)
-              <tr @class(['off' => ! $item->is_active])>
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->total_qty }}</td>
-                <td>{{ $item->max_per_request }}</td>
-                <td><span @class(['status-badge', 'st-confirmed' => $item->is_active, 'st-cancelled' => ! $item->is_active])>{{ $item->is_active ? 'On' : 'Off' }}</span></td>
-                <td><a href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a></td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      @endif
-    </section>
-  @endforeach
 
   <div class="add-row rb-booking__panel">
     @if ($categories->isNotEmpty())
@@ -124,6 +79,60 @@
         <button type="submit" class="btn-small">Add category</button>
       </form>
     </details>
+  </div>
+  @if ($categories->isNotEmpty())
+    <div class="rb-booking__panel eq-search" data-eq-search hidden>
+      <label for="eq-filter" class="field-label">Find equipment</label>
+      <input id="eq-filter" type="search" class="eq-search__input" placeholder="Search by item or category" autocomplete="off" aria-controls="eq-categories" aria-describedby="eq-filter-status">
+      <p class="hint" id="eq-filter-status" role="status" aria-live="polite"></p>
+    </div>
+  @endif
+
+  <div id="eq-categories">
+  @if ($categories->isEmpty())
+    <div class="rb-booking__panel">
+      <p class="empty">No equipment yet. Add a category first (for example “Audiovisual Equipment”), then add items to it.</p>
+    </div>
+  @endif
+
+  @foreach ($categories as $category)
+    @php $renameBag = $errors->getBag('category'.$category->id); @endphp
+    <section class="mcat rb-booking__panel" data-eq-section>
+      <div class="mcat-head">
+        <h2 class="mcat-title" id="cat-title-{{ $category->id }}" data-rb-rename="cat-rename-{{ $category->id }}"><span class="mcat-name" data-eq-category>{{ $category->name }}</span> <span class="count">{{ $category->equipment->count() }}</span></h2>
+        <a class="mcat-edit" href="#cat-rename-{{ $category->id }}" data-rb-reveal="cat-rename-{{ $category->id }}"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.5 2.5l2 2-8 8-3 1 1-3 8-8z"/></svg>Rename<span class="sr-only"> {{ $category->name }}</span></a>
+        <form method="post" action="{{ route('manage.categories.update', $category) }}" id="cat-rename-{{ $category->id }}" @class(['mcat-rename', 'rb-reveal', 'is-open' => $renameBag->any()]) data-original="{{ $category->name }}" novalidate>
+          @csrf
+          @method('PUT')
+          <label for="cat-{{ $category->id }}" class="sr-only">New name for {{ $category->name }}</label>
+          <input id="cat-{{ $category->id }}" name="name" maxlength="60" required data-rb-focus @if ($renameBag->any()) autofocus aria-invalid="true" aria-describedby="cat-{{ $category->id }}-error" @endif value="{{ $renameBag->any() ? old('name') : $category->name }}">
+          <button type="submit" class="btn-small">Save<span class="sr-only"> name</span></button>
+          <a class="btn-ghost" href="#cat-title-{{ $category->id }}" data-rb-reveal-close>Cancel</a>
+          <p class="field-error" id="cat-{{ $category->id }}-error" role="alert" @if (! $renameBag->any()) hidden @endif>{{ $renameBag->first('name') }}</p>
+        </form>
+      </div>
+      @if ($category->equipment->isEmpty())
+        <p class="empty">No items yet.</p>
+      @else
+        <table class="mtable eq-table">
+          <colgroup><col class="c-item"><col class="c-stock"><col class="c-max"><col class="c-status"><col class="c-edit"></colgroup>
+          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr></thead>
+          <tbody>
+            @foreach ($category->equipment as $item)
+              <tr @class(['off' => ! $item->is_active]) data-eq-row>
+                <td class="eq-name" data-eq-name>{{ $item->name }}</td>
+                <td>{{ $item->total_qty }}</td>
+                <td>{{ $item->max_per_request }}</td>
+                <td><span @class(['status-badge', 'st-confirmed' => $item->is_active, 'st-cancelled' => ! $item->is_active])>{{ $item->is_active ? 'On' : 'Off' }}</span></td>
+                <td class="eq-edit"><a class="row-edit" href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a></td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      @endif
+    </section>
+  @endforeach
+  <p class="empty rb-booking__panel" data-eq-none hidden>No equipment or category matches that search.</p>
   </div>
 </section>
 @endsection
