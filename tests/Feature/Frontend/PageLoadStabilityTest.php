@@ -32,5 +32,8 @@ final class PageLoadStabilityTest extends TestCase
         $this->assertMatchesRegularExpression('/rel="preload"[^>]*as="font"[^>]*crossorigin/', $layout);
         $this->assertStringContainsString('"ReserveBot Inter Fallback"', $this->read('public/css/foundations/tokens.css'));
         $this->assertStringContainsString('size-adjust', $this->read('public/css/foundations/fonts.css'));
+        $fonts = $this->read('public/css/foundations/fonts.css');
+        $this->assertStringNotContainsString('font-display: swap', $fonts, 'A late swap re-wraps text already on screen.');
+        $this->assertStringContainsString('font-display: optional', $fonts);
     }
 }
