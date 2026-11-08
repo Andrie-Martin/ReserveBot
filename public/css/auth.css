@@ -99,9 +99,12 @@
 /* Authentication is the primary task; supporting copy follows it in DOM order. */
 .rb-auth-login__card .rb-auth-card__intro .rb-description { margin-bottom: 0; }
 @media (max-height: 49.999rem) {
-  /* Short laptops keep both columns; only the decorative panel is dropped. */
+  /* Short laptops keep both columns and the maroon panel (a viewport under 50rem tall is ordinary 100% zoom on a 900px screen);
+     the page scrolls when the content is taller than the viewport, and the panel is only tightened. */
   .rb-auth-login { padding-block: var(--rb-space-4) var(--rb-space-6); }
-  .rb-auth-login__art { display: none; }
+  .rb-auth-login__aside { gap: var(--rb-space-4); }
+  .rb-auth-login__art { min-height: 0; padding: var(--rb-space-4) var(--rb-space-6); }
+  .rb-auth-login__art .rb-auth-login__art-title { margin-top: var(--rb-space-2); }
   .rb-auth-login__card { padding-block: var(--rb-space-6); }
   .rb-auth-login__card .rb-auth-card__footer { padding-top: var(--rb-space-1); }
 }
