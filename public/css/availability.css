@@ -305,3 +305,24 @@
 .rb-availability__finder-field .rb-picker { width: 100%; }
 .rb-availability__board .rb-availability__room-row { padding-right: var(--rb-space-2); }
 .rb-availability__axis { padding-right: var(--rb-space-2); }
+
+/* Unknown reason / unknown capacity read as quiet secondary text, never as an alarm. */
+.rb-availability__unspecified { color: var(--rb-text-secondary); }
+.rb-availability__room-name > .rb-availability__unspecified { font-style: normal; }
+
+/* Calendar and event details: equal-height cards side by side on wide screens (the calendar sets the height, the event list
+   scrolls inside its card); a natural stack on phones and narrow windows. */
+.rb-availability__events-scroll { min-width: 0; }
+.rb-availability__events-scroll:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-availability__event-empty { margin: 0; padding: var(--rb-space-6) var(--rb-space-4); border: 1px dashed var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); color: var(--rb-text-secondary); font-size: var(--rb-text-small); text-align: center; }
+@media (min-width: 64.001rem) {
+  .rb-availability__secondary { align-items: stretch; }
+  .rb-availability__calendar-details { display: flex; flex-direction: column; height: 0; min-height: 100%; }
+  .rb-availability__calendar-details > h2 { flex: none; }
+  .rb-availability__events-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: var(--rb-space-1); }
+}
+@media (min-width: 64.001rem) {
+  /* Nothing selected (or nothing to show): the message fills the card instead of leaving a blank slab beneath it. */
+  .rb-availability__events-scroll:has(> :is(.rb-availability__event-prompt:not([hidden]), .rb-availability__event-empty)) { display: flex; flex-direction: column; }
+  .rb-availability__events-scroll > :is(.rb-availability__event-prompt:not([hidden]), .rb-availability__event-empty) { flex: 1 1 auto; display: grid; place-content: center; max-width: 100%; margin: 0; }
+}
