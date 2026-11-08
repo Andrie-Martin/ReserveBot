@@ -39,7 +39,7 @@
   --rb-danger-bg: #FEE2E2;
   --rb-neutral-text: #4B5563;
   --rb-neutral-bg: #F3F4F6;
-  --rb-font-family: "ReserveBot Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rb-font-family: "ReserveBot Inter", "ReserveBot Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --rb-weight-regular: 400;
   --rb-weight-medium: 500;
   --rb-weight-semibold: 600;

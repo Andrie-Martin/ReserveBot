@@ -28,3 +28,12 @@
   font-weight: 700;
   font-display: swap;
 }
+/* Metric-matched local fallback: text laid out before Inter arrives takes the same space, so the font swap does not reflow the page. */
+@font-face {
+  font-family: "ReserveBot Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  size-adjust: 107.4%;
+  ascent-override: 90.2%;
+  descent-override: 22.5%;
+  line-gap-override: 0%;
+}
