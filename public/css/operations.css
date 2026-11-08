@@ -128,3 +128,28 @@
   .rb-ops .req-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 6rem), 1fr)); }
   .rb-ops .req-actions :is(.btn-approve, .btn-reject, .btn-ghost) { min-width: 0; padding-inline: var(--rb-space-2); }
 }
+
+/* Requests: groups (room requests, equipment-only) and fixed metadata columns. */
+.rb-ops .req-note { margin: var(--rb-space-1) 0 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-ops .req-group { margin: var(--rb-space-6) 0 0; }
+.rb-ops .req-group:first-of-type { margin-top: var(--rb-space-4); }
+.rb-ops .req-group__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--rb-space-4); padding-bottom: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
+.rb-ops .req-group__head h3 { margin: 0; font-size: var(--rb-text-h3); letter-spacing: -.01em; }
+.rb-ops .req-group__hint { margin: 0; font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-ops .req-group__none { margin: var(--rb-space-2) 0 0; padding: var(--rb-space-2) 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+.rb-ops .req-group--room .req { border-left-color: var(--rb-color-maroon); }
+.rb-ops .req-group--equipment .req { border-left-color: var(--rb-color-gold); }
+.rb-ops .req-facts { grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr)); align-items: start; }
+.rb-ops .req-fact--who { grid-column: auto; }
+.rb-ops .req-fact--items { grid-column: 1 / -1; }
+.rb-ops .req-group--room .req-fact--room dd { font-weight: var(--rb-weight-semibold); }
+.rb-ops .req-actions { gap: var(--rb-space-2); }
+.rb-ops .req-actions :is(.btn-approve, .btn-reject, .btn-ghost) { flex: 0 0 auto; width: 7.5rem; min-width: 0; padding-inline: var(--rb-space-2); }
+@media (max-width: 56rem) {
+  .rb-ops .req-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rb-ops .req-fact--who { grid-column: 1 / -1; }
+}
+@media (max-width: 40rem) {
+  .rb-ops .req-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 6rem), 1fr)); }
+  .rb-ops .req-actions :is(.btn-approve, .btn-reject, .btn-ghost) { width: 100%; }
+}
