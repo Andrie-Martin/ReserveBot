@@ -87,14 +87,15 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertLessThan(strpos($page, 'rooms-table'), strpos($page, '+ Add a room'));
     }
 
-    public function test_dashboard_counters_use_the_shared_compact_stat(): void
+    public function test_dashboard_counters_use_shared_stat_components(): void
     {
-        foreach (['resources/views/home.blade.php', 'resources/views/home/_representative.blade.php'] as $view) {
-            $source = $this->read($view);
-            $this->assertStringContainsString('class="rb-stat"', $source);
-            $this->assertStringContainsString('rb-stat__value', $source);
-            $this->assertStringNotContainsString('<p class="stat">', $source);
-        }
+        // Representative: the compact pill. Lab staff and admin: three equal cards from the shared stat-card component.
+        $rep = $this->read('resources/views/home/_representative.blade.php');
+        $this->assertStringContainsString('class="rb-stat"', $rep);
+        $this->assertStringContainsString('rb-stat__value', $rep);
+        $home = $this->read('resources/views/home.blade.php');
+        $this->assertStringContainsString('<x-ui.stat-card', $home);
+        $this->assertStringNotContainsString('<p class="stat">', $home);
         $this->assertStringContainsString('font-variant-numeric: tabular-nums', $this->read('public/css/foundations/components.css'));
     }
 
@@ -165,7 +166,7 @@ final class UiPolishPresentationTest extends TestCase
         $view = $this->read('resources/views/requests/index.blade.php');
         $this->assertStringContainsString("fn (\$r) => (bool) \$r->room_id", $view);
         $this->assertStringContainsString("fn (\$r) => ! \$r->room_id", $view);
-        $this->assertStringContainsString("\$group['items']->count()", $view);
+        $this->assertStringContainsString("\$tab['items']->count()", $view);
         $this->assertStringContainsString("route('bookings.approve', \$r)", $view);
         $this->assertStringContainsString("route('bookings.reject', \$r)", $view);
         $this->assertStringContainsString('Grouping does not change who can approve', $view);
@@ -272,5 +273,86 @@ final class UiPolishPresentationTest extends TestCase
         $js = $this->read('public/js/ui.js');
         $this->assertStringContainsString('rbRevealGroup', $js);
         $this->assertStringContainsString('form[data-rb-once]', $js);
+    }
+
+    public function test_secondary_navigation_is_one_shared_underline_nav_not_pills(): void
+    {
+        $manage = $this->read('resources/views/manage/_tabs.blade.php');
+        $this->assertStringContainsString('class="rb-subnav"', $manage);
+        $this->assertSame(4, substr_count($manage, 'aria-current="page"'));
+        foreach (["route('manage.rooms')", "route('manage.equipment')", "route('manage.rules')", "route('manage.timetable')"] as $route) {
+            $this->assertStringContainsString($route, $manage);
+        }
+        $this->assertStringContainsString('class="rb-subnav req-tabs"', $this->read('resources/views/requests/index.blade.php'));
+
+        $css = $this->read('public/css/foundations/components.css');
+        $this->assertMatchesRegularExpression('/\.rb-subnav\s*\{[^}]*border-bottom[^}]*overflow-x:\s*auto/', $css);
+        $this->assertMatchesRegularExpression('/\.rb-subnav a\[aria-current\]::after[^{]*\{[^}]*background:\s*var\(--rb-color-maroon\)/', $css);
+        $this->assertMatchesRegularExpression('/\.rb-subnav a:focus-visible\s*\{[^}]*outline/', $css);
+        $this->assertStringNotContainsString('radius-pill); background: var(--rb-color-maroon)', $this->read('public/css/manage.css'));
+        $this->assertStringNotContainsString('manage-tabs', $this->read('public/css/manage.css'));
+    }
+
+    public function test_requests_tabs_are_query_parameter_links_that_work_without_a_script(): void
+    {
+        $page = $this->read('resources/views/requests/index.blade.php');
+        $this->assertStringContainsString("request()->query('tab')", $page);
+        $this->assertStringContainsString("route('requests'", $page);
+        $this->assertStringContainsString('aria-current="page"', $page);
+        $this->assertStringContainsString('Recently decided', $page);
+        $this->assertStringNotContainsString('data-rb-tab', $page);
+        $this->assertStringNotContainsString('role="tablist"', $page);
+    }
+
+    public function test_free_rooms_use_yellow_only_for_an_all_day_block_and_explain_the_colours(): void
+    {
+        $results = $this->read('resources/views/rooms/_results.blade.php');
+        foreach (['Reported free', 'Not reported as free', 'Unavailable all day'] as $word) {
+            $this->assertStringContainsString($word, $results);
+        }
+        $room = $this->read('resources/views/rooms/_room.blade.php');
+        $this->assertStringContainsString(':blocked="(bool) $row[\'allDay\']"', $room);
+        $this->assertStringContainsString('rb-availability__blocked', $room);
+        $track = $this->read('resources/views/components/ui/availability-track.blade.php');
+        $this->assertStringContainsString("'rb-availability-track--blocked' => \$blocked", $track);
+        $css = $this->read('public/css/availability.css');
+        $this->assertMatchesRegularExpression('/\.rb-availability__blocked\s*\{[^}]*var\(--rb-warning-bg\)[^}]*var\(--rb-warning-text\)/', $css);
+    }
+
+    public function test_free_rooms_overview_hides_a_missing_capacity_but_keeps_a_real_one(): void
+    {
+        $room = $this->read('resources/views/rooms/_room.blade.php');
+        $this->assertStringContainsString('@if (RoomCapacity::known($room->capacity))', $room);
+        // The only place the "not specified" wording can come from is the helper, and the overview never calls it for an unknown value.
+        $this->assertStringContainsString('RoomCapacity::known($room->capacity) ?', $room);
+    }
+
+    public function test_event_details_show_the_chosen_date_directly_without_a_second_disclosure(): void
+    {
+        $details = $this->read('resources/views/rooms/_calendar-details.blade.php');
+        $this->assertStringNotContainsString('x-ui.disclosure', $details);
+        $this->assertStringNotContainsString('<details', $details);
+        $this->assertStringNotContainsString('<summary', $details);
+        $this->assertStringContainsString('rb-availability__events-count', $details);
+        $this->assertStringContainsString('rb-availability__event-prompt', $details);
+        $cards = $this->read('resources/views/rooms/_calendar-events.blade.php');
+        foreach (["\$event['text']", "\$event['room']", "\$event['tip']", "\$event['tag']", "\$event['check']"] as $field) {
+            $this->assertStringContainsString($field, $cards, 'every existing event field is still shown');
+        }
+        $js = $this->read('public/js/availability.js');
+        $this->assertStringNotContainsString('summary', $js);
+        $this->assertStringContainsString('hidden', $js);
+        $this->assertMatchesRegularExpression('/\.rb-availability__events-scroll\s*\{[^}]*overflow-y:\s*auto/', $this->read('public/css/availability.css'));
+    }
+
+    public function test_staff_dashboard_has_three_equal_cards_that_collapse_to_two_then_one_column(): void
+    {
+        $css = $this->read('public/css/dashboard.css');
+        $this->assertMatchesRegularExpression('/\.rb-dashboard__stats\s*\{[^}]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/', $css);
+        $this->assertMatchesRegularExpression('/@media \(max-width: 56rem\)\s*\{\s*\.rb-dashboard__stats\s*\{[^}]*repeat\(2/', $css);
+        $this->assertMatchesRegularExpression('/@media \(max-width: 40rem\)\s*\{\s*\.rb-dashboard__stats\s*\{[^}]*minmax\(0,\s*1fr\)\s*;/', $css);
+        foreach (['StaffController', 'AdminController'] as $controller) {
+            $this->assertStringContainsString('DeskStats::for($user)', $this->read('app/Http/Controllers/'.$controller.'.php'));
+        }
     }
 }

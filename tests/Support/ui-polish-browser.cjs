@@ -104,14 +104,19 @@ const ok = (name) => { passed++; console.log('  PASS', name); };
   {
     const { context, page } = await login('staff');
     await page.goto(base + '/requests');
-    const groups = await page.evaluate(() => [...document.querySelectorAll('.req-group')].map((g) => ({ key: g.className.match(/req-group--(\w+)/)[1], count: +g.querySelector('.count').textContent, cards: g.querySelectorAll('.req').length, ids: [...g.querySelectorAll('.req')].map((c) => c.id) })));
-    assert.deepEqual(groups.map((g) => g.key), ['room', 'equipment']);
-    for (const g of groups) assert.equal(g.count, g.cards, `${g.key} count matches its cards`);
+    // Two category tabs (links with ?tab=); only the selected category's cards are on the page.
+    const tabs = await page.evaluate(() => [...document.querySelectorAll('.req-tabs a')].map((a) => ({ id: a.id, count: +a.querySelector('.count').textContent, current: a.getAttribute('aria-current') })));
+    assert.deepEqual(tabs.map((t) => t.id), ['req-tab-room', 'req-tab-equipment']);
+    assert.equal(tabs[0].current, 'page', 'Room requests is the default');
     const total = await page.evaluate(() => +document.querySelector('.rb-booking__panel h2 .count').textContent);
-    assert.equal(groups.reduce((n, g) => n + g.cards, 0), total, 'groups add up to the Waiting total');
+    assert.equal(tabs[0].count + tabs[1].count, total, 'tab counts add up to the Waiting total');
+    assert.equal(await page.locator('.req').count(), tabs[0].count, 'room tab lists exactly its counted cards');
+    await page.goto(base + '/requests?tab=equipment');
+    assert.equal(await page.locator('.req').count(), tabs[1].count, 'equipment tab lists exactly its counted cards');
     const equipmentNeeds = await page.evaluate(() => [...document.querySelectorAll('.req-group--equipment .req')].map((c) => c.textContent.includes('Equipment only')));
-    assert.ok(equipmentNeeds.every(Boolean), 'only equipment-only requests in the equipment group');
-    ok('room / equipment-only groups: counts, totals and membership');
+    assert.ok(equipmentNeeds.every(Boolean), 'only equipment-only requests in the equipment tab');
+    await page.goto(base + '/requests');
+    ok('room / equipment-only tabs: counts, totals and membership');
     // reject form: full width under the facts, required reason, nothing submitted
     await page.locator('[data-rb-reveal]').first().click();
     const w = await page.evaluate(() => { const c = document.querySelector('.req'); const f = c.querySelector('.req-reject.is-open'); return { card: c.getBoundingClientRect().width, form: f.getBoundingClientRect().width, required: f.querySelector('textarea').required }; });
@@ -180,9 +185,8 @@ const ok = (name) => { passed++; console.log('  PASS', name); };
     assert.ok(bg.every((c) => c === 'rgb(255, 255, 255)'));
     ok('booking rules and semester Save buttons are inside matching white cards');
     await page.goto(base + '/staff');
-    const stat = await page.evaluate(() => { const v = getComputedStyle(document.querySelector('.rb-stat__value')), l = getComputedStyle(document.querySelector('.rb-stat__label')); return { vs: v.fontSize, ls: l.fontSize, vl: v.lineHeight, ll: l.lineHeight }; });
-    assert.equal(stat.vs, stat.ls); assert.equal(stat.vl, stat.ll);
-    ok('stat number and label share font size and line height');
+    assert.equal(await page.locator('.rb-dashboard__stats .rb-stat-card').count(), 3, 'three statistic cards');
+    ok('lab staff dashboard shows three statistic cards');
     await context.close();
   }
   {
@@ -202,7 +206,8 @@ const ok = (name) => { passed++; console.log('  PASS', name); };
     assert.ok(!/yellow on timetable/i.test(text) && !/Blocked all day/i.test(text) && !/Seats not recorded/i.test(text), 'no spreadsheet remarks or old wording');
     ok('rooms page shows no "yellow on timetable", "Blocked all day" or "Seats not recorded"');
     assert.ok(!/\b0 seats\b/.test(text), 'unknown capacity is never shown as zero');
-    ok('capacity reads "N seats" when recorded and "Capacity not specified" otherwise, never "0 seats"');
+    assert.ok(!/Capacity not specified/.test(text), 'the Free rooms overview does not repeat "Capacity not specified"');
+    ok('capacity reads "N seats" when recorded, is left out when not, and is never "0 seats"');
     const counts = page.locator('.rb-availability__event-count');
     if (await counts.count()) {
       await counts.first().click();

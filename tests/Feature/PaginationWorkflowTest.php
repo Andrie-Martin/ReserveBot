@@ -173,21 +173,109 @@ final class PaginationWorkflowTest extends TestCase
         $this->assertSame(range(1, 14), $seen, 'oldest id first, no gaps or repeats between pages 1 and 2');
     }
 
-    public function test_requests_split_into_room_and_equipment_only_groups_keeping_soonest_first_order(): void
+    private function equipmentOnly(string $purpose, \DateTimeInterface $start): Reservation
+    {
+        return Reservation::create(['user_id' => $this->rep->id, 'room_id' => null, 'purpose' => $purpose, 'start_time' => $start,
+            'end_time' => (clone $start)->modify('+1 hour'), 'status' => 'Pending', 'other_items' => 'Extension cord']);
+    }
+
+    public function test_requests_are_two_category_tabs_with_counts_defaulting_to_room_requests_soonest_first(): void
     {
         $staff = $this->person('lab_staff', 'Lab Grouper');
         $room1 = $this->booking('Pending', now()->addDays(6)->setTime(9, 0), 'Room later');
-        $equip = Reservation::create(['user_id' => $this->rep->id, 'room_id' => null, 'purpose' => 'Borrow only', 'start_time' => now()->addDays(3)->setTime(9, 0), 'end_time' => now()->addDays(3)->setTime(10, 0), 'status' => 'Pending', 'other_items' => 'Extension cord']);
+        $equip = $this->equipmentOnly('Borrow only', now()->addDays(3)->setTime(9, 0));
         $room2 = $this->booking('Pending', now()->addDays(4)->setTime(9, 0), 'Room sooner');
         $html = $this->actingAs($staff)->get('/requests')->assertOk()->getContent();
 
+        // Both labels carry an accurate count; the selected one is the current page link.
         $this->assertMatchesRegularExpression('/Room requests <span class="count">2<\/span>/', $html);
         $this->assertMatchesRegularExpression('/Equipment-only requests <span class="count">1<\/span>/', $html);
-        $roomPart = substr($html, strpos($html, 'req-group--room'), strpos($html, 'req-group--equipment') - strpos($html, 'req-group--room'));
-        $equipPart = substr($html, strpos($html, 'req-group--equipment'));
-        $this->assertLessThan(strpos($roomPart, 'id="req-'.$room1->id.'"'), strpos($roomPart, 'id="req-'.$room2->id.'"'), 'soonest first inside the room group');
-        $this->assertStringNotContainsString('id="req-'.$equip->id.'"', $roomPart);
-        $this->assertStringContainsString('id="req-'.$equip->id.'"', $equipPart);
-        $this->assertStringContainsString('action="'.route('bookings.approve', $equip).'"', $equipPart);
+        $this->assertMatchesRegularExpression('/<a [^>]*id="req-tab-room"[^>]*aria-current="page"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<a [^>]*id="req-tab-equipment"[^>]*aria-current/', $html);
+        $this->assertStringContainsString('href="'.route('requests', ['tab' => 'equipment']).'"', $html);
+
+        // Only the selected category's cards are on the page, soonest first.
+        $this->assertLessThan(strpos($html, 'id="req-'.$room1->id.'"'), strpos($html, 'id="req-'.$room2->id.'"'), 'soonest first');
+        $this->assertStringNotContainsString('id="req-'.$equip->id.'"', $html);
+
+        $other = $this->actingAs($staff)->get('/requests?tab=equipment')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<a [^>]*id="req-tab-equipment"[^>]*aria-current="page"/', $other);
+        $this->assertStringContainsString('id="req-'.$equip->id.'"', $other);
+        $this->assertStringContainsString('action="'.route('bookings.approve', $equip).'"', $other);
+        $this->assertStringNotContainsString('id="req-'.$room1->id.'"', $other);
+        $this->assertStringContainsString('class="req-group req-group--equipment"', $other);
+
+        // An unknown category falls back to Room requests.
+        $junk = $this->actingAs($staff)->get('/requests?tab=nonsense')->assertOk()->getContent();
+        $this->assertStringContainsString('id="req-'.$room1->id.'"', $junk);
+    }
+
+    public function test_an_empty_category_says_so_and_points_at_the_other_one(): void
+    {
+        $staff = $this->person('lab_staff', 'Lab Empty');
+        $this->equipmentOnly('Borrow only', now()->addDays(3)->setTime(9, 0));
+        $html = $this->actingAs($staff)->get('/requests')->assertOk()->getContent();
+        $this->assertStringContainsString('No room requests are waiting for approval.', $html);
+        $this->assertStringContainsString('1 equipment-only request is waiting.', $html);
+    }
+
+    public function test_a_refused_rejection_stays_on_the_equipment_tab_and_other_departments_stay_hidden(): void
+    {
+        $staff = $this->person('lab_staff', 'Lab Reject');
+        $equip = $this->equipmentOnly('Borrow only', now()->addDays(3)->setTime(9, 0));
+        $this->actingAs($staff)->from('/requests?tab=equipment')->post(route('bookings.reject', $equip), ['reason' => ''])
+            ->assertRedirect('/requests?tab=equipment')->assertSessionHasErrors('reason', null, 'reject'.$equip->id);
+        $page = $this->actingAs($staff)->get('/requests?tab=equipment')->assertOk()->getContent();
+        $this->assertStringContainsString('id="req-'.$equip->id.'"', $page);
+        $this->assertSame('Pending', $equip->fresh()->status);
+
+        // Even if the address lost the category (refused from the default view), the form that was refused is the one shown.
+        $this->actingAs($staff)->from('/requests')->followingRedirects()->post(route('bookings.reject', $equip), ['reason' => ''])
+            ->assertOk()->assertSee('id="req-'.$equip->id.'"', false)->assertSee('Give a reason, so the rep knows what to change.');
+
+        $otherDepartment = Department::create(['name' => 'Elsewhere', 'slug' => 'else-'.Str::lower(Str::random(12))]);
+        $outsider = User::create(['department_id' => $otherDepartment->id, 'name' => 'Outside Rep', 'email' => Str::lower(Str::random(14)).'@gmail.com',
+            'role' => 'rep', 'password' => 'Starting123', 'is_active' => true, 'must_change_password' => false, 'email_verified_at' => now()]);
+        Reservation::create(['user_id' => $outsider->id, 'room_id' => null, 'purpose' => 'Hidden elsewhere', 'start_time' => now()->addDay(), 'end_time' => now()->addDay()->addHour(), 'status' => 'Pending', 'other_items' => 'Cable']);
+        $this->actingAs($staff)->get('/requests?tab=equipment')->assertOk()->assertDontSee('Hidden elsewhere');
+    }
+
+    public function test_staff_and_admin_dashboards_show_three_department_scoped_counts(): void
+    {
+        $staff = $this->person('lab_staff', 'Lab Stats');
+        $admin = $this->admin;
+        $projector = \App\Models\Equipment::create(['category_id' => \App\Models\EquipmentCategory::create(['department_id' => $this->department->id, 'name' => 'Stats '.Str::random(6), 'sort_order' => 1])->id, 'name' => 'Proj '.Str::random(6), 'total_qty' => 9, 'max_per_request' => 5, 'sort_order' => 1, 'is_active' => true]);
+
+        $this->booking('Pending', now()->addDays(2)->setTime(9, 0), 'Waiting one');
+        $this->booking('Pending', now()->addDays(3)->setTime(9, 0), 'Waiting two');
+        $this->booking('Confirmed', now()->setTime(8, 0), 'Approved today');
+        $inUse = $this->booking('InUse', now()->setTime(9, 0), 'In use today');
+        $inUse->equipment()->attach($projector->id, ['qty_requested' => 3]);
+        $done = $this->booking('Completed', now()->setTime(7, 0), 'Returned already');
+        $done->equipment()->attach($projector->id, ['qty_requested' => 4]);             // returned: not "in use"
+        $waitingItems = $this->booking('Pending', now()->addDays(4)->setTime(9, 0), 'Waiting with items');
+        $waitingItems->equipment()->attach($projector->id, ['qty_requested' => 2]);    // not handed out yet
+
+        // Another department's bookings never count.
+        $otherDepartment = Department::create(['name' => 'Elsewhere', 'slug' => 'else-'.Str::lower(Str::random(12))]);
+        $outsider = User::create(['department_id' => $otherDepartment->id, 'name' => 'Outside Rep', 'email' => Str::lower(Str::random(14)).'@gmail.com',
+            'role' => 'rep', 'password' => 'Starting123', 'is_active' => true, 'must_change_password' => false, 'email_verified_at' => now()]);
+        $far = Reservation::create(['user_id' => $outsider->id, 'room_id' => $this->room->id, 'purpose' => 'Elsewhere', 'start_time' => now()->setTime(10, 0), 'end_time' => now()->setTime(11, 0), 'status' => 'InUse']);
+        $far->equipment()->attach($projector->id, ['qty_requested' => 7]);
+        Reservation::create(['user_id' => $outsider->id, 'room_id' => $this->room->id, 'purpose' => 'Elsewhere waiting', 'start_time' => now()->addDays(2), 'end_time' => now()->addDays(2)->addHour(), 'status' => 'Pending']);
+
+        foreach ([[$staff, '/staff'], [$admin, '/admin']] as [$who, $url]) {
+            $this->flushSession();   // a new browser session per person (auth.session ties a session to one password hash)
+            $html = $this->actingAs($who)->get($url)->assertOk()->getContent();
+            $cards = [];
+            preg_match_all('/rb-stat-card__label">([^<]+)<\/dt>\s*<dd class="rb-stat-card__value">(\d+)</', $html, $m, PREG_SET_ORDER);
+            foreach ($m as $card) {
+                $cards[$card[1]] = (int) $card[2];
+            }
+            $this->assertSame(['Requests waiting for approval' => 3, 'Bookings approved or in use today' => 2, 'Equipment units in use' => 3], $cards, $url);
+            $this->assertStringContainsString('Ready to use', $html);
+        }
+        $this->flushSession();
+        $this->actingAs($this->rep)->get('/staff')->assertForbidden();
     }
 }
