@@ -246,3 +246,6 @@
 /* Stepper targets stay 44px even when text is enlarged, so the control still fits a phone's width. */
 .rb-booking .rb-stepper .rb-stepper__btn { width: min(var(--rb-control-height), 44px); min-width: min(var(--rb-control-height), 44px); height: min(var(--rb-control-height), 44px); }
 .rb-booking .book-form .eq-item input.rb-stepper__input { width: min(3.5rem, 56px); min-height: min(var(--rb-control-height), 44px); }
+/* Long category names (one unbroken word) wrap inside the accordion header instead of widening the page. */
+.rb-booking .eq-cat > summary { min-width: 0; overflow-wrap: anywhere; }
+.rb-booking .eq-cat > summary > * { min-width: 0; }

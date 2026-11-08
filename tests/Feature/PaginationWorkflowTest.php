@@ -156,4 +156,39 @@ final class PaginationWorkflowTest extends TestCase
         $this->actingAs($staff)->post(route('bookings.reject', $booking), ['reason' => ''])->assertSessionHasErrors('reason', null, 'reject'.$booking->id);
         $this->assertSame('Pending', $booking->fresh()->status);
     }
+
+    public function test_past_bookings_with_identical_start_times_keep_oldest_id_first_across_page_boundaries(): void
+    {
+        $start = now()->subDays(5)->setTime(9, 0);
+        $ids = [];
+        foreach (range(1, 14) as $i) {
+            $ids[] = $this->booking('Cancelled', $start, 'Tie '.$i)->id;       // all share one start time
+        }
+        $seen = [];
+        foreach ([1, 2] as $page) {
+            $html = $this->actingAs($this->rep)->get('/my-bookings?past_page='.$page)->assertOk()->getContent();
+            preg_match_all('/Tie (\d+)/', $html, $m);
+            $seen = array_merge($seen, array_map('intval', array_unique($m[1])));
+        }
+        $this->assertSame(range(1, 14), $seen, 'oldest id first, no gaps or repeats between pages 1 and 2');
+    }
+
+    public function test_requests_split_into_room_and_equipment_only_groups_keeping_soonest_first_order(): void
+    {
+        $staff = $this->person('lab_staff', 'Lab Grouper');
+        $room1 = $this->booking('Pending', now()->addDays(6)->setTime(9, 0), 'Room later');
+        $equip = Reservation::create(['user_id' => $this->rep->id, 'room_id' => null, 'purpose' => 'Borrow only', 'start_time' => now()->addDays(3)->setTime(9, 0), 'end_time' => now()->addDays(3)->setTime(10, 0), 'status' => 'Pending', 'other_items' => 'Extension cord']);
+        $room2 = $this->booking('Pending', now()->addDays(4)->setTime(9, 0), 'Room sooner');
+        $html = $this->actingAs($staff)->get('/requests')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/Room requests <span class="count">2<\/span>/', $html);
+        $this->assertMatchesRegularExpression('/Equipment-only requests <span class="count">1<\/span>/', $html);
+        $roomPart = substr($html, strpos($html, 'req-group--room'), strpos($html, 'req-group--equipment') - strpos($html, 'req-group--room'));
+        $equipPart = substr($html, strpos($html, 'req-group--equipment'));
+        $this->assertLessThan(strpos($roomPart, 'id="req-'.$room1->id.'"'), strpos($roomPart, 'id="req-'.$room2->id.'"'), 'soonest first inside the room group');
+        $this->assertStringNotContainsString('id="req-'.$equip->id.'"', $roomPart);
+        $this->assertStringContainsString('id="req-'.$equip->id.'"', $equipPart);
+        $this->assertStringContainsString('action="'.route('bookings.approve', $equip).'"', $equipPart);
+    }
 }
+

@@ -61,7 +61,8 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertStringContainsString('max="{{ $most }}"', $book);
         $this->assertStringContainsString('min($item->max_per_request, $item->free)', $book);
         $this->assertStringContainsString('@disabled($item->free === 0)', $book);
-        $this->assertStringNotContainsString('name="qty[{{ $item->id }}]" id', $book);
+        $this->assertSame(1, substr_count($book, 'name="qty[{{ $item->id }}]"'), 'one qty control per item');
+        $this->assertMatchesRegularExpression('/<input type="number" class="rb-stepper__input" id="qty-\{\{ \$item->id \}\}" name="qty\[\{\{ \$item->id \}\}\]"[^>]*min="0"/', $book);
         // The helper search field is never submitted.
         $this->assertMatchesRegularExpression('/<input type="search" id="eq-search"(?:(?!name=)[^>])*>/', $book);
     }
@@ -71,10 +72,11 @@ final class UiPolishPresentationTest extends TestCase
         $page = $this->read('resources/views/manage/equipment.blade.php');
         $this->assertStringContainsString("route('manage.categories.update', \$category)", $page);
         $this->assertStringContainsString("@method('PUT')", $page);
-        $this->assertStringContainsString('data-rb-reveal="cat-rename-', $page);
-        $this->assertStringContainsString('data-rb-rename="cat-rename-', $page);       // double-click target
+        $this->assertStringContainsString('data-rb-rename="cat-rename-', $page);       // the category name itself is the target
         $this->assertStringContainsString('data-rb-reveal-close', $page);             // Cancel
         $this->assertStringNotContainsString('<details class="rename"', $page);
+        $this->assertStringNotContainsString('mcat-edit', $page, 'no separate Rename button beside each category');
+        $this->assertStringContainsString('aria-describedby="cat-hint-', $page);       // the keyboard/touch instructions are announced
         // Add actions come before the category list.
         $this->assertLessThan(strpos($page, 'id="eq-categories"'), strpos($page, 'class="add-row'));
     }
@@ -102,11 +104,104 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertStringNotContainsString('x-ui.disclosure', $home);
         $this->assertStringContainsString('data-rb-drawer="meetings-all"', $home);
         $this->assertStringContainsString('data-rb-drawer="timetable-all"', $home);
-        $this->assertStringContainsString('classes.answer', $this->read('resources/views/home/_meeting.blade.php').$this->read('resources/views/classes/_answer.blade.php').'classes.answer');
+        // Every meeting row (page list and drawer) renders its Face-to-face / Online form through the one shared partial, with the rep route.
+        $meeting = $this->read('resources/views/home/_meeting.blade.php');
+        $this->assertStringContainsString("@include('classes._answer', ['m' => \$m, 'route' => 'classes.answer'])", $meeting);
+        $this->assertStringContainsString('name="answer" value="f2f"', $this->read('resources/views/classes/_answer.blade.php'));
+        // The drawer lists only the meetings that are not already answered inline, so each meeting keeps exactly one form.
+        $this->assertStringContainsString('@foreach ($otherMeetings as $m)', $home);
     }
 
     public function test_every_page_loads_the_shared_enhancement_script_with_a_cache_buster(): void
     {
         $this->assertMatchesRegularExpression('/js\/ui\.js\'\) \}\}\?v=\{\{ filemtime\(public_path\(\'js\/ui\.js\'\)\) \}\}" defer/', $this->read('resources/views/layouts/app.blade.php'));
+    }
+
+    public function test_rename_field_cannot_widen_the_page_qa_f1(): void
+    {
+        $css = $this->read('public/css/manage.css');
+        $this->assertDoesNotMatchRegularExpression('/\.mcat-rename input[^{]*\{[^}]*flex:\s*1 1 14rem/', $css, 'a 14rem flex-basis made the card wider than a 320px screen');
+        $this->assertMatchesRegularExpression('/\.mcat-rename input\[name="name"\]\s*\{[^}]*flex:\s*1 1 100%[^}]*width:\s*100%/', $css);
+    }
+
+    public function test_no_script_drawer_overlay_cannot_paint_over_the_panel_qa_f2(): void
+    {
+        $css = $this->read('public/css/foundations/components.css');
+        $this->assertStringNotContainsString('.rb-drawer:target:not([open])::before', $css);
+        $this->assertMatchesRegularExpression('/\.rb-drawer:target:not\(\[open\]\)\s*\{[^}]*0 0 0 100vmax/', $css);
+    }
+
+    public function test_drawer_header_is_compact_and_sub_line_lives_in_the_body_qa_f4(): void
+    {
+        $drawer = $this->read('resources/views/components/ui/drawer.blade.php');
+        $head = substr($drawer, strpos($drawer, 'rb-drawer__head'), strpos($drawer, 'rb-drawer__body') - strpos($drawer, 'rb-drawer__head'));
+        $this->assertStringNotContainsString('rb-drawer__sub', $head);
+        $this->assertStringContainsString('data-rb-drawer-close', $head);
+        $this->assertGreaterThan(strpos($drawer, 'rb-drawer__body'), strpos($drawer, 'rb-drawer__sub'));
+    }
+
+    public function test_drawers_react_to_hash_changes_and_never_stack_qa_f5(): void
+    {
+        $js = $this->read('public/js/ui.js');
+        $this->assertStringContainsString("window.addEventListener('hashchange', fromHash)", $js);
+        $this->assertStringContainsString("$$('dialog.rb-drawer[open]').forEach(other => other.close())", $js);
+    }
+
+    public function test_dead_room_busy_css_is_gone_and_nothing_references_it_qa_f6(): void
+    {
+        foreach (['public/css/availability.css', 'public/css/style.css', 'public/css/foundations/components.css', 'resources/views/rooms/_room.blade.php', 'public/js/ui.js', 'public/js/availability.js'] as $file) {
+            $this->assertStringNotContainsString('room-busy', $this->read($file), $file);
+        }
+    }
+
+    public function test_past_booking_ties_and_account_ties_use_a_deterministic_oldest_id_first_order_qa_f3(): void
+    {
+        $this->assertStringContainsString("->orderByDesc('start_time')->orderBy('id')", $this->read('app/Http/Controllers/BookingController.php'));
+        $this->assertStringContainsString("->orderBy('id')->get()", $this->read('app/Http/Controllers/AccountsController.php'));
+    }
+
+    public function test_requests_are_grouped_by_room_with_counts_and_unchanged_forms(): void
+    {
+        $view = $this->read('resources/views/requests/index.blade.php');
+        $this->assertStringContainsString("fn (\$r) => (bool) \$r->room_id", $view);
+        $this->assertStringContainsString("fn (\$r) => ! \$r->room_id", $view);
+        $this->assertStringContainsString("\$group['items']->count()", $view);
+        $this->assertStringContainsString("route('bookings.approve', \$r)", $view);
+        $this->assertStringContainsString("route('bookings.reject', \$r)", $view);
+        $this->assertStringContainsString('Grouping does not change who can approve', $view);
+    }
+
+    public function test_search_boxes_use_the_application_clear_control_not_the_browser_x(): void
+    {
+        foreach (['resources/views/manage/equipment.blade.php', 'resources/views/bookings/create.blade.php'] as $view) {
+            $source = $this->read($view);
+            $this->assertStringContainsString('rb-search__clear', $source);
+            $this->assertStringContainsString('aria-label="Clear search"', $source);
+        }
+        $css = $this->read('public/css/foundations/components.css');
+        $this->assertStringContainsString('::-webkit-search-cancel-button', $css);
+        $this->assertStringContainsString("clear.addEventListener('click'", $this->read('public/js/ui.js'));
+    }
+
+    public function test_booking_rules_and_semesters_save_inside_their_own_card_footer(): void
+    {
+        $rules = $this->read('resources/views/manage/rules.blade.php');
+        $this->assertSame(2, substr_count($rules, 'class="mform-footer"'), 'rules form and the per-semester form each have a footer');
+        $this->assertMatchesRegularExpression('/<div class="mform-footer"><button type="submit" class="btn-small">Save rules<\/button><\/div>\s*<\/form>/', $rules);
+        $this->assertMatchesRegularExpression('/<div class="mform-footer"><button type="submit" class="btn-small">Save dates<\/button><\/div>\s*<\/form>/', $rules);
+    }
+
+    public function test_password_guidance_is_a_matching_white_card(): void
+    {
+        $css = $this->read('public/css/auth.css');
+        $this->assertDoesNotMatchRegularExpression('/\.rb-account-guidance\s*\{[^}]*background/', $css);
+        $this->assertStringContainsString('rb-card rb-account-guidance', $this->read('resources/views/account/password.blade.php'));
+    }
+
+    public function test_stat_number_and_label_share_size_and_line_height(): void
+    {
+        $css = $this->read('public/css/foundations/components.css');
+        $this->assertMatchesRegularExpression('/\.rb-stat__value\s*\{[^}]*font-size:\s*inherit[^}]*line-height:\s*inherit/', $css);
+        $this->assertMatchesRegularExpression('/\.rb-stat__label\s*\{[^}]*font-size:\s*inherit[^}]*line-height:\s*inherit/', $css);
     }
 }

@@ -17,3 +17,13 @@ Backend touched only for pagination: `AccountsController::index` (20 per page, i
 
 ## Tests
 `tests/Feature/Frontend/UiPolishPresentationTest.php` (source contracts, no DB) and `tests/Feature/PaginationWorkflowTest.php` (DB-gated: run with `tests/Support/run-db-tests.sh`).
+
+## Final corrections (after independent QA)
+
+- **Rename:** there is no Rename button. The category name is the target: double-click (mouse), tap (touch/pen), Enter / Space / F2 (keyboard). A pencil and a hint ("Double-click the name to rename" / "Tap the name to rename") appear next to it. The field is percentage-width on phones, so it can never widen the page (QA F1).
+- **Requests:** waiting requests are split into **Room requests** (room only, room and equipment) and **Equipment-only requests**, each with its own count, both still soonest first. Presentation only; approval rules and routes are unchanged.
+- **Cards:** Booking rules is one white card with Save in its footer; each semester is one white card with Save dates in its footer. The password guidance is a white card matching the form.
+- **Search:** the equipment search (Manage and Book) fills its card and uses an application clear button (`.rb-search`, wired in `ui.js`); the browser's own X is hidden.
+- **Dashboard stat:** number and label share one font size and line height; only weight, colour and a soft tint set the number apart.
+- **QA fixes:** no-JS drawer overlay is a spread shadow, not a layer over the panel (F2); drawer header is kicker + title + Close, the sub-line moved into the body (F4); `hashchange` opens a drawer and only one is open at a time (F5); ties on My bookings are oldest id first and Accounts are read in id order (F3); the unused `room-busy` CSS is removed (F6).
+- **Tests:** `UiPolishPresentationTest` (20 source checks, the two ineffective assertions replaced), `PaginationWorkflowTest` (tie order, request grouping), and a real-browser script `tests/Support/ui-polish-browser.cjs` (needs Playwright and a disposable app; see its header). It changes no data.
