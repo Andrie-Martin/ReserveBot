@@ -22,7 +22,7 @@
   padding: var(--rb-space-2) var(--rb-space-4);
   border: var(--rb-border-width) solid transparent; border-radius: var(--rb-radius-control);
   background: var(--rb-action-primary-bg); color: var(--rb-action-primary-text);
-  font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold);
+  font-size: .8125rem; font-weight: var(--rb-weight-bold);   /* the same action-button type as the page-level .btn-* buttons */
   text-align: center; text-decoration: none; overflow-wrap: anywhere; cursor: pointer;
 }
 .rb-button:hover { background: var(--rb-action-primary-hover); color: var(--rb-action-primary-text); }

@@ -7,7 +7,7 @@
 .rb-booking__intro { min-width: 0; }
 .rb-booking__kicker, .rb-booking .eyebrow { margin: 0 0 var(--rb-space-1); font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .09em; text-transform: uppercase; color: var(--rb-color-maroon); }
 .rb-booking h1 { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); letter-spacing: -.03em; overflow-wrap: anywhere; }
-@media (min-width: 40.001rem) { .rb-booking__intro h1 { font-size: 1.8125rem; } }
+@media (min-width: 40.001rem) { .rb-booking__intro h1, .rb-booking .mine-head h1 { font-size: var(--rb-text-title); } }
 .rb-booking__intro .muted, .rb-booking .mine-head .muted { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
 
 /* Buttons shared by the three screens. */
@@ -34,7 +34,7 @@
 .rb-booking .empty { margin: 0; padding: var(--rb-space-4); border: 1px dashed var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
 
 /* Panels (the My bookings groups, booking detail blocks). */
-.rb-booking__panel, .rb-booking .review-box, .rb-booking .staff-box, .rb-booking .change-box, .rb-booking .cancel-box { min-width: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
+.rb-booking__panel, .rb-booking .review-box, .rb-booking .staff-box, .rb-booking .change-box { min-width: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
 .rb-booking__panel > h2 { display: flex; align-items: center; gap: var(--rb-space-2); margin: 0 0 var(--rb-space-2); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); font-size: 1rem; letter-spacing: -.02em; }
 .rb-booking .count { padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-surface-active); color: var(--rb-color-maroon); font-size: .75rem; font-weight: var(--rb-weight-bold); }
 .rb-booking summary { display: flex; align-items: center; min-height: var(--rb-control-height); cursor: pointer; color: var(--rb-color-maroon); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
@@ -58,7 +58,7 @@
 .rb-booking .book-form { display: grid; gap: var(--rb-space-6); min-width: 0; padding: 1.5rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
 .rb-booking .book-form > * { margin: 0; min-width: 0; }
 .rb-booking .book-form fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
-.rb-booking .book-form legend, .rb-booking .field-label { display: block; margin: 0 0 var(--rb-space-2); padding: 0; font-size: .8125rem; font-weight: var(--rb-weight-bold); color: var(--rb-text-primary); }
+.rb-booking .book-form legend, .rb-booking .field-label { display: block; margin: 0 0 var(--rb-space-2); padding: 0; font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); }
 .rb-booking .optional { font-weight: var(--rb-weight-regular); color: var(--rb-text-secondary); }
 .rb-booking .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr)); gap: var(--rb-space-4); }
 .rb-booking .book-form :is(select, textarea, input:not([type=radio], [type=checkbox], [type=hidden])) { display: block; width: 100%; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); }
@@ -73,11 +73,24 @@
 .rb-booking .choice strong { font-size: var(--rb-text-small); color: var(--rb-text-primary); }
 .rb-booking .choice span, .rb-booking .room-opt-name { font-size: .8125rem; color: var(--rb-text-secondary); }
 .rb-booking .room-opt-name strong { font-size: var(--rb-text-small); }
-.rb-booking .room-opt-name, .rb-booking .room-opt-name strong, .rb-booking .busy-rooms li { min-width: 0; overflow-wrap: anywhere; }
+.rb-booking .room-opt-name, .rb-booking .room-opt-name strong, .rb-booking .unavail__row > * { min-width: 0; overflow-wrap: anywhere; }
 .rb-booking .room-opt-state.free { color: var(--rb-success-text); font-size: .8125rem; }
 .rb-booking .room-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: var(--rb-space-2) var(--rb-space-4); margin-top: var(--rb-space-2); }
-.rb-booking .busy-rooms { margin-top: var(--rb-space-2); }
-.rb-booking .busy-rooms ul { margin: 0; padding-left: 1.25rem; font-size: .8125rem; color: var(--rb-text-secondary); }
+/* Unavailable rooms: an always-visible, compact table-like list (room | reason | time); it wraps to stacked lines on narrow screens. */
+.rb-booking .unavail { margin-top: var(--rb-space-4); padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+.rb-booking .unavail__title { display: flex; align-items: center; gap: var(--rb-space-2); margin: 0; font-size: var(--rb-text-small); font-weight: var(--rb-weight-bold); color: var(--rb-text-primary); }
+.rb-booking .unavail__hint { margin: var(--rb-space-1) 0 var(--rb-space-2); font-size: .8125rem; color: var(--rb-text-secondary); }
+.rb-booking .unavail__list { margin: 0; padding: 0; list-style: none; }
+.rb-booking .unavail__row { display: grid; grid-template-columns: minmax(4.5rem, 6.5rem) minmax(0, 1fr) auto; align-items: baseline; gap: var(--rb-space-1) var(--rb-space-4); margin: 0; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: .8125rem; }
+.rb-booking .unavail__room { font-size: var(--rb-text-small); color: var(--rb-text-primary); }
+.rb-booking .unavail__reason { color: var(--rb-text-secondary); }
+.rb-booking .unavail__time { color: var(--rb-text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 40rem) {
+  .rb-booking .unavail { padding-inline: var(--rb-space-3, .75rem); }
+  .rb-booking .unavail__row { grid-template-columns: auto minmax(0, 1fr); }
+  .rb-booking .unavail__reason { grid-column: 1 / -1; grid-row: 2; }
+  .rb-booking .unavail__time { grid-column: 2; grid-row: 1; justify-self: end; white-space: normal; text-align: right; }
+}
 
 .rb-booking .part-equipment > .field-label { margin-top: var(--rb-space-4); }
 
@@ -119,7 +132,8 @@
 .rb-booking .brow-meta, .rb-booking .brow-items, .rb-booking .brow-reason { margin-top: .125rem; font-size: .8125rem; color: var(--rb-text-secondary); }
 .rb-booking .brow-reason:not(.note) { color: var(--rb-danger-text); }
 .rb-booking .brow-side { min-width: 0; max-width: 100%; display: flex; flex-direction: column; align-items: flex-end; gap: var(--rb-space-1); }
-.rb-booking .brow-cancel { display: inline-flex; align-items: center; min-height: var(--rb-control-height); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-semibold); }
+.rb-booking .btn-ghost--compact { min-height: 2rem; padding: .25rem var(--rb-space-4); line-height: 1.25; }
+@media (max-width: 40rem), (pointer: coarse) { .rb-booking .btn-ghost--compact { min-height: var(--rb-control-height); } }
 .rb-booking .status-badge { display: inline-flex; align-items: center; gap: var(--rb-space-1); padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); max-width: 100%; white-space: normal; }
 .rb-booking .status-badge::before { content: ''; width: .3125rem; height: .3125rem; border-radius: 50%; background: currentColor; }
 
@@ -137,11 +151,11 @@
 .rb-booking .who-id { font-size: .75rem; color: var(--rb-text-secondary); overflow-wrap: anywhere; }
 /* An unbreakable unit: it drops to its own line before it ever splits, and only splits when even a whole line is too narrow. */
 .rb-booking .who-id-inline { display: inline-block; overflow-wrap: anywhere; }
-.rb-booking .review-actions, .rb-booking .change-grid { display: grid; gap: var(--rb-space-4); }
+.rb-booking .change-grid { display: grid; gap: var(--rb-space-4); }
 .rb-booking .change-grid { grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); }
-.rb-booking .change-grid form, .rb-booking .reject form, .rb-booking .cancel-box form { display: grid; gap: var(--rb-space-2); min-width: 0; }
-.rb-booking :is(.change-box, .cancel-box, .reject) :is(select, textarea) { display: block; width: 100%; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); }
-.rb-booking :is(.change-box, .cancel-box, .reject) textarea { min-height: 5rem; }
+.rb-booking .change-grid form { display: grid; gap: var(--rb-space-2); min-width: 0; }
+.rb-booking .change-box :is(select, textarea) { display: block; width: 100%; min-height: var(--rb-control-height); padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); }
+.rb-booking .change-box textarea { min-height: 5rem; }
 .rb-booking .history { margin: 0; padding: 0; list-style: none; }
 .rb-booking .history li { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); margin: 0; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: var(--rb-text-small); }
 .rb-booking .history li:first-child { border-top: 0; }
@@ -181,16 +195,9 @@
 .rb-booking :is(.tag-warn, .tag-today) { display: inline-flex; align-items: center; padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: .75rem; font-weight: var(--rb-weight-bold); }
 .rb-booking .tag-warn { background: var(--rb-danger-bg); color: var(--rb-danger-text); }
 .rb-booking .tag-today { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
-.rb-booking .review-actions { align-items: start; }
-.rb-booking .review-actions > form { margin: 0; }
 
-/* Phase 05: disclosure summaries on the system tokens (legacy [open] variants out-rank plain selectors). */
-.rb-booking .change-box > summary, .rb-booking .change-box[open] > summary,
-.rb-booking details.cancel-box > summary, .rb-booking details.cancel-box[open] > summary,
-.rb-booking details.reject > summary, .rb-booking details.reject[open] > summary { display: inline-flex; width: fit-content; max-width: 100%; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-bold); }
-.rb-booking details.cancel-box > summary, .rb-booking details.cancel-box[open] > summary,
-.rb-booking details.reject > summary, .rb-booking details.reject[open] > summary { border-color: var(--rb-danger-text); color: var(--rb-danger-text); }
-.rb-booking details.cancel-box[open] > summary, .rb-booking details.reject[open] > summary { background: var(--rb-danger-bg); }
+/* Phase 05: the Change box disclosure summary (the Reject and Cancel disclosures were replaced by always-visible panels). */
+.rb-booking .change-box > summary, .rb-booking .change-box[open] > summary { display: inline-flex; width: fit-content; max-width: 100%; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font-size: .8125rem; font-weight: var(--rb-weight-bold); }
 .rb-booking .change-box[open] > summary { background: var(--rb-surface-active); }
 .rb-booking .change-grid { align-items: start; }
 .rb-booking .change-grid form { align-content: start; }
@@ -200,11 +207,6 @@
    Row titles (.brow-title, dark text with a maroon hover) and timetable week-day names (.tt-dayname, bold) keep their own link styling. The exclusions sit in :where() so the rule keeps its original specificity (0,2,1). */
 .rb-booking a:not([class]):not(:where(.brow-title a, .tt-dayname a)), .rb-booking .req-link { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); }
 
-/* Phase 10 QA: the reject and cancel reason fields kept the legacy violet focus ring from style.css (details.reject textarea:focus, 0,2,2). Same ring as every other field here. */
-.rb-booking details.reject textarea:focus, .rb-booking details.cancel-box textarea:focus { border-color: var(--rb-border-control); outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
-
-/* Phase 10 QA: the "busy rooms" disclosure on the booking steps still turned legacy violet on hover (style.css .busy-rooms summary:hover). */
-.rb-booking .busy-rooms summary:hover { color: var(--rb-color-maroon); }
 
 /* ---- Book: When card, equipment list (two columns on desktop, one on phones), steppers, summary ---- */
 .rb-booking .when-summary { background: var(--rb-surface-panel); border-color: var(--rb-border-warm); border-radius: var(--rb-radius-card); padding: var(--rb-space-4) var(--rb-space-6); }
@@ -314,3 +316,32 @@
 
 /* 320px with enlarged text: the two action toggles share the row or stack, never wider than the screen. */
 .rb-booking .change-toggle { min-width: min(9rem, 100%); max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; text-align: center; }
+
+/* Booking detail actions: approve/reject (staff) and cancel (rep) are always-visible panels, not disclosures. */
+.rb-booking .review-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--rb-space-4); align-items: stretch; }
+.rb-booking .action-panel { display: flex; flex-direction: column; gap: var(--rb-space-2); box-sizing: border-box; min-width: 0; margin: 0; padding: var(--rb-space-4) 1.25rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
+.rb-booking .action-panel > h3 { margin: 0; font-size: var(--rb-text-h3); line-height: var(--rb-leading-heading); }
+.rb-booking .action-panel .hint { margin: 0; }
+.rb-booking .action-panel--reject { border-color: color-mix(in srgb, var(--rb-danger-text) 35%, var(--rb-surface-panel)); }
+.rb-booking :is(.action-panel__field, .cancel-card__form > div:first-child) { display: grid; gap: var(--rb-space-1); min-width: 0; }
+.rb-booking .action-panel .field-label, .rb-booking .cancel-card .field-label { margin: 0; }
+.rb-booking .action-panel textarea, .rb-booking .cancel-card textarea { display: block; box-sizing: border-box; width: 100%; min-height: 4.5rem; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); resize: vertical; }
+.rb-booking .action-panel textarea:focus, .rb-booking .cancel-card textarea:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-color: var(--rb-border-control); }
+.rb-booking :is(.action-panel, .cancel-card) textarea[aria-invalid="true"] { border-color: var(--rb-danger-text); }
+.rb-booking :is(.action-panel, .cancel-card) .field-error { margin: 0; }
+/* The action sits at the foot of its panel, so Approve and Reject line up whatever the panels contain. */
+.rb-booking .action-panel__foot { margin-top: auto; padding-top: var(--rb-space-2); }
+.rb-booking .cancel-card { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; gap: var(--rb-space-4) var(--rb-space-6); }
+.rb-booking .cancel-card__info { display: grid; gap: var(--rb-space-2); align-content: start; min-width: 0; }
+.rb-booking .cancel-card__info > * { margin: 0; }
+.rb-booking .cancel-card__info h2 { font-size: var(--rb-text-h3); line-height: var(--rb-leading-heading); }
+.rb-booking .cancel-card__deadline { font-size: var(--rb-text-small); color: var(--rb-text-primary); }
+.rb-booking .cancel-card__form { display: grid; gap: var(--rb-space-2); min-width: 0; max-width: 36rem; padding-left: var(--rb-space-6); border-left: 1px solid var(--rb-border-warm); }
+@media (max-width: 56rem) {
+  .rb-booking .review-panels, .rb-booking .cancel-card { grid-template-columns: minmax(0, 1fr); }
+  .rb-booking .cancel-card__form { max-width: none; padding-left: 0; border-left: 0; }
+}
+@media (max-width: 40rem) {
+  .rb-booking .action-panel { padding: var(--rb-space-4); }
+  .rb-booking :is(.action-panel__foot, .cancel-card__form) :is(.btn-approve, .btn-reject) { width: 100%; }
+}

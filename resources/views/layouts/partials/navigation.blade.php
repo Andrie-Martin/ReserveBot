@@ -12,5 +12,4 @@
       @endforeach
     </ul>
   </nav>
-  @include('layouts.partials.workspace-note')
 </aside>

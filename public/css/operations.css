@@ -7,7 +7,7 @@
 .rb-ops .today-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); }
 .rb-ops .today-head > div:first-child { min-width: 0; }
 .rb-ops .today-head h1 { margin: 0 0 var(--rb-space-1); font-size: var(--rb-text-h2); }
-@media (min-width: 40.001rem) { .rb-ops .today-head h1 { font-size: 1.8125rem; } }
+@media (min-width: 40.001rem) { .rb-ops .today-head h1 { font-size: var(--rb-text-title); } }
 .rb-ops .today-head .muted { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
 .rb-ops .daynav { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
 .rb-ops .today-stats { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; padding: 0; list-style: none; }
@@ -98,7 +98,11 @@
 .rb-ops .req-reject textarea { display: block; box-sizing: border-box; width: 100%; min-height: 5rem; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); resize: vertical; }
 .rb-ops .req-reject textarea:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-ops .req-reject textarea[aria-invalid="true"] { border-color: var(--rb-danger-text); }
-.rb-ops .req-reject__actions { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
+.rb-ops .req-reject__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+/* Reject booking (filled, destructive) and Cancel (neutral outline) are one group: same height, type, padding and radius. style.css gives button.btn-reject a top margin, which is reset here. */
+.rb-ops .req-reject__actions > :is(.btn-reject, .btn-ghost) { box-sizing: border-box; flex: 0 0 auto; width: auto; min-width: 7.5rem; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border-width: 1px; font-size: .8125rem; font-weight: var(--rb-weight-bold); line-height: 1.25; }
+.rb-ops .req-reject__actions > .btn-ghost { border-color: var(--rb-border-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); }
+.rb-ops .req-reject__actions > .btn-ghost:hover { border-color: var(--rb-text-secondary); background: var(--rb-surface-canvas); color: var(--rb-text-primary); }
 .rb-ops .req-reject .btn-reject { border-color: var(--rb-danger-text); background: var(--rb-danger-text); color: var(--rb-color-white); }
 .rb-ops .req-reject .btn-reject:hover { background: var(--rb-color-white); color: var(--rb-danger-text); }
 .rb-ops .req-actions .btn-reject[aria-expanded="true"] { background: var(--rb-danger-bg); }
@@ -119,7 +123,7 @@
   .rb-ops .req-fact--who { grid-column: 1 / -1; }
   .rb-ops .req-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr)); }
   .rb-ops .req-actions form, .rb-ops .req-actions form button, .rb-ops .req-actions a { width: 100%; box-sizing: border-box; }
-  .rb-ops .req-reject__actions > * { flex: 1 1 8rem; }
+  .rb-ops .req-reject__actions > :is(.btn-reject, .btn-ghost) { flex: 1 1 8rem; }
   .rb-ops .decided-row { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 40rem), (pointer: coarse) { .rb-ops .decided-title { display: inline-flex; align-items: center; min-height: var(--rb-control-height); } }

@@ -15,14 +15,17 @@ class RoomCapacityTest extends TestCase
         $this->assertTrue(RoomCapacity::known(40));
     }
 
-    public function test_a_missing_capacity_is_never_shown_as_zero_or_as_the_old_wording(): void
+    public function test_a_missing_capacity_shows_nothing_at_all(): void
     {
         foreach ([null, '', 'n/a'] as $missing) {
-            $label = RoomCapacity::label($missing);
-            $this->assertSame('Capacity not specified', $label);
-            $this->assertStringNotContainsString('0', $label);
-            $this->assertStringNotContainsString('not recorded', $label);
+            $this->assertSame('', RoomCapacity::label($missing), 'no placeholder wording, no zero, no dash');
             $this->assertFalse(RoomCapacity::known($missing));
         }
+    }
+
+    public function test_a_recorded_zero_is_a_real_value_and_is_kept(): void
+    {
+        $this->assertTrue(RoomCapacity::known(0));
+        $this->assertSame('0 seats', RoomCapacity::label(0));
     }
 }

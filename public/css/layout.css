@@ -34,9 +34,6 @@
 .rb-nav-item__icon { width: 1.125rem; height: 1.125rem; flex: 0 0 1.125rem; }
 .rb-nav-item__mobile { display: none; }
 .rb-nav-item__count { margin-left: auto; padding: 0 .375rem; border-radius: .375rem; background: color-mix(in srgb, var(--rb-color-maroon) 16%, var(--rb-color-white)); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); }
-.rb-sidebar .rb-workspace-note { margin-top: auto; padding: .75rem; background: var(--rb-surface-canvas); border: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
-.rb-workspace-note p { margin: 0; }
-.rb-workspace-note .rb-workspace-note__title { color: var(--rb-color-maroon); font-weight: var(--rb-weight-semibold); margin-bottom: var(--rb-space-2); }
 .rb-account__link:hover { color: var(--rb-color-maroon); background: var(--rb-surface-active); }
 .rb-header__crumb { display: none; }
 .rb-role-card { display: grid; gap: .125rem; padding: .625rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
@@ -104,8 +101,7 @@
     .rb-shell--workspace:not(.rb-shell--rep):not([data-menu-open]) .rb-sidebar { display: none; }
   }
   .rb-sidebar { border-right: 0; border-bottom: 1px solid var(--rb-border-warm); padding: var(--rb-space-4); }
-  .rb-sidebar .rb-workspace-note { display: none; }
-  .rb-shell--workspace .rb-shell__main, .rb-shell--workspace .rb-shell__main.wide { padding: var(--rb-space-6) var(--rb-space-4) var(--rb-space-8); }
+    .rb-shell--workspace .rb-shell__main, .rb-shell--workspace .rb-shell__main.wide { padding: var(--rb-space-6) var(--rb-space-4) var(--rb-space-8); }
   .rb-email-notice { margin: var(--rb-space-4) var(--rb-space-4) 0; }
   .rb-shell--rep { padding-bottom: var(--rb-bottom-space, calc(7rem + env(safe-area-inset-bottom))); }
   .rb-shell--rep .rb-sidebar { position: fixed; z-index: 10; bottom: 0; left: 0; right: 0; padding: 0 0 env(safe-area-inset-bottom); border-top: 1px solid var(--rb-border-warm); border-bottom: 0; }

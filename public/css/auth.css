@@ -38,7 +38,10 @@
 .rb-auth-illustration__caption, .rb-auth-illustration__motto { fill: var(--rb-color-white); font-family: var(--rb-font-family); font-weight: var(--rb-weight-semibold); font-size: 12px; }
 .rb-auth-illustration__motto { font-size: 13px; }
 .rb-account-page { max-width: none; }
-.rb-account-hero .rb-heading--h1 { margin: 0; letter-spacing: -.03em; }
+.rb-account-hero .rb-heading--h1 { margin: 0; font-size: var(--rb-text-h2); letter-spacing: -.03em; }
+@media (min-width: 40.001rem) { .rb-account-hero .rb-heading--h1 { font-size: var(--rb-text-title); } }
+/* Descriptions and helper text on the account pages use the same small size as the sub-lines and hints elsewhere. */
+.rb-account-page .rb-description { font-size: var(--rb-text-small); }
 .rb-account-hero .rb-description { max-width: 42rem; margin: var(--rb-space-1) 0 0; }
 .rb-account-layout { display: grid; gap: var(--rb-section-gap); align-items: start; }
 .rb-account-layout > * { min-width: 0; }
@@ -47,10 +50,10 @@
 .rb-account-password-card { max-width: 34rem; }
 .rb-account-fineprint { margin: 0; font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
 .rb-account-page.rb-stack { gap: var(--rb-section-gap); }
-.rb-account-tabs { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); padding-bottom: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
-.rb-account-tabs a { padding: var(--rb-space-2) var(--rb-space-4); display: inline-flex; align-items: center; min-height: var(--rb-control-height); text-decoration: none; font-weight: var(--rb-weight-semibold); border: 1px solid transparent; border-radius: var(--rb-radius-control); }
-.rb-account-tabs a[aria-current] { background: var(--rb-surface-active); border-color: color-mix(in srgb, var(--rb-color-maroon) 16%, var(--rb-color-white)); }
-.rb-account-tabs a:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+/* The Information / Password tabs use the shared underline sub-navigation (.rb-subnav); this only undoes the page's blanket maroon link colour for idle tabs. */
+.rb-account-page .rb-subnav a { color: var(--rb-text-secondary); }
+.rb-account-page .rb-subnav a:hover { color: var(--rb-color-deep); }
+.rb-account-page .rb-subnav a[aria-current] { color: var(--rb-color-maroon); }
 .rb-auth-card a, .rb-account-page a { color: var(--rb-color-maroon); }
 .rb-auth-card a:focus-visible, .rb-account-page a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-account-photo { display: grid; gap: var(--rb-space-4); min-width: 0; }

@@ -70,8 +70,7 @@ const sizes=[[1438,638],[1440,900],[1366,768],[1280,720],[1024,600],[768,1024],[
     assert.ok(focus.y>=bounds.y-1&&focus.y+focus.height<=bounds.y+bounds.height+1,'last navigation link visible');
     assert.equal(await page.locator(':focus').evaluate(e=>getComputedStyle(e).outlineStyle),'solid');
     await sidebar.evaluate(e=>e.scrollTop=e.scrollHeight);
-    const note=await sidebar.locator('.rb-workspace-note').boundingBox(),end=await sidebar.boundingBox();
-    assert.ok(note.y+note.height<=end.y+end.height+1,'advisory reachable');
+    assert.equal(await sidebar.locator('.rb-workspace-note').count(),0,'the campus information card is gone');
    } else if(await sidebar.count()) {
     if(await page.locator('.rb-shell--rep').count()){
      const last=page.locator('main a, main button:not([disabled]), main input:not([type=hidden]), main select').last();
