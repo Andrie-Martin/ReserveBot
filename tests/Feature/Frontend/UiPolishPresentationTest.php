@@ -355,4 +355,26 @@ final class UiPolishPresentationTest extends TestCase
             $this->assertStringContainsString('DeskStats::for($user)', $this->read('app/Http/Controllers/'.$controller.'.php'));
         }
     }
+
+    public function test_booking_detail_actions_are_always_visible_panels_not_dropdowns(): void
+    {
+        $view = $this->read('resources/views/bookings/show.blade.php');
+        $this->assertStringNotContainsString('<details', $view);
+        $this->assertStringNotContainsString('<summary', $view);
+        // Same forms as before: routes, POST, CSRF and the field name.
+        foreach (["route('bookings.approve', \$reservation)", "route('bookings.reject', \$reservation)", "route('bookings.cancel', \$reservation)"] as $route) {
+            $this->assertStringContainsString($route, $view);
+        }
+        $this->assertSame(5, substr_count($view, '@csrf'), 'approve, reject, cancel, and the staff move and cancel forms each carry a token');
+        $this->assertStringContainsString('id="cancel"', $view, 'the My bookings link target stays');
+        $this->assertStringContainsString("getBag('reject'.\$reservation->id)", $view, 'the rejection error bag name is unchanged');
+        $this->assertMatchesRegularExpression('/id="reject-reason" name="reason"[^>]*\brequired\b/', $view);
+        $this->assertMatchesRegularExpression('/id="cancel-reason" name="reason"[^>]*\brequired\b/', $view);
+
+        $css = $this->read('public/css/booking.css');
+        $this->assertMatchesRegularExpression('/\.review-panels\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(0,\s*2fr\)/', $css, 'approve is one third, reject two thirds');
+        $this->assertMatchesRegularExpression('/@media \(max-width: 56rem\)\s*\{\s*\.rb-booking \.review-panels[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/', $css, 'the panels stack on narrow screens');
+        $this->assertStringNotContainsString('details.reject', $css);
+        $this->assertStringNotContainsString('details.cancel-box', $css);
+    }
 }
