@@ -205,3 +205,112 @@
 
 /* Phase 10 QA: the "busy rooms" disclosure on the booking steps still turned legacy violet on hover (style.css .busy-rooms summary:hover). */
 .rb-booking .busy-rooms summary:hover { color: var(--rb-color-maroon); }
+
+/* ---- Book: When card, equipment list (two columns on desktop, one on phones), steppers, summary ---- */
+.rb-booking .when-summary { background: var(--rb-surface-panel); border-color: var(--rb-border-warm); border-radius: var(--rb-radius-card); padding: var(--rb-space-4) var(--rb-space-6); }
+.rb-booking .when-summary .btn-ghost { align-self: center; }
+@media (max-width: 40rem) { .rb-booking .when-summary { padding: var(--rb-space-4); } }
+.rb-booking .eq-tools[hidden], .rb-booking .eq-summary[hidden], .rb-booking [data-eq-none][hidden], .rb-booking [data-eq-item][hidden], .rb-booking .eq-cat[hidden], .rb-booking .eq-summary__empty[hidden] { display: none; }
+.rb-booking .eq-tools { margin: var(--rb-space-4) 0 0; }
+.rb-booking .book-form .rb-search input.rb-search__input { width: 100%; padding: var(--rb-space-2) 2.75rem var(--rb-space-2) var(--rb-space-4); }
+.rb-booking .eq-tools .hint { min-height: 1.25rem; margin: var(--rb-space-1) 0 0; }
+.rb-booking .eq-summary { margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+.rb-booking .eq-summary h3 { margin: 0 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__empty { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__list { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; padding: 0; list-style: none; }
+.rb-booking .eq-summary__list > li { display: inline-flex; align-items: center; gap: var(--rb-space-2); margin: 0; padding: .25rem var(--rb-space-2) .25rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-pill); background: var(--rb-surface-panel); font-size: var(--rb-text-small); }
+.rb-booking .eq-summary__list strong { color: var(--rb-color-maroon); font-variant-numeric: tabular-nums; }
+.rb-booking .eq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-2) var(--rb-space-6); padding: var(--rb-space-2) var(--rb-space-4) var(--rb-space-4); }
+.rb-booking .eq-item { display: flex; align-items: center; justify-content: space-between; gap: var(--rb-space-4); padding: var(--rb-space-2) 0; border-bottom: 1px solid var(--rb-border-warm); }
+.rb-booking .eq-item.is-picked label { color: var(--rb-color-deep); font-weight: var(--rb-weight-bold); }
+.rb-booking .eq-item__info { display: grid; gap: .125rem; min-width: 0; }
+.rb-booking .eq-item__info label { margin: 0; font-weight: var(--rb-weight-semibold); }
+.rb-booking .eq-free { margin: 0; }
+.rb-booking .rb-stepper { display: inline-flex; align-items: center; flex: none; gap: var(--rb-space-1); }
+.rb-booking .rb-stepper .rb-stepper__btn { display: inline-grid; place-items: center; box-sizing: border-box; width: var(--rb-control-height); min-width: var(--rb-control-height); height: var(--rb-control-height); margin: 0; padding: 0; border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-color-maroon); font: inherit; font-size: 1.25rem; font-weight: var(--rb-weight-bold); line-height: 1; cursor: pointer; }
+.rb-booking .rb-stepper .rb-stepper__btn[hidden] { display: none; }
+.rb-booking .rb-stepper .rb-stepper__btn:hover:not(:disabled) { background: var(--rb-surface-active); color: var(--rb-color-deep); border-color: var(--rb-color-maroon); }
+.rb-booking .rb-stepper .rb-stepper__btn:disabled { border-style: dashed; border-color: var(--rb-border-subtle); background: var(--rb-neutral-bg); color: var(--rb-text-muted); cursor: not-allowed; }
+.rb-booking .rb-stepper .rb-stepper__btn:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-booking .book-form .eq-item input.rb-stepper__input { box-sizing: border-box; width: 3.5rem; min-width: 0; padding: var(--rb-space-2) var(--rb-space-1); text-align: center; font-variant-numeric: tabular-nums; font-weight: var(--rb-weight-bold); }
+.rb-booking .rb-stepper--js .rb-stepper__input { -moz-appearance: textfield; appearance: textfield; }
+.rb-booking .rb-stepper--js .rb-stepper__input::-webkit-outer-spin-button, .rb-booking .rb-stepper--js .rb-stepper__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@media (max-width: 52rem) { .rb-booking .eq-grid { grid-template-columns: minmax(0, 1fr); } }
+/* Class picker. */
+.rb-booking .when-class .rb-picker { max-width: 40rem; }
+.rb-booking .when-class .rb-picker__option-title { font-weight: var(--rb-weight-semibold); }
+
+/* Large text on a phone: the item name and its stepper wrap onto two lines instead of widening the page. */
+.rb-booking .eq-item { flex-wrap: wrap; }
+.rb-booking .eq-item__info { flex: 1 1 9rem; }
+/* Stepper targets stay 44px even when text is enlarged, so the control still fits a phone's width. */
+.rb-booking .rb-stepper .rb-stepper__btn { width: min(var(--rb-control-height), 44px); min-width: min(var(--rb-control-height), 44px); height: min(var(--rb-control-height), 44px); }
+.rb-booking .book-form .eq-item input.rb-stepper__input { width: min(3.5rem, 56px); min-height: min(var(--rb-control-height), 44px); }
+/* Long category names (one unbroken word) wrap inside the accordion header instead of widening the page. */
+.rb-booking .eq-cat > summary { min-width: 0; overflow-wrap: anywhere; }
+.rb-booking .eq-cat > summary > * { min-width: 0; }
+
+/* ================= Booking details: compact summary, grouped staff actions, Move / Cancel panels ================= */
+.rb-booking .booking-summary .booking-head { align-items: flex-start; margin-bottom: var(--rb-space-4); padding-bottom: var(--rb-space-4); border-bottom: 1px solid var(--rb-border-warm); }
+.rb-booking .booking-summary .booking-head h1 { font-size: 1.375rem; line-height: var(--rb-leading-heading); overflow-wrap: anywhere; }
+.rb-booking .bfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rb-space-4) var(--rb-space-6); margin: 0; padding: 0; border: 0; }
+.rb-booking .bfact { min-width: 0; }
+.rb-booking .bfact--note { grid-column: 1 / -1; padding: var(--rb-space-2) var(--rb-space-4); border-left: 3px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
+.rb-booking .bfact dt { margin: 0 0 .125rem; font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); letter-spacing: .04em; text-transform: uppercase; color: var(--rb-text-secondary); }
+.rb-booking .bfact dd { margin: 0; font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-booking .bfact .who-cell { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .bequip { margin-top: var(--rb-space-4); padding-top: var(--rb-space-4); border-top: 1px solid var(--rb-border-warm); }
+.rb-booking .bequip > h2 { margin: 0 0 var(--rb-space-2); padding: 0; border: 0; font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); letter-spacing: .04em; text-transform: uppercase; color: var(--rb-text-secondary); }
+.rb-booking .chips { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; padding: 0; list-style: none; }
+.rb-booking .chip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .125rem var(--rb-space-2); max-width: 100%; margin: 0; padding: .25rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-pill); background: var(--rb-surface-canvas); font-size: var(--rb-text-small); }
+.rb-booking .chip__name { min-width: 0; overflow-wrap: anywhere; }
+.rb-booking .chip__qty { color: var(--rb-color-maroon); font-weight: var(--rb-weight-bold); font-variant-numeric: tabular-nums; }
+.rb-booking .chip__note { color: var(--rb-text-secondary); font-size: var(--rb-text-caption); }
+.rb-booking .chip--other { border-style: dashed; background: var(--rb-surface-panel); }
+
+/* Staff actions: one card, each block a titled section divided by a rule. */
+.rb-booking .booking-actions > h2 { margin: 0 0 var(--rb-space-4); padding: 0; border: 0; font-size: var(--rb-text-h3); }
+.rb-booking .booking-actions > :is(.review-box, .staff-box, .change-actions) { margin: 0; padding: var(--rb-space-4) 0 0; border: 0; border-top: 1px solid var(--rb-border-warm); border-radius: 0; background: none; }
+.rb-booking .booking-actions > h2 + :is(.review-box, .staff-box, .change-actions) { padding-top: 0; border-top: 0; }
+.rb-booking .booking-actions > :is(.review-box, .staff-box, .change-actions) + :is(.review-box, .staff-box, .change-actions) { margin-top: var(--rb-space-4); }
+.rb-booking .change-actions .review-title { margin: 0 0 var(--rb-space-2); }
+.rb-booking .change-bar { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
+.rb-booking .change-toggle { min-width: 9rem; }
+.rb-booking .change-toggle[aria-expanded="true"] { border-color: var(--rb-color-maroon); background: var(--rb-surface-active); color: var(--rb-color-deep); }
+.rb-booking .btn-ghost--danger { border-color: var(--rb-danger-text); color: var(--rb-danger-text); }
+.rb-booking .btn-ghost--danger:hover { background: var(--rb-danger-bg); color: var(--rb-danger-text); }
+.rb-booking .btn-ghost--danger[aria-expanded="true"] { border-color: var(--rb-danger-text); background: var(--rb-danger-bg); color: var(--rb-danger-text); }
+
+.rb-booking .change-panel.rb-reveal { display: none; box-sizing: border-box; gap: var(--rb-space-4); width: 100%; max-width: 52rem; margin: var(--rb-space-4) 0 0; padding: var(--rb-space-4) var(--rb-space-6) var(--rb-space-6); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); }
+.rb-booking .change-panel.rb-reveal.is-open, .rb-booking .change-panel.rb-reveal:target { display: grid; }
+.rb-booking .change-panel--cancel { border-color: color-mix(in srgb, var(--rb-danger-text) 35%, var(--rb-surface-panel)); border-left: 3px solid var(--rb-danger-text); }
+.rb-booking .change-panel > h3 { margin: 0; font-size: var(--rb-text-h3); }
+.rb-booking .change-panel > * { min-width: 0; margin-block: 0; }
+.rb-booking .change-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr)); gap: var(--rb-space-4); }
+.rb-booking .change-panel .field-label { margin: 0 0 var(--rb-space-1); }
+.rb-booking .change-panel textarea { display: block; box-sizing: border-box; width: 100%; min-height: 5.5rem; padding: var(--rb-space-2) .75rem; border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font: inherit; font-size: var(--rb-text-small); resize: vertical; }
+.rb-booking .change-panel textarea:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-color: var(--rb-border-control); }
+.rb-booking .change-panel .hint { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+.rb-booking .change-panel > .hint { margin: 0; }
+.rb-booking .change-confirm { display: flex; align-items: flex-start; gap: var(--rb-space-2); min-height: var(--rb-control-height); font-size: var(--rb-text-small); font-weight: var(--rb-weight-medium); cursor: pointer; }
+.rb-booking .change-confirm input { flex: none; width: 1.25rem; height: 1.25rem; margin: .125rem 0 0; accent-color: var(--rb-danger-text); }
+.rb-booking .change-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); padding-top: var(--rb-space-4); border-top: 1px solid var(--rb-border-warm); }
+.rb-booking .btn-reject--solid { border-color: var(--rb-danger-text); background: var(--rb-danger-text); color: var(--rb-color-white); }
+.rb-booking .btn-reject--solid:hover { background: var(--rb-surface-panel); color: var(--rb-danger-text); }
+.rb-booking .change-footer button:disabled { opacity: .6; cursor: progress; }
+
+@media (max-width: 56rem) {
+  .rb-booking .bfacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 40rem) {
+  .rb-booking .bfacts { grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-2) 0; }
+  .rb-booking .bfact { padding-bottom: var(--rb-space-2); border-bottom: 1px solid var(--rb-border-warm); }
+  .rb-booking .bfact:last-child { border-bottom: 0; }
+  .rb-booking .bfact--note { border-bottom: 0; }
+  .rb-booking .change-panel.rb-reveal { padding: var(--rb-space-4); }
+  .rb-booking .change-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
+  .rb-booking .change-toggle, .rb-booking .change-footer > * { width: 100%; box-sizing: border-box; }
+}
+
+/* 320px with enlarged text: the two action toggles share the row or stack, never wider than the screen. */
+.rb-booking .change-toggle { min-width: min(9rem, 100%); max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; text-align: center; }

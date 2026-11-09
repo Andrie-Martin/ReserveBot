@@ -251,12 +251,12 @@ function ttContracts(): int
             $check($x->query('.//input[@name="_token" and @value="isolated-layout-csrf"]', $form)->length === 1, "$name csrf");
         }
         $check($x->query('//link[contains(@href,"css/manage.css?v=")]')->length === 1, "$name manage stylesheet");
-        $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")]')->length === 1, "$name one current tab");
+        $check($x->query('//nav[@aria-label="Manage"]//a[@aria-current="page"]')->length === 1, "$name one current tab");
         // Phase 08 review corrections: descriptive heading that matches the title, aria-current, page script, named scroll regions, refused-form fields.
         $heading = trim($x->query('//main//h1')->item(0)->textContent);
         $check($heading !== '' && $heading !== 'Manage', "$name descriptive heading ($heading)");
         $check(str_starts_with(trim($x->query('//title')->item(0)->textContent), $heading), "$name title starts with the heading");
-        $check($x->query('//nav[@aria-label="Manage"]//a[contains(@class,"on")][@aria-current="page"]')->length === 1 && $x->query('//nav[@aria-label="Manage"]//a[@aria-current="page"]')->length === 1, "$name current tab has aria-current");
+        $check($x->query('//nav[@aria-label="Manage"]//a[@aria-current="page"]')->length === 1 && $x->query('//nav[@aria-label="Manage"]//a[@aria-current="page"]')->length === 1, "$name current tab has aria-current");
         $check($x->query('//script[contains(@src,"js/timetable.js?v=")]')->length === 1, "$name page script");
         foreach ($x->query('//*[contains(@class,"tt-week-scroll") or contains(@class,"table-scroll")]') as $region) {
             $check($region->getAttribute('role') === 'region' && $region->getAttribute('tabindex') === '0' && str_contains($region->getAttribute('aria-label'), 'scroll horizontally'), "$name scroll region is named and focusable");

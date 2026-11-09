@@ -6,7 +6,7 @@
       <h2 id="day-title">{{ $date->format('l, F j') }}@if ($date->isToday()) <span class="rb-availability__todaytag">Today</span>@endif</h2>
     </div>
     <div class="rb-availability__daynav">
-      <x-ui.link-button variant="secondary" href="#calendar-and-agenda">Calendar and agenda</x-ui.link-button>
+      <x-ui.link-button href="#calendar-and-agenda">Calendar and agenda</x-ui.link-button>
       @if ($prevUrl)
         <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$prevUrl">‹ Previous day</x-ui.link-button>
       @else

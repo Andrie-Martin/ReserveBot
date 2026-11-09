@@ -78,7 +78,7 @@ textarea.rb-control { resize: vertical; }
 .rb-page-header__text { flex: 1 1 var(--rb-grid-min); min-width: 0; }
 .rb-stat-card__list { margin: 0; }
 .rb-stat-card__label { color: var(--rb-text-muted); font-size: var(--rb-text-small); }
-.rb-stat-card__value { margin: var(--rb-space-2) 0 0; font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); font-variant-numeric: tabular-nums; }
+.rb-stat-card__value { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-h1); font-weight: var(--rb-weight-bold); font-variant-numeric: tabular-nums; }
 .rb-empty-state { display: grid; justify-items: start; gap: var(--rb-space-4); padding: var(--rb-space-6); border: var(--rb-border-width) dashed var(--rb-border-control); border-radius: var(--rb-radius-card); color: var(--rb-text-primary); }
 .rb-empty-state .rb-description { margin: 0; }
 .rb-table-container { max-width: 100%; min-width: 0; overflow-x: auto; border: var(--rb-border-width) solid var(--rb-border-panel); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); color: var(--rb-text-primary); }
@@ -99,7 +99,125 @@ textarea.rb-control { resize: vertical; }
 .rb-disclosure > summary:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-disclosure__content { min-width: 0; padding-block: var(--rb-space-2); }
 /* Native markers remain visible; state styling never changes disclosure geometry. */
-.rb-disclosure > summary:hover,
-.rb-availability__room-busy > summary:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
-.rb-disclosure[open] > summary,
-.rb-availability__room-busy[open] > summary { color: var(--rb-color-deep); text-decoration: underline; text-underline-offset: .25em; }
+.rb-disclosure > summary:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+.rb-disclosure[open] > summary { color: var(--rb-color-deep); text-decoration: underline; text-underline-offset: .25em; }
+
+/* ---- Native selects: a consistent arrow with room to its right (the no-script / fallback look of every list) ---- */
+html .rb-ui select:not([multiple]):not([size]), html select.rb-control:not([multiple]):not([size]) {
+  appearance: none; -webkit-appearance: none;
+  padding-inline-end: 2.75rem; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%234B5563' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 1rem center; background-size: 1rem;
+}
+html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none; }
+
+/* ---- Compact picker (replaces the oversized native popup when script is available) ---- */
+.rb-picker { position: relative; min-width: 0; }
+.rb-picker__native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.rb-picker .rb-picker__button {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--rb-space-2); box-sizing: border-box;
+  width: 100%; min-width: 0; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) 2.75rem var(--rb-space-2) var(--rb-space-4);
+  border: var(--rb-border-width) solid var(--rb-border-control); border-radius: var(--rb-radius-control);
+  background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; text-align: left; cursor: pointer; position: relative;
+}
+.rb-picker .rb-picker__button:hover, .rb-picker .rb-picker__button:active { border-color: var(--rb-color-maroon); background: var(--rb-surface-panel); color: var(--rb-text-primary); }
+.rb-picker .rb-picker__button:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-picker .rb-picker__button:disabled { background: var(--rb-neutral-bg); color: var(--rb-text-muted); border-style: dashed; cursor: not-allowed; }
+.rb-picker__button[aria-invalid="true"], .rb-picker.is-invalid .rb-picker__button { border-color: var(--rb-danger-text); border-width: var(--rb-focus-width); }
+.rb-picker__value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rb-picker.is-placeholder .rb-picker__value { color: var(--rb-text-muted); }
+.rb-picker__chevron { position: absolute; right: 1rem; top: 50%; width: 1rem; height: 1rem; margin-top: -.5rem; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%234B5563' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform .12s ease; }
+.rb-picker.is-open .rb-picker__chevron { transform: rotate(180deg); }
+.rb-picker__popup { position: fixed; z-index: 60; box-sizing: border-box; display: grid; gap: var(--rb-space-2); max-width: calc(100vw - 1rem); padding: var(--rb-space-2);
+  border: var(--rb-border-width) solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); box-shadow: 0 .5rem 1.5rem rgba(35, 32, 34, .18); }
+.rb-picker__popup[hidden], .rb-picker__empty[hidden], .rb-picker__option[hidden], .rb-picker__group[hidden] { display: none; }
+.rb-picker__popup.is-up { align-content: end; }
+.rb-picker__search { box-sizing: border-box; width: 100%; min-height: var(--rb-control-height); padding: var(--rb-space-2) var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-control); border-radius: var(--rb-radius-control); font: inherit; font-size: var(--rb-text-small); }
+.rb-picker__search:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: 0; }
+.rb-picker__list { overflow-y: auto; overscroll-behavior: contain; min-height: 0; outline: 0; }
+.rb-picker__group + .rb-picker__group, .rb-picker__option + .rb-picker__group { margin-top: var(--rb-space-1); }
+.rb-picker__group-label { position: sticky; top: 0; padding: var(--rb-space-1) var(--rb-space-2); background: var(--rb-surface-canvas); color: var(--rb-text-secondary); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); letter-spacing: .02em; text-transform: uppercase; }
+.rb-picker__option { display: grid; gap: 0; padding: var(--rb-space-2) var(--rb-space-2); border-radius: calc(var(--rb-radius-control) - 2px); font-size: var(--rb-text-small); cursor: pointer; scroll-margin-block: 2rem; }
+.rb-picker__option-title { overflow-wrap: anywhere; font-weight: var(--rb-weight-medium); }
+.rb-picker__option-meta { color: var(--rb-text-secondary); font-size: var(--rb-text-caption); overflow-wrap: anywhere; }
+.rb-picker__option.is-placeholder .rb-picker__option-title { color: var(--rb-text-muted); font-weight: var(--rb-weight-regular); }
+.rb-picker__option.is-active { background: var(--rb-surface-active); }
+.rb-picker__option[aria-selected="true"] { box-shadow: inset 3px 0 0 var(--rb-color-maroon); background: var(--rb-surface-active); }
+.rb-picker__option[aria-selected="true"] .rb-picker__option-title { font-weight: var(--rb-weight-bold); color: var(--rb-color-deep); }
+.rb-picker__option.is-disabled { opacity: .55; cursor: not-allowed; }
+.rb-picker__empty { margin: 0; padding: var(--rb-space-4) var(--rb-space-2); color: var(--rb-text-muted); font-size: var(--rb-text-small); text-align: center; }
+@media (min-width: 40.001rem) and (pointer: fine) { .rb-picker__option { padding-block: .375rem; } }
+
+/* ---- Drawer / full-screen panel (<dialog class="rb-drawer">). Without script, :target opens it and a link closes it. ---- */
+.rb-drawer { box-sizing: border-box; position: fixed; inset: 0 0 0 auto; width: min(30rem, 100vw); max-width: 100vw; height: 100vh; height: 100dvh; max-height: none; margin: 0; padding: 0;
+  border: 0; border-left: var(--rb-border-width) solid var(--rb-border-warm); background: var(--rb-surface-panel); color: var(--rb-text-primary); box-shadow: -.5rem 0 2rem rgba(35, 32, 34, .2); overscroll-behavior: contain; }
+.rb-drawer::backdrop { background: rgba(35, 32, 34, .45); }
+.rb-drawer:not([open]) { display: none; }
+/* No-script fallback: the dimming is a spread shadow OUTSIDE the panel, so it can never paint over the panel's own content. */
+.rb-drawer:target:not([open]) { display: block; z-index: 70; box-shadow: -.5rem 0 2rem rgba(35, 32, 34, .2), 0 0 0 100vmax rgba(35, 32, 34, .45); }
+.rb-drawer[open], .rb-drawer:target:not([open]) { display: flex; flex-direction: column; }
+.rb-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); padding: var(--rb-space-2) var(--rb-space-6) var(--rb-space-2); border-bottom: var(--rb-border-width) solid var(--rb-border-warm); background: var(--rb-surface-canvas); }
+.rb-drawer__kicker { margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); letter-spacing: .06em; text-transform: uppercase; }
+.rb-drawer__head > div { min-width: 0; }
+.rb-drawer__title { margin: 0; font-size: var(--rb-text-h2); line-height: var(--rb-leading-heading); overflow-wrap: anywhere; }
+.rb-drawer__sub { margin: 0 0 var(--rb-space-4); color: var(--rb-text-muted); font-size: var(--rb-text-small); overflow-wrap: anywhere; }
+.rb-drawer .rb-drawer__close { flex: none; min-height: min(var(--rb-control-height), 44px); min-width: 44px; }
+.rb-drawer__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--rb-space-4) var(--rb-space-6) var(--rb-space-8); }
+.rb-drawer__body > :first-child { margin-top: 0; }
+.rb-drawer .rb-button:focus-visible, .rb-drawer a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+@media (max-width: 40rem) {
+  .rb-drawer { inset: 0; width: 100vw; border-left: 0; box-shadow: none; }
+  .rb-drawer__head, .rb-drawer__body { padding-inline: var(--rb-space-4); }
+  .rb-drawer__title { font-size: var(--rb-text-h3); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rb-drawer[open] { animation: rb-drawer-in .18s ease-out; }
+  .rb-drawer[open]::backdrop { animation: rb-fade-in .18s ease-out; }
+}
+@keyframes rb-drawer-in { from { transform: translateX(1.5rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rb-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Inline reveal panel: closed by default, opened by script (.is-open) or, with no script, by :target ---- */
+.rb-reveal { display: none; }
+.rb-reveal.is-open, .rb-reveal:target { display: block; }
+
+/* ---- Pager ---- */
+.rb-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin-top: var(--rb-space-4); padding-top: var(--rb-space-4); border-top: var(--rb-border-width) solid var(--rb-border-warm); font-size: var(--rb-text-small); color: var(--rb-text-muted); }
+.rb-pager__info { margin: 0; }
+.rb-pager__nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-pager__page { padding-inline: var(--rb-space-2); font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); white-space: nowrap; }
+.rb-pager .rb-button[aria-disabled="true"] { border-style: dashed; border-color: var(--rb-border-control); background: var(--rb-neutral-bg); color: var(--rb-text-muted); cursor: not-allowed; }
+@media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; } }
+.rb-pager__nav > * { min-width: 0; }
+
+/* ---- Compact statistic (dashboards): one card, number and label at the same size and line height, grouped on one line.
+   The number is set apart by weight, colour and a soft tint only, so 0, 7 and 1234 all sit on the same baseline and the card never changes height. ---- */
+.rb-stat { display: inline-flex; align-items: center; gap: var(--rb-space-2) .75rem; width: fit-content; justify-self: start; max-width: 100%; margin: 0; padding: .5rem var(--rb-space-4) .5rem .5rem; border: var(--rb-border-width) solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font-size: var(--rb-text-body); line-height: var(--rb-leading-body); }
+.rb-stat__value { flex: none; box-sizing: border-box; min-width: 2.25rem; margin: 0; padding: 0 .5rem; border-radius: var(--rb-radius-pill); background: var(--rb-surface-active); color: var(--rb-color-maroon); font-size: inherit; font-weight: var(--rb-weight-bold); line-height: inherit; font-variant-numeric: tabular-nums; text-align: center; }
+.rb-stat__label { min-width: 0; margin: 0; color: var(--rb-text-muted); font-size: inherit; line-height: inherit; overflow-wrap: anywhere; }
+
+/* ---- Search field with an application-styled clear control (replaces the browser's generic search X) ---- */
+.rb-search { position: relative; display: block; width: 100%; min-width: 0; }
+.rb-search .rb-search__input { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--rb-control-height); margin: 0; padding: var(--rb-space-2) 2.75rem var(--rb-space-2) var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-border-control); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-text-primary); font: inherit; font-size: var(--rb-text-small); -webkit-appearance: none; appearance: none; }
+.rb-search .rb-search__input::-webkit-search-cancel-button, .rb-search .rb-search__input::-webkit-search-decoration { display: none; -webkit-appearance: none; }
+.rb-search .rb-search__input:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-color: var(--rb-border-control); }
+.rb-search .rb-search__clear { position: absolute; top: 0; right: 0; display: grid; place-items: center; box-sizing: border-box; width: 2.75rem; min-width: 2.75rem; height: 100%; min-height: var(--rb-control-height); margin: 0; padding: 0; border: 0; border-radius: 0 var(--rb-radius-control) var(--rb-radius-control) 0; background: transparent; color: var(--rb-text-muted); cursor: pointer; }
+.rb-search .rb-search__clear[hidden] { display: none; }
+.rb-search .rb-search__clear:hover { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
+.rb-search .rb-search__clear:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: -2px; }
+.rb-search .rb-search__clear svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; }
+
+/* Secondary navigation (Manage pages, Requests): one hairline under the row, the current page in maroon with a short underline.
+   Links to separate URLs, so the current one carries aria-current. Scrolls sideways instead of wrapping on narrow screens. */
+.rb-subnav { display: flex; flex-wrap: nowrap; gap: var(--rb-space-1) var(--rb-space-6); margin: var(--rb-space-4) 0; padding: 0; border-bottom: var(--rb-border-width) solid var(--rb-border-warm); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; font-family: var(--rb-font-family); }
+.rb-subnav a { position: relative; flex: none; display: inline-flex; align-items: center; gap: var(--rb-space-2); min-height: var(--rb-control-height); padding: var(--rb-space-1) 0; border: 0; border-radius: 0; background: none; color: var(--rb-text-muted); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); line-height: var(--rb-leading-body); text-decoration: none; white-space: nowrap; }
+.rb-subnav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+.rb-subnav a:hover { color: var(--rb-color-deep); }
+.rb-subnav a:hover::after { background: var(--rb-border-control); opacity: .45; }
+.rb-subnav a[aria-current] { color: var(--rb-color-maroon); }
+.rb-subnav a[aria-current]::after, .rb-subnav a[aria-current]:hover::after { background: var(--rb-color-maroon); opacity: 1; }
+.rb-subnav a:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: calc(-1 * var(--rb-focus-width)); border-radius: var(--rb-radius-control); }
+.rb-subnav a .count { flex: none; min-width: 1.5rem; padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-neutral-bg); color: var(--rb-neutral-text); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); line-height: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.rb-subnav a[aria-current] .count { background: var(--rb-surface-active); color: var(--rb-color-maroon); }
+@media (max-width: 40rem) { .rb-subnav { gap: var(--rb-space-1) var(--rb-space-4); } }

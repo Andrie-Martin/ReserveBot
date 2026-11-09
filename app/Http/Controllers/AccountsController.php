@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Photos;
 use App\Support\AccountFields;
 use App\Support\EmailSetup;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -25,6 +26,9 @@ use Illuminate\View\View;
  */
 class AccountsController extends Controller
 {
+    /** People shown per page on the Accounts list */
+    private const PER_PAGE = 20;
+
     private const MESSAGES = [
         'role.*' => 'Pick Block rep or Lab staff.',
         'block_id.required' => 'Pick the block this rep represents.',
@@ -38,16 +42,29 @@ class AccountsController extends Controller
     public function index(Request $request): View
     {
         $admin = $request->user();
-        $accounts = User::with('section')->where('department_id', $admin->department_id)->get();
+        $accounts = User::with('section')->where('department_id', $admin->department_id)->orderBy('id')->get();
         $byName = fn (User $user) => Str::lower($user->name);
+
+        // Same order as before (block reps, then lab staff, then admins), cut into pages of PER_PAGE people.
+        $ordered = [
+            'Block reps' => $accounts->where('role', 'rep')->sortBy(fn (User $user) => ($user->section?->name ?? '~').' '.Str::lower($user->name), SORT_NATURAL)->values(),
+            'Lab staff' => $accounts->where('role', 'lab_staff')->sortBy($byName)->values(),
+            'Admins' => $accounts->where('role', 'admin')->sortBy($byName)->values(),
+        ];
+        $everyone = collect($ordered)->flatten(1)->values();
+        $lastPage = max(1, (int) ceil($everyone->count() / self::PER_PAGE));
+        $page = min(max(1, (int) $request->query('page', 1)), $lastPage);
+        $pageIds = $everyone->forPage($page, self::PER_PAGE)->pluck('id')->all();
+        $paginator = new LengthAwarePaginator(
+            $everyone->forPage($page, self::PER_PAGE)->values(), $everyone->count(), self::PER_PAGE, $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
 
         return view('accounts.index', [
             'admin' => $admin,
-            'groups' => [
-                'Block reps' => $accounts->where('role', 'rep')->sortBy(fn (User $user) => ($user->section?->name ?? '~').' '.Str::lower($user->name), SORT_NATURAL),
-                'Lab staff' => $accounts->where('role', 'lab_staff')->sortBy($byName),
-                'Admins' => $accounts->where('role', 'admin')->sortBy($byName),
-            ],
+            'groups' => collect($ordered)->map(fn (Collection $people) => $people->filter(fn (User $user) => in_array($user->id, $pageIds, true))->values())->all(),
+            'groupTotals' => collect($ordered)->map->count()->all(),
+            'paginator' => $paginator,
             'blocks' => $this->blocks($admin),
             'sections' => $this->sections(),
             'emailSends' => EmailSetup::sends(),

@@ -37,7 +37,6 @@
 .rb-dashboard h3 { font-size: var(--rb-text-h3); margin: var(--rb-space-4) 0 var(--rb-space-2); }
 .rb-dashboard__meetings .mlist { border: 0; border-radius: 0; overflow: visible; }
 .rb-dashboard__meetings .mlist > li { padding: var(--rb-space-2) 0; }
-.rb-dashboard__other { margin-top: var(--rb-space-4); }
 .rb-dashboard__classes .rb-table-container { border: 0; border-radius: 0; }
 @media (max-width: 50rem) { .rb-dashboard__links { grid-template-columns: minmax(0, 1fr); } }
 
@@ -94,8 +93,6 @@
 /* Phase 05: the staff/admin dashboard shares the /rep structure (kicker, banner, icon tiles). The section keeps the
    legacy .card class for its untouched meetings/classes blocks, so neutralise that frame here. */
 .card.rb-dashboard--staff { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.rb-dashboard--staff .stat { margin: 0; padding: var(--rb-space-2) var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
-.rb-dashboard--staff .stat strong { margin-right: var(--rb-space-1); font-size: var(--rb-text-h2); color: var(--rb-color-maroon); }
 
 /* QA F-03: shortcut labels wrap by word. `overflow-wrap: anywhere` let the label shrink to ~0 beside the fixed icon and
    arrow, so enlarged text broke letter by letter. The row now wraps (label drops under the icon when it cannot fit
@@ -106,3 +103,44 @@
    pushing the page into horizontal scrolling. */
 .rb-dashboard__action-label { flex: 1 1 7rem; min-width: 0; }
 @media (max-width: 40rem) { .rb-dashboard__action-arrow { display: none; } }
+
+/* Compact previews with a "View all" action (the full lists open in a drawer / full-screen panel). */
+.rb-dashboard__preview > h3 { margin: var(--rb-space-4) 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-dashboard__more { margin: var(--rb-space-2) 0 0; }
+.rb-dashboard__next { margin: 0; padding: 0; list-style: none; }
+.rb-dashboard__next > li { display: grid; grid-template-columns: 14rem minmax(0, 1fr) auto; gap: .125rem var(--rb-space-4); align-items: baseline; padding: var(--rb-space-2) 0; border-top: 1px solid var(--rb-border-warm); font-size: var(--rb-text-small); }
+.rb-dashboard__next > li:first-child { border-top: 0; }
+.rb-dashboard__next-when { font-weight: var(--rb-weight-semibold); font-variant-numeric: tabular-nums; }
+.rb-dashboard__next-what { min-width: 0; overflow-wrap: anywhere; }
+.rb-dashboard__next-where { color: var(--rb-text-secondary); text-align: right; overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+  .rb-dashboard__next > li { grid-template-columns: minmax(0, 1fr); }
+  .rb-dashboard__next-where { text-align: left; }
+}
+.rb-drawer .rb-dashboard__meetings .mlist > li, .rb-drawer.rb-dashboard__timetable-drawer .mlist > li { margin: 0; }
+.rb-drawer .rb-dashboard__meetings.mlist > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "when status" "what status" "answer answer"; gap: 0 var(--rb-space-4); padding: var(--rb-space-4) 0; border-top: 1px solid var(--rb-border-warm); }
+.rb-drawer .rb-dashboard__meetings.mlist > li:first-child { border-top: 0; }
+.rb-drawer .rb-dashboard__meetings.mlist .mlist-when { grid-area: when; font-weight: var(--rb-weight-semibold); }
+.rb-drawer .rb-dashboard__meetings.mlist .mlist-what { grid-area: what; color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-drawer .rb-dashboard__meetings.mlist > li > .st { grid-area: status; justify-self: end; }
+.rb-drawer .rb-dashboard__meetings.mlist > li > .answer-buttons { grid-area: answer; margin-top: var(--rb-space-2); }
+.rb-drawer .mlist { margin: 0; padding: 0; list-style: none; }
+.rb-drawer .rb-table-container table { font-size: var(--rb-text-small); }
+.rb-drawer .rb-table-container th, .rb-drawer .rb-table-container td { padding: var(--rb-space-2); }
+
+/* Dashboard counter: shared compact statistic (staff, admin). */
+.rb-dashboard--staff .rb-stat, .rb-dashboard__intro .rb-stat { margin-top: var(--rb-space-4); }
+.rb-drawer.rb-dashboard__timetable-drawer { width: min(46rem, 100vw); }
+.rb-dashboard__preview-list > li { grid-template-areas: "when status" "what status"; grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 40rem) { .rb-dashboard__preview-list > li { grid-template-columns: minmax(0, 1fr); grid-template-areas: "when" "what" "status"; } }
+
+/* Staff and admin statistics: three equal cards across the page, two then one column on narrower screens. Each shows the
+   label, a large figure and a short line saying what is counted. */
+.rb-dashboard__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--rb-space-4); min-width: 0; }
+.rb-dashboard__stats .rb-stat-card { display: flex; flex-direction: column; justify-content: space-between; gap: var(--rb-space-2); min-width: 0; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-card); background: var(--rb-surface-panel); overflow-wrap: anywhere; }
+.rb-dashboard__stats .rb-stat-card__list { display: flex; flex-direction: column; gap: var(--rb-space-1); margin: 0; }
+.rb-dashboard__stats .rb-stat-card__label { color: var(--rb-text-primary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); line-height: var(--rb-leading-body); }
+.rb-dashboard__stats .rb-stat-card__value { margin: 0; color: var(--rb-color-maroon); font-size: var(--rb-text-display); font-weight: var(--rb-weight-bold); line-height: 1.1; letter-spacing: -.03em; }
+.rb-dashboard__stats .rb-stat-card__note { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); line-height: var(--rb-leading-body); }
+@media (max-width: 56rem) { .rb-dashboard__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 40rem) { .rb-dashboard__stats { grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-2); } }

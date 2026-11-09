@@ -25,8 +25,13 @@
     <p class="rb-dashboard__banner-text">{{ $intro }}</p>
   </div>
 
-  @if ($stat)
-    <p class="stat"><strong>{{ $stat['value'] }}</strong> {{ $stat['label'] }}</p>
+  @if (! empty($stats))
+    {{-- Three read-only counts for the viewer's own department; each says what it counts. --}}
+    <section class="rb-dashboard__stats" aria-label="At a glance">
+      @foreach ($stats as $stat)
+        <x-ui.stat-card :label="$stat['label']" :value="$stat['value']" :note="$stat['note']" />
+      @endforeach
+    </section>
   @endif
 
   @if (! empty($meetings))

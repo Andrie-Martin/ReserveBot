@@ -79,10 +79,6 @@
 .rb-availability__clashline { color: var(--rb-warning-text); }
 .rb-availability__room-free { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
 .rb-availability__free-chip { background: var(--rb-success-bg); color: var(--rb-success-text); padding: var(--rb-space-1) var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: var(--rb-text-small); }
-.rb-availability__room-busy { margin-top: var(--rb-space-2); }
-.rb-availability__room-busy summary { cursor: pointer; padding: var(--rb-space-2) 0; min-height: var(--rb-control-height); color: var(--rb-color-maroon); }
-.rb-availability__room-busy ul { list-style: none; padding: 0; margin: 0; }
-.rb-availability__room-busy li { display: grid; gap: var(--rb-space-2); padding: var(--rb-space-2) 0; margin: 0; border-top: 1px solid var(--rb-border-warm); }
 .rb-availability__extra { display: block; }
 .rb-availability__mine .rb-availability__what { font-weight: var(--rb-weight-semibold); }
 @media (max-width: 64rem) { .rb-availability { grid-template-columns: minmax(0, 1fr); } }
@@ -116,10 +112,6 @@
 .rb-availability__dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--rb-color-maroon); }
 .rb-availability__dots i.k-booking { background: var(--rb-success-text); }
 .rb-availability__dots i.rb-availability__pending { background: var(--rb-warning-text); }
-.rb-availability__calendar-events { font-size: var(--rb-text-caption); overflow-wrap: anywhere; }
-.rb-availability__calendar-events > summary { padding: var(--rb-space-1); }
-.rb-availability__event-list { list-style: none; padding: 0; margin: 0; }
-.rb-availability__event-list li { display: grid; gap: var(--rb-space-1); padding: var(--rb-space-2) var(--rb-space-1); border-bottom: 1px solid var(--rb-border-warm); }
 .rb-availability__room-body { min-width: 0; overflow-wrap: anywhere; }
 .rb-availability__room-body > p:first-child { margin-top: 0; }
 .rb-availability__finder { margin-top: 0; }
@@ -135,10 +127,7 @@
 .rb-availability__secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); align-items: start; min-width: 0; scroll-margin-top: var(--rb-space-4); }
 .rb-availability__calendar-details { min-width: 0; }
 .rb-availability__agenda-card { grid-column: 1 / -1; }
-.rb-availability__calendar-events { font-size: var(--rb-text-body); scroll-margin-top: var(--rb-space-4); }
-.rb-availability__calendar-events > summary { padding: var(--rb-space-2) 0; }
 .rb-availability__event-count { color: var(--rb-color-maroon); display: flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1); font-size: var(--rb-text-caption); }
-.rb-availability__event-list li { padding: var(--rb-space-2) 0; }
 @media (min-width: 64.001rem) {
  .rb-availability__finder-label { flex-basis: auto; }
 }
@@ -148,7 +137,7 @@
 
 /* Progressive contextual panel: fallback event lists remain open and linked. */
 .rb-availability__calendar-details [hidden] { display: none; }
-.rb-availability__event-count[aria-expanded="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }
+.rb-availability__event-count[aria-current="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }
 
 /* One shared horizontal coordinate system; exact interval text remains visible. */
 /* Paint-only surface: no border/padding alters the shared axis or row geometry. The outer border is a
@@ -174,12 +163,20 @@
 .rb-availability-track__free { position: absolute; top: 0; height: 100%; background: var(--rb-success-text); }
 .rb-availability__board .rb-availability__room-free { gap: 0 var(--rb-space-2); margin-top: var(--rb-space-1); }
 .rb-availability__board .rb-availability__free-chip { padding: 0; background: none; border-radius: 0; }
-.rb-availability__board .rb-availability__room-busy { margin: 0; }
 .rb-availability__room-actions { display: contents; }
-.rb-availability__board .rb-availability__room-busy[open] { grid-column: 1 / -1; }
-.rb-availability__board .rb-availability__room-busy summary { font-size: var(--rb-text-small); }
 .rb-availability__board .rb-availability__room-body p { margin: 0 0 var(--rb-space-1); }
 .rb-availability__timeline-legend { font-size: var(--rb-text-small); color: var(--rb-text-muted); margin: 0; }
+.rb-availability__timeline-legend p { margin: var(--rb-space-1) 0 0; }
+/* Availability colours: green = reported free, neutral = not reported as free, yellow = blocked or unavailable for the whole day.
+   Yellow is only used for a genuine all-day block, and is also written out ("Unavailable all day"), so colour is never the only cue. */
+.rb-availability__keys { display: flex; flex-wrap: wrap; gap: var(--rb-space-1) var(--rb-space-4); margin: 0; padding: 0; list-style: none; }
+.rb-availability__keys li { display: inline-flex; align-items: center; gap: var(--rb-space-2); margin: 0; }
+.rb-availability__key { flex: none; width: 1.5rem; height: .625rem; border-radius: 2px; outline: 1px solid var(--rb-border-control); }
+.rb-availability__key--free { background: var(--rb-success-text); }
+.rb-availability__key--none { background: var(--rb-neutral-bg); }
+.rb-availability__key--blocked, .rb-availability-track--blocked { background: repeating-linear-gradient(135deg, var(--rb-color-gold) 0 .375rem, var(--rb-warning-bg) .375rem .75rem); }
+.rb-availability-track--blocked { outline-color: var(--rb-warning-text); }
+.rb-availability__blocked { padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-warning-bg); color: var(--rb-warning-text); font-weight: var(--rb-weight-semibold); }
 @container (max-width: 50rem) {
  .rb-availability__axis, .rb-availability__board .rb-availability__room-row { grid-template-columns: minmax(25rem, 1fr); min-width: 25rem; }
  .rb-availability__board .rb-availability__room-name,
@@ -187,7 +184,6 @@
  .rb-availability__axis > strong { position: sticky; left: 0; width: 100cqi; max-width: 100%; box-sizing: border-box; }
  .rb-availability__board .rb-availability__room-name { display: flex; gap: var(--rb-space-2); }
  .rb-availability__board .rb-availability__room-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--rb-space-2); background: var(--rb-surface-panel); }
- .rb-availability__board .rb-availability__room-busy[open] { flex-basis: 100%; }
 }
 
 /* Phase 03B: prototype hierarchy. Presentation only; server data, URLs, forms and the shared timeline
@@ -253,26 +249,14 @@
   .rb-availability__agenda .rb-availability__when { flex-basis: 100%; white-space: normal; }
 }
 
-/* Phase 03D-2: expanded "What's on" disclosure. It spans the whole row, so it takes the same 1rem inset as the
-   room-name column, and its entries use the page's dense type scale as compact time | label rows. Only paddings
-   and type change: row, name and track boxes keep their pinned x/width. */
-.rb-availability__board .rb-availability__room-busy[open] { padding: 0 var(--rb-space-4) var(--rb-space-2); }
-.rb-availability__board .rb-availability__room-busy[open] > summary { padding-left: 0; }
-.rb-availability__room-busy li { grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr); align-items: baseline; gap: .125rem var(--rb-space-4); padding: var(--rb-space-2) 0; font-size: .8125rem; }
-.rb-availability__room-busy .rb-availability__when { font-size: .8125rem; overflow-wrap: anywhere; }
-.rb-availability__room-busy .rb-availability__what { display: flex; flex-wrap: wrap; align-items: center; gap: .125rem var(--rb-space-2); font-size: .8125rem; }
-.rb-availability__room-busy .rb-availability__extra { flex-basis: 100%; font-size: var(--rb-text-caption); }
+/* Narrow board: room text and actions share the room-name inset (the day's entries open in the schedule drawer, not in the row). */
 @container (max-width: 50rem) {
   /* Narrow board: the row's text, actions and axis heading share the room-name inset; tracks stay flush. */
   .rb-availability__board .rb-availability__room-body > p, .rb-availability__board .rb-availability__room-free,
   .rb-availability__board .rb-availability__room-actions { padding-inline: var(--rb-space-4); }
   /* Text lines wrap within the visible board width at rest; the track keeps its full scrollable width. */
   .rb-availability__board .rb-availability__room-body > p, .rb-availability__board .rb-availability__room-free { box-sizing: border-box; max-width: 100cqi; overflow-wrap: anywhere; }
-  .rb-availability__board .rb-availability__room-busy[open] { padding-inline: 0; }
   .rb-availability__axis > div > strong { padding-left: var(--rb-space-4); }
-}
-@container (max-width: 36rem) {
-  .rb-availability__room-busy li { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Phase 03D-3: the page-intro rule zeroed every paragraph margin, including the kicker's own spacing; restore it so the
@@ -301,3 +285,67 @@
   .rb-availability__cell { padding-inline: 2px; }
   .rb-availability__event-count { padding-inline: 0; }
 }
+
+/* Room schedule drawer (replaces the in-row "What's on" disclosure): the row stays one line; the day's entries open in a
+   right-hand drawer on wide screens and a full-screen panel on phones. Rows read as time | subject | section/instructor. */
+.rb-availability__axis, .rb-availability__board .rb-availability__room-row { grid-template-columns: 11rem minmax(25rem, 1fr) 5rem 9.5rem; min-width: 52rem; }
+@container (max-width: 50rem) {
+  .rb-availability__axis, .rb-availability__board .rb-availability__room-row { grid-template-columns: minmax(25rem, 1fr); min-width: 25rem; }
+}
+.rb-availability__btn-schedule { white-space: nowrap; }
+.rb-availability__count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.375rem; padding: 0 .375rem; border-radius: var(--rb-radius-pill); background: var(--rb-surface-active); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-variant-numeric: tabular-nums; }
+.rb-availability__schedule-list { margin: 0; padding: 0; list-style: none; }
+.rb-availability__schedule-list > li { display: grid; gap: .125rem; margin: 0; padding: var(--rb-space-4) 0; border-top: 1px solid var(--rb-border-warm); }
+.rb-availability__schedule-list > li:first-child { border-top: 0; padding-top: 0; }
+.rb-availability__schedule-list > li.rb-availability__mine { border-left: 3px solid var(--rb-color-maroon); padding-left: var(--rb-space-2); }
+.rb-availability__schedule-list p { margin: 0; overflow-wrap: anywhere; }
+.rb-availability__schedule-list .rb-availability__when { font-size: var(--rb-text-small); color: var(--rb-color-deep); }
+.rb-availability__schedule-list .rb-availability__what { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem var(--rb-space-2); font-weight: var(--rb-weight-semibold); }
+.rb-availability__schedule-list .rb-availability__extra { display: block; font-size: var(--rb-text-small); }
+.rb-availability__schedule-sub { margin: var(--rb-space-6) 0 var(--rb-space-2); font-size: var(--rb-text-small); }
+.rb-availability__schedule-free { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; }
+.rb-availability__schedule-actions { margin: var(--rb-space-6) 0 0; }
+/* Free rooms finder: the pickers fill their field. */
+.rb-availability__finder-field .rb-picker { width: 100%; }
+.rb-availability__board .rb-availability__room-row { padding-right: var(--rb-space-2); }
+.rb-availability__axis { padding-right: var(--rb-space-2); }
+
+/* Unknown reason / unknown capacity read as quiet secondary text, never as an alarm. */
+.rb-availability__unspecified { color: var(--rb-text-secondary); }
+.rb-availability__room-name > .rb-availability__unspecified { font-style: normal; }
+
+/* Calendar and event details: equal-height cards side by side on wide screens (the calendar sets the height, the event list
+   scrolls inside its card); a natural stack on phones and narrow windows. */
+.rb-availability__events-scroll { min-width: 0; }
+.rb-availability__events-scroll:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-availability__event-empty { margin: 0; padding: var(--rb-space-6) var(--rb-space-4); border: 1px dashed var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); color: var(--rb-text-secondary); font-size: var(--rb-text-small); text-align: center; }
+@media (min-width: 64.001rem) {
+  .rb-availability__secondary { align-items: stretch; }
+  .rb-availability__calendar-details { display: flex; flex-direction: column; height: 0; min-height: 100%; }
+  .rb-availability__calendar-details > h2 { flex: none; }
+  .rb-availability__events-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: var(--rb-space-1); }
+}
+@media (min-width: 64.001rem) {
+  /* Nothing selected (or nothing to show): the message fills the card instead of leaving a blank slab beneath it. */
+  .rb-availability__events-scroll:has(> :is(.rb-availability__event-prompt:not([hidden]), .rb-availability__event-empty)) { display: flex; flex-direction: column; }
+  .rb-availability__events-scroll > :is(.rb-availability__event-prompt:not([hidden]), .rb-availability__event-empty) { flex: 1 1 auto; display: grid; place-content: center; max-width: 100%; margin: 0; }
+}
+
+/* Event details: one section per date (heading + count), then structured event cards. */
+.rb-availability__calendar-events { font-size: var(--rb-text-body); scroll-margin-top: var(--rb-space-4); }
+.rb-availability__calendar-events + .rb-availability__calendar-events { margin-top: var(--rb-space-6); }
+.rb-availability__events-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--rb-space-4); margin: 0 0 var(--rb-space-2); }
+.rb-availability__events-head h3 { margin: 0; font-size: var(--rb-text-h3); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.rb-availability__events-head h3:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+.rb-availability__events-count { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+.rb-availability__event-list { display: grid; gap: var(--rb-space-2); list-style: none; margin: 0; padding: 0; }
+.rb-availability__event-card, .rb-availability__event-list li.rb-availability__event-card { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: var(--rb-space-1) var(--rb-space-4); align-items: start; margin: 0; padding: .75rem var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-left: 3px solid var(--rb-color-maroon); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); overflow-wrap: anywhere; }
+.rb-availability__event-card.k-booking { border-left-color: var(--rb-color-gold); }
+.rb-availability__event-card.rb-availability__pending { border-left-color: var(--rb-warning-text); background: color-mix(in srgb, var(--rb-warning-bg) 35%, var(--rb-surface-panel)); }
+.rb-availability__event-card p { margin: 0; }
+.rb-availability__event-time { font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); font-variant-numeric: tabular-nums; color: var(--rb-color-deep); }
+.rb-availability__event-title { font-weight: var(--rb-weight-semibold); }
+.rb-availability__event-room, .rb-availability__event-tip { color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-availability__event-tags { display: flex; flex-wrap: wrap; gap: var(--rb-space-1) var(--rb-space-2); margin-top: var(--rb-space-1) !important; }
+.rb-availability__event-tag { padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-neutral-bg); color: var(--rb-neutral-text); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); line-height: 1.5rem; }
+@media (max-width: 40rem) { .rb-availability__event-card, .rb-availability__event-list li.rb-availability__event-card { grid-template-columns: minmax(0, 1fr); } }

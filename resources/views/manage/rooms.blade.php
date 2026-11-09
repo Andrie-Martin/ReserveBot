@@ -17,31 +17,7 @@
   <p class="muted">{{ $department->name }}’s rooms. Rooms are shared between departments, so a change shows for every department that uses the room. A room that’s off can’t be booked; bookings already made keep it.</p>
   </header>
 
-  <div class="rb-booking__panel">
-  @if ($rooms->isEmpty())
-    <p class="empty">No rooms yet. Use “+ Add a room” below to add the first one; it can be booked as soon as it’s added.</p>
-  @else
-  <table class="mtable rooms-table">
-    <thead>
-      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr>
-    </thead>
-    <tbody>
-      @foreach ($rooms as $room)
-        <tr @class(['off' => ! $room->is_active])>
-          <td><strong>{{ $room->name }}</strong>@if ($room->departments_count > 1) <span class="tag-shared">shared</span>@endif</td>
-          <td class="hide-sm">{{ $room->building ?? '—' }}</td>
-          <td>{{ $room->capacity ?? 'Not recorded' }}</td>
-          <td class="hide-sm note">{{ $room->fixed_equipment_note }}</td>
-          <td><span @class(['status-badge', 'st-confirmed' => $room->is_active, 'st-cancelled' => ! $room->is_active])>{{ $room->is_active ? 'On' : 'Off' }}</span></td>
-          <td><a href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a></td>
-        </tr>
-      @endforeach
-    </tbody>
-  </table>
-  @endif
-  </div>
-
-  <div class="rb-booking__panel">
+  <div class="add-row rb-booking__panel">
   <details class="add-box" @if ($errors->getBag('add')->any()) open @endif>
     <summary>+ Add a room</summary>
     <form method="post" action="{{ route('manage.rooms.store') }}" class="mform">
@@ -80,5 +56,31 @@
     </form>
   </details>
   </div>
+
+  <div class="rb-booking__panel">
+  @if ($rooms->isEmpty())
+    <p class="empty">No rooms yet. Use “+ Add a room” above to add the first one; it can be booked as soon as it’s added.</p>
+  @else
+  <table class="mtable rooms-table">
+    <colgroup><col class="c-room"><col class="c-building"><col class="c-seats"><col class="c-note"><col class="c-status"><col class="c-edit"></colgroup>
+    <thead>
+      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr>
+    </thead>
+    <tbody>
+      @foreach ($rooms as $room)
+        <tr @class(['off' => ! $room->is_active])>
+          <td><strong>{{ $room->name }}</strong>@if ($room->departments_count > 1) <span class="tag-shared">shared</span>@endif</td>
+          <td class="hide-sm">{{ $room->building ?? '—' }}</td>
+          <td>{{ $room->capacity ?? 'Not specified' }}</td>
+          <td class="hide-sm note">{{ $room->fixed_equipment_note }}</td>
+          <td><span @class(['status-badge', 'st-confirmed' => $room->is_active, 'st-cancelled' => ! $room->is_active])>{{ $room->is_active ? 'On' : 'Off' }}</span></td>
+          <td class="room-edit"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a></td>
+        </tr>
+      @endforeach
+    </tbody>
+  </table>
+  @endif
+  </div>
+
 </section>
 @endsection

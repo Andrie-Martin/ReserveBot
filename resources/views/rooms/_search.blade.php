@@ -4,7 +4,7 @@
       <div class="rb-availability__finder-field">
         <span class="rb-availability__finder-label">Find a room free from</span>
         <label for="from" class="sr-only">Start time</label>
-        <x-ui.select :invalid="(bool) $searchError" aria-describedby="availability-search-feedback" id="from" name="from" required>
+        <x-ui.select data-rb-picker :invalid="(bool) $searchError" aria-describedby="availability-search-feedback" id="from" name="from" required>
           <option value="">Start</option>
           @foreach ($slots as $t)
             <option value="{{ TimeSlots::hhmm($t) }}" @selected($search && $search['from'] === $t)>{{ TimeSlots::clock($t) }}</option>
@@ -14,7 +14,7 @@
       <div class="rb-availability__finder-field">
         <span class="rb-availability__finder-label rb-availability__finder-to">to</span>
         <label for="to" class="sr-only">End time</label>
-        <x-ui.select :invalid="(bool) $searchError" aria-describedby="availability-search-feedback" id="to" name="to" required>
+        <x-ui.select data-rb-picker :invalid="(bool) $searchError" aria-describedby="availability-search-feedback" id="to" name="to" required>
           <option value="">End</option>
           @foreach ($slots as $t)
             <option value="{{ TimeSlots::hhmm($t + $step) }}" @selected($search && $search['to'] === $t + $step)>{{ TimeSlots::clock($t + $step) }}</option>

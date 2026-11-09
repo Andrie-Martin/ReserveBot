@@ -23,7 +23,7 @@
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
-  <div class="rb-booking__panel">
+  <div class="rb-booking__panel booking-summary">
   <div class="booking-head">
     <div>
       <p class="eyebrow">Booking #{{ $reservation->id }} · {{ $reservation->needLabel() }}</p>
@@ -32,51 +32,68 @@
     <span class="status-badge st-{{ strtolower($reservation->status) }}">{{ $reservation->statusLabel() }}</span>
   </div>
 
-  <dl class="facts">
-    <dt>When</dt>
-    <dd>{{ $start->format('l, F j, Y') }} · {{ TimeSlots::span($start->hour * 60 + $start->minute, $end->isSameDay($start) ? $end->hour * 60 + $end->minute : 1440) }}</dd>
+  <dl class="bfacts">
+    <div class="bfact bfact--when">
+      <dt>When</dt>
+      <dd>{{ $start->format('l, F j, Y') }} · {{ TimeSlots::span($start->hour * 60 + $start->minute, $end->isSameDay($start) ? $end->hour * 60 + $end->minute : 1440) }}</dd>
+    </div>
 
     @if ($class)
-      <dt>Class</dt>
-      <dd>{{ trim(($class->course?->code ?? 'Class').' '.($class->course?->title ?? '')) }} · {{ $class->section?->name }}</dd>
+      <div class="bfact">
+        <dt>Class</dt>
+        <dd>{{ trim(($class->course?->code ?? 'Class').' '.($class->course?->title ?? '')) }} · {{ $class->section?->name }}</dd>
+      </div>
     @endif
 
-    <dt>Room</dt>
-    <dd>{{ $reservation->room?->name ?? 'No room (equipment only)' }}</dd>
+    <div class="bfact">
+      <dt>Room</dt>
+      <dd>{{ $reservation->room?->name ?? 'No room (equipment only)' }}</dd>
+    </div>
 
-    @if ($reservation->hasEquipment())
-      <dt>Equipment</dt>
-      <dd>
-        <ul class="item-list">
-          @foreach ($reservation->equipment as $item)
-            <li>{{ $item->name }} <span class="qty">×{{ $item->pivot->qty_requested }}</span></li>
-          @endforeach
-          @if (filled($reservation->other_items))
-            <li>{{ $reservation->other_items }} <span class="muted small">(not on the list)</span></li>
-          @endif
-        </ul>
-      </dd>
-    @endif
+    <div class="bfact bfact--who">
+      <dt>Booked by</dt>
+      <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
+    </div>
 
-
-    <dt>Booked by</dt>
-    <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
-
-    <dt>Sent</dt>
-    <dd>{{ $reservation->created_at?->format('F j, Y, g:i A') }}</dd>
+    <div class="bfact">
+      <dt>Sent</dt>
+      <dd>{{ $reservation->created_at?->format('F j, Y, g:i A') }}</dd>
+    </div>
 
     @if ($reservation->reviewer)
-      <dt>{{ $reservation->status === 'Rejected' ? 'Rejected by' : 'Approved by' }}</dt>
-      <dd>{{ $reservation->reviewer->name }}</dd>
+      <div class="bfact">
+        <dt>{{ $reservation->status === 'Rejected' ? 'Rejected by' : 'Approved by' }}</dt>
+        <dd>{{ $reservation->reviewer->name }}</dd>
+      </div>
     @endif
 
     @if (filled($reservation->status_reason))
-      <dt>{{ ['Rejected' => 'Why it was rejected', 'Cancelled' => 'Why it was cancelled', 'Completed' => 'Return note'][$reservation->status] ?? 'Note' }}</dt>
-      <dd>{{ $reservation->status_reason }}</dd>
+      <div class="bfact bfact--note">
+        <dt>{{ ['Rejected' => 'Why it was rejected', 'Cancelled' => 'Why it was cancelled', 'Completed' => 'Return note'][$reservation->status] ?? 'Note' }}</dt>
+        <dd>{{ $reservation->status_reason }}</dd>
+      </div>
     @endif
   </dl>
+
+  @if ($reservation->hasEquipment())
+    <section class="bequip" aria-labelledby="bequip-title">
+      <h2 id="bequip-title">Equipment <span class="count">{{ $reservation->equipment->count() + (filled($reservation->other_items) ? 1 : 0) }}</span></h2>
+      <ul class="chips">
+        @foreach ($reservation->equipment as $item)
+          <li class="chip"><span class="chip__name">{{ $item->name }}</span> <span class="chip__qty"><span class="sr-only">quantity </span>×{{ $item->pivot->qty_requested }}</span></li>
+        @endforeach
+        @if (filled($reservation->other_items))
+          <li class="chip chip--other"><span class="chip__name">{{ $reservation->other_items }}</span> <span class="chip__note">not on the list</span></li>
+        @endif
+      </ul>
+    </section>
+  @endif
   </div>
 
+  @php $showStaffActions = $canReview || ($isStaff && in_array($reservation->status, ['Confirmed', 'InUse'], true)) || $canChange; @endphp
+  @if ($showStaffActions)
+  <section class="rb-booking__panel booking-actions" aria-labelledby="booking-actions-title">
+  <h2 id="booking-actions-title">Staff actions</h2>
   {{-- Lab staff and admins: decide on a request, as it is --}}
   @if ($canReview)
     <div class="review-box">
@@ -110,76 +127,99 @@
     </div>
   @endif
 
-  {{-- Lab staff and admins: cancel or move an approved booking, with a reason the rep sees --}}
+  {{-- Lab staff and admins: move or cancel an approved booking, with a reason the rep sees. One action at a time. --}}
   @if ($canChange)
     @php
       $moveErrors = $errors->getBag('move');
       $cancelErrors = $errors->getBag('cancel');
       $nowFrom = $start->hour * 60 + $start->minute;
       $nowTo = $end->hour * 60 + $end->minute;
+      $manyRooms = count($rooms) > 8;
     @endphp
-    <details class="change-box" id="change" @if ($moveErrors->any() || $cancelErrors->any()) open @endif>
-      <summary>Cancel or move this booking</summary>
-      <div class="change-grid">
-        <form method="post" action="{{ route('bookings.move', $reservation) }}" class="book-form">
-          @csrf
-          <h3>Move it</h3>
-          @if ($moveErrors->any())
-            <p class="error">{{ $moveErrors->first() }}</p>
-          @endif
-          <div class="field-row">
-            <div>
-              <label for="move-date" class="field-label">Day</label>
-              <select id="move-date" name="date">
-                @foreach ($moveDays as $day)
-                  <option value="{{ $day->toDateString() }}" @selected(old('date', $start->toDateString()) === $day->toDateString())>{{ $day->format('D, M j') }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="move-from" class="field-label">From</label>
-              <select id="move-from" name="from">
-                @foreach ($starts as $t)
-                  <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('from', TimeSlots::hhmm($nowFrom)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="move-to" class="field-label">To</label>
-              <select id="move-to" name="to">
-                @foreach ($ends as $t)
-                  <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('to', TimeSlots::hhmm($nowTo)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          @if ($reservation->room_id)
-            <label for="move-room" class="field-label">Room</label>
-            <select id="move-room" name="room">
-              @foreach ($rooms as $room)
-                <option value="{{ $room->id }}" @selected((int) old('room', $reservation->room_id) === $room->id)>{{ $room->name }}{{ $room->id === $reservation->room_id ? ' (now)' : '' }}</option>
+    <div class="change-actions" id="change">
+      <p class="review-title" id="change-title">Change this booking</p>
+      <div class="change-bar" role="group" aria-labelledby="change-title">
+        <a class="btn-ghost change-toggle" href="#move-panel" data-rb-reveal="move-panel">Move booking</a>
+        <a class="btn-ghost btn-ghost--danger change-toggle" href="#cancel-panel" data-rb-reveal="cancel-panel">Cancel booking</a>
+      </div>
+
+      <form method="post" action="{{ route('bookings.move', $reservation) }}" id="move-panel" data-rb-once data-rb-reveal-group="change" @class(['change-panel', 'rb-reveal', 'is-open' => $moveErrors->any()])>
+        @csrf
+        <h3>Move booking</h3>
+        @if ($moveErrors->any())
+          <p class="error" role="alert">{{ $moveErrors->first() }}</p>
+        @endif
+        <div class="change-fields">
+          <div>
+            <label for="move-date" class="field-label">Day</label>
+            <select id="move-date" name="date" data-rb-picker data-rb-focus>
+              @foreach ($moveDays as $day)
+                <option value="{{ $day->toDateString() }}" @selected(old('date', $start->toDateString()) === $day->toDateString())>{{ $day->format('D, M j') }}</option>
               @endforeach
             </select>
-          @else
-            <p class="hint">Equipment only, so there’s no room to change.</p>
+          </div>
+          <div>
+            <label for="move-from" class="field-label">From</label>
+            <select id="move-from" name="from" data-rb-picker>
+              @foreach ($starts as $t)
+                <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('from', TimeSlots::hhmm($nowFrom)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div>
+            <label for="move-to" class="field-label">To</label>
+            <select id="move-to" name="to" data-rb-picker>
+              @foreach ($ends as $t)
+                <option value="{{ TimeSlots::hhmm($t) }}" @selected(old('to', TimeSlots::hhmm($nowTo)) === TimeSlots::hhmm($t))>{{ TimeSlots::clock($t) }}</option>
+              @endforeach
+            </select>
+          </div>
+          @if ($reservation->room_id)
+            <div>
+              <label for="move-room" class="field-label">Room</label>
+              <select id="move-room" name="room" {!! $manyRooms ? 'data-rb-picker="search" data-rb-search-label="Search rooms" data-rb-empty="No room matches that search."' : 'data-rb-picker' !!}>
+                @foreach ($rooms as $room)
+                  <option value="{{ $room->id }}" @selected((int) old('room', $reservation->room_id) === $room->id)>{{ $room->name }}{{ $room->id === $reservation->room_id ? ' (now)' : '' }}</option>
+                @endforeach
+              </select>
+            </div>
           @endif
+        </div>
+        @unless ($reservation->room_id)
+          <p class="hint">Equipment only, so there’s no room to change.</p>
+        @endunless
+        <div>
           <label for="move-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-          <textarea id="move-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The projector in CEA300 is broken">{{ $moveErrors->any() ? old('reason') : '' }}</textarea>
+          <textarea id="move-reason" name="reason" rows="3" maxlength="255" required placeholder="e.g. The projector in CEA300 is broken">{{ $moveErrors->any() ? old('reason') : '' }}</textarea>
           <p class="hint">The new room and items are checked again before anything changes.</p>
+        </div>
+        <div class="change-footer">
           <button type="submit" class="btn-approve">Move booking</button>
-        </form>
-        <form method="post" action="{{ route('bookings.staff-cancel', $reservation) }}">
-          @csrf
-          <h3>Cancel it</h3>
-          @if ($cancelErrors->any())
-            <p class="error">{{ $cancelErrors->first() }}</p>
-          @endif
+          <a class="btn-ghost" href="#change" data-rb-reveal-close>Back</a>
+        </div>
+      </form>
+
+      <form method="post" action="{{ route('bookings.staff-cancel', $reservation) }}" id="cancel-panel" data-rb-once data-rb-reveal-group="change" @class(['change-panel', 'change-panel--cancel', 'rb-reveal', 'is-open' => $cancelErrors->any()])>
+        @csrf
+        <h3>Cancel booking</h3>
+        <p class="hint">Cancelling frees the room and any items, and tells the rep why.</p>
+        @if ($cancelErrors->any())
+          <p class="error" role="alert">{{ $cancelErrors->first() }}</p>
+        @endif
+        <div>
           <label for="staff-cancel-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
-          <textarea id="staff-cancel-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The building is closed that day">{{ $cancelErrors->any() ? old('reason') : '' }}</textarea>
-          <button type="submit" class="btn-reject">Cancel booking</button>
-        </form>
-      </div>
-    </details>
+          <textarea id="staff-cancel-reason" name="reason" data-rb-focus rows="3" maxlength="255" required placeholder="e.g. The building is closed that day">{{ $cancelErrors->any() ? old('reason') : '' }}</textarea>
+        </div>
+        {{-- Confirmation only: it has no name, so it is never sent; the browser refuses to submit until it is ticked. --}}
+        <label class="check change-confirm" for="staff-cancel-confirm"><input type="checkbox" id="staff-cancel-confirm" required> Yes, cancel this booking for {{ $booker->name }}.</label>
+        <div class="change-footer">
+          <button type="submit" class="btn-reject btn-reject--solid">Cancel booking</button>
+          <a class="btn-ghost" href="#change" data-rb-reveal-close>Back</a>
+        </div>
+      </form>
+    </div>
+  @endif
+  </section>
   @endif
 
   {{-- The rep: cancel, with a reason, until the department's deadline --}}

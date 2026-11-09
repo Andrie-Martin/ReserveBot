@@ -51,9 +51,11 @@
   </details>
   </div>
 
+  @php $total = fn ($title, $people) => isset($groupTotals) ? ($groupTotals[$title] ?? $people->count()) : $people->count(); @endphp
   @foreach ($groups as $title => $people)
+    @continue(isset($paginator) && $people->isEmpty() && $total($title, $people) > 0)
     <div class="rb-booking__panel">
-    <h2>{{ $title }} <span class="count">{{ $people->count() }}</span></h2>
+    <h2>{{ $title }} <span class="count">{{ $total($title, $people) }}</span></h2>
     @if ($people->isEmpty())
       <p class="empty">None yet.</p>
     @else
@@ -112,5 +114,9 @@
     @endif
     </div>
   @endforeach
+
+  @isset($paginator)
+    <x-ui.pager :paginator="$paginator" noun="accounts" />
+  @endisset
 </section>
 @endsection
