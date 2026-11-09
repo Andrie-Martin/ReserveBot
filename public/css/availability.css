@@ -209,7 +209,7 @@
    section header, tiled calendar, empty state, one-line agenda rows). Presentation only: 44px targets,
    control-border contrast, the shared timeline coordinate system and sticky room labels are unchanged. */
 .rb-availability__cal-intro .rb-availability__muted { font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
-@media (min-width: 40.001rem) { .rb-availability h1 { font-size: 1.8125rem; } }
+@media (min-width: 40.001rem) { .rb-availability h1 { font-size: var(--rb-text-title); } }
 .rb-availability .rb-availability__day-card { padding: var(--rb-space-4) 1.25rem; }
 .rb-availability a.rb-button, .rb-availability__off { font-size: .8125rem; font-weight: var(--rb-weight-bold); }
 /* Finder: grouped fields with their captions above, compact primary action at the end. */
