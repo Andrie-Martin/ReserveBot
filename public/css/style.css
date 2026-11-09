@@ -381,21 +381,10 @@ button.btn-approve { width: auto; padding: 8px 18px; background: #15803D; }
 button.btn-approve:hover { background: #166534; }
 button.btn-reject { width: auto; margin-top: 8px; padding: 8px 16px; background: #B91C1C; }
 button.btn-reject:hover { background: #991B1B; }
-details.reject > summary, details.cancel-box > summary { width: fit-content; padding: 7px 14px; border: 1px solid #FECACA; border-radius: 8px; background: #fff; color: #B91C1C; font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; }
-details.reject > summary::-webkit-details-marker, details.cancel-box > summary::-webkit-details-marker { display: none; }
-details.reject[open] > summary, details.cancel-box[open] > summary { background: #FEF2F2; }
-details.reject form, details.cancel-box form { margin-top: 10px; }
-details.reject textarea, details.cancel-box textarea { display: block; width: 100%; padding: 9px 10px; border: 1px solid #D1D5DB; border-radius: 8px; font: inherit; resize: vertical; }
-details.reject textarea:focus, details.cancel-box textarea:focus { outline: 2px solid var(--brand); border-color: transparent; }
 
 /* One booking's page: decide or cancel */
 .review-box { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #FDE68A; border-radius: 12px; background: #FFFBEB; }
 .review-title { margin: 0 0 10px; color: #92400E; font-weight: 600; }
-.review-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
-.review-actions form { margin: 0; }
-.review-actions details.reject { flex: 1 1 260px; }
-.cancel-box { margin: 0 0 20px; }
-.cancel-box .hint { margin: 0 0 10px; }
 
 /* My bookings */
 .mine-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }

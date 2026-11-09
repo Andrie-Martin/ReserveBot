@@ -96,25 +96,32 @@
   <h2 id="booking-actions-title">Staff actions</h2>
   {{-- Lab staff and admins: decide on a request, as it is --}}
   @if ($canReview)
-    <div class="review-box">
-      <p class="review-title">This booking is waiting for approval.</p>
-      <div class="review-actions">
-        <form method="post" action="{{ route('bookings.approve', $reservation) }}">
+    <div class="review-box" id="review" role="group" aria-labelledby="review-title">
+      <p class="review-title" id="review-title">This booking is waiting for approval.</p>
+      <div class="review-panels">
+        {{-- Two plain forms, both always visible: nothing is sent until its own button is pressed. --}}
+        <form method="post" action="{{ route('bookings.approve', $reservation) }}" class="action-panel action-panel--approve" aria-labelledby="approve-title">
           @csrf
-          <button type="submit" class="btn-approve">Approve</button>
+          <h3 id="approve-title">Approve booking</h3>
+          <p class="hint">Confirms the room and any items for {{ $booker->name }}.</p>
+          <div class="action-panel__foot">
+            <button type="submit" class="btn-approve">Approve booking</button>
+          </div>
         </form>
-        <details class="reject" @if ($rejectErrors->any()) open @endif>
-          <summary>Reject…</summary>
-          <form method="post" action="{{ route('bookings.reject', $reservation) }}">
-            @csrf
-            <label for="reject-reason" class="field-label">Reason <span class="optional">(the rep sees this)</span></label>
+        <form method="post" action="{{ route('bookings.reject', $reservation) }}" class="action-panel action-panel--reject" aria-labelledby="reject-title">
+          @csrf
+          <h3 id="reject-title">Reject booking</h3>
+          <div class="action-panel__field">
+            <label for="reject-reason" class="field-label">Reason <span class="optional">(required; the rep sees this)</span></label>
             <textarea id="reject-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. The lab is closed for maintenance that day" @if ($rejectErrors->any()) autofocus aria-invalid="true" aria-describedby="reject-reason-error" @endif>{{ $rejectErrors->any() ? old('reason') : '' }}</textarea>
             @if ($rejectErrors->any())
               <p class="field-error" id="reject-reason-error">{{ $rejectErrors->first('reason') }}</p>
             @endif
+          </div>
+          <div class="action-panel__foot">
             <button type="submit" class="btn-reject">Reject booking</button>
-          </form>
-        </details>
+          </div>
+        </form>
       </div>
     </div>
   @endif
@@ -224,19 +231,26 @@
 
   {{-- The rep: cancel, with a reason, until the department's deadline --}}
   @if ($canCancel)
-    <details class="cancel-box" id="cancel" @if ($errors->has('reason')) open @endif>
-      <summary>Cancel this booking</summary>
-      <form method="post" action="{{ route('bookings.cancel', $reservation) }}">
+    <section class="rb-booking__panel cancel-card" id="cancel" aria-labelledby="cancel-title">
+      <div class="cancel-card__info">
+        <h2 id="cancel-title">Cancel this booking</h2>
+        <p class="cancel-card__deadline">You can cancel until <strong>{{ $cancelDeadline->format('D, M j, g:i A') }}</strong></p>
+        <p class="hint">That is {{ $cancelHours }} before it starts. Cancelling frees the room and any items, and the reason you give is kept with the booking.</p>
+      </div>
+      <form method="post" action="{{ route('bookings.cancel', $reservation) }}" class="cancel-card__form">
         @csrf
-        <p class="hint">You can cancel until {{ $cancelDeadline->format('D, M j, g:i A') }} ({{ $cancelHours }} before it starts).</p>
-        <label for="cancel-reason" class="field-label">Why are you cancelling?</label>
-        <textarea id="cancel-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. Our class was moved online">{{ old('reason') }}</textarea>
-        @error('reason')
-          <p class="field-error">{{ $message }}</p>
-        @enderror
-        <button type="submit" class="btn-reject">Cancel booking</button>
+        <div>
+          <label for="cancel-reason" class="field-label">Why are you cancelling? <span class="optional">(required)</span></label>
+          <textarea id="cancel-reason" name="reason" rows="2" maxlength="255" required placeholder="e.g. Our class was moved online" @error('reason') autofocus aria-invalid="true" aria-describedby="cancel-reason-error" @enderror>{{ old('reason') }}</textarea>
+          @error('reason')
+            <p class="field-error" id="cancel-reason-error">{{ $message }}</p>
+          @enderror
+        </div>
+        <div class="action-panel__foot">
+          <button type="submit" class="btn-reject">Cancel booking</button>
+        </div>
       </form>
-    </details>
+    </section>
   @elseif ($tooLateToCancel && ! session('problem'))
     <p class="notice">It’s too late to cancel here: bookings can be cancelled until {{ $cancelHours }} before they start. Please tell the lab staff.</p>
   @endif
