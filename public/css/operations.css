@@ -29,6 +29,8 @@
 .rb-ops .tcard-reason, .rb-ops .tcard-items, .rb-ops .tcard-note { margin-top: var(--rb-space-1); font-size: .8125rem; }
 .rb-ops .tcard-items, .rb-ops .tcard-note { color: var(--rb-text-secondary); }
 .rb-ops .tcard-side { display: grid; justify-items: end; gap: var(--rb-space-2); min-width: 0; max-width: 100%; }
+/* The booking link is a real secondary button (same box as every other outlined action), right-aligned under the status. */
+.rb-ops .tcard-side .tcard-link { justify-self: end; min-width: 8.5rem; }
 
 /* Today: the department's classes. */
 .rb-ops details.done-list { margin: 0; padding: 0; border: 0; }

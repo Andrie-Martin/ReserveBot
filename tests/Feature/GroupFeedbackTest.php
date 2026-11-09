@@ -350,4 +350,54 @@ final class GroupFeedbackTest extends TestCase
         // The booking link inside the drawer still points at the same booking page.
         $this->assertStringContainsString(route('book', ['for' => 'other', 'date' => $day->toDateString(), 'room' => $this->room->id]), html_entity_decode($html));
     }
+
+    // ---- 12: Today review control -------------------------------------------------------------------------------------
+
+    public function test_today_page_offers_review_request_as_a_secondary_button_link_that_changes_nothing(): void
+    {
+        $day = $this->busyDay();
+        $pending = $this->booking('Pending', $day->copy()->setTime(9, 0), null, null, 'Needs review');
+        $confirmed = $this->booking('Confirmed', $day->copy()->setTime(11, 0), null, null, 'Already approved');
+        $done = $this->booking('Rejected', $day->copy()->setTime(13, 0), null, null, 'Already rejected');
+
+        foreach ([$this->staff, $this->admin] as $user) {
+            $html = $this->as($user)->get('/today?date='.$day->toDateString())->assertOk()->getContent();
+            $link = '/<a href="'.preg_quote(route('bookings.show', $pending), '/').'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Review request<span class="sr-only"> for booking #'.$pending->id.'<\/span><\/a>/';
+            $this->assertMatchesRegularExpression($link, $html, $user->role.': an anchor styled as the shared outlined button');
+            $this->assertStringNotContainsString('Approve or reject', $html);
+            $this->assertStringNotContainsString('req-link', $html, 'the bare underlined link style is gone from this card');
+            // Navigation only: nothing on the Today card approves or rejects.
+            $this->assertStringNotContainsString(route('bookings.approve', $pending), $html);
+            $this->assertStringNotContainsString(route('bookings.reject', $pending), $html);
+            // Other states use the same control with their existing destinations.
+            $this->assertStringContainsString('href="'.route('bookings.show', $confirmed).'#change" class="rb-button rb-button--secondary rb-button--compact tcard-link">Cancel or move', $html);
+            $this->assertStringContainsString('href="'.route('bookings.show', $done).'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Details', $html);
+        }
+        // Following the link only opens the review page.
+        $this->as($this->staff)->get(route('bookings.show', $pending))->assertOk()->assertSee('Approve');
+        $this->assertSame('Pending', $pending->fresh()->status);
+    }
+
+    // ---- 8: My bookings on phones keeps the same data and actions ----------------------------------------------------
+
+    public function test_my_bookings_rows_keep_every_fact_and_action_in_a_stable_order_for_the_stacked_phone_card(): void
+    {
+        $day = $this->busyDay();
+        $open = $this->booking('Confirmed', $day->copy()->setTime(9, 0), null, null, str_repeat('Very long purpose ', 8));
+        $rejected = Reservation::create(['user_id' => $this->rep->id, 'room_id' => $this->room->id, 'purpose' => 'Closed one', 'start_time' => now()->subDays(3)->setTime(9, 0), 'end_time' => now()->subDays(3)->setTime(10, 0), 'status' => 'Rejected', 'status_reason' => 'Room is reserved that day']);
+        $html = $this->as($this->rep)->get(route('bookings.mine'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<li class="brow">\s*<div class="brow-when">\s*<strong>'.preg_quote($open->start_time->format('D, M j'), '/').'<\/strong>\s*<span>[^<]+<\/span>\s*<\/div>\s*<div class="brow-what">\s*<p class="brow-title"><a href="'.preg_quote(route('bookings.show', $open), '/').'">Very long purpose/', $html);
+        $this->assertMatchesRegularExpression('/<div class="brow-side">\s*<span class="status-badge st-confirmed">[^<]+<\/span>\s*<a class="btn-ghost btn-ghost--danger btn-ghost--compact brow-cancel" href="'.preg_quote(route('bookings.show', $open), '/').'#cancel">Cancel booking/', $html);
+        $this->assertStringContainsString('Rejected: “Room is reserved that day”', $html);
+        $this->assertStringNotContainsString(route('bookings.show', $rejected).'#cancel', $html, 'closed bookings still have no cancel control');
+        $this->assertStringContainsString('<h2>Coming up <span class="count">1</span></h2>', $html);
+        $this->assertStringContainsString('Past and closed <span class="count">1</span>', $html);
+        $this->assertStringContainsString('class="blist past"', $html, 'upcoming and past stay separate lists');
+
+        // The empty state is unchanged.
+        $empty = $this->as($this->person($this->department, 'rep', 'Empty Rep', null, true))->get(route('bookings.mine'))->assertOk()->getContent();
+        $this->assertStringContainsString('Nothing coming up.', $empty);
+        $this->assertStringContainsString('None yet.', $empty);
+    }
 }
