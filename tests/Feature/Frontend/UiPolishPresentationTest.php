@@ -377,4 +377,98 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertStringNotContainsString('details.reject', $css);
         $this->assertStringNotContainsString('details.cancel-box', $css);
     }
+
+    public function test_the_sidebar_information_card_is_removed_everywhere(): void
+    {
+        $this->assertFileDoesNotExist(dirname(__DIR__, 3).'/resources/views/layouts/partials/workspace-note.blade.php');
+        $this->assertStringNotContainsString('workspace-note', $this->read('resources/views/layouts/partials/navigation.blade.php'));
+        $this->assertStringNotContainsString('workspace-note', $this->read('public/css/layout.css'), 'no CSS left over for the removed card');
+        foreach (['resources/views', 'public/css'] as $dir) {
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 3).'/'.$dir, \FilesystemIterator::SKIP_DOTS)) as $file) {
+                $text = file_get_contents($file->getPathname());
+                $this->assertStringNotContainsString('PUP CEA / NDC Campus', $text, $file->getPathname());
+                $this->assertStringNotContainsString('rb-workspace-note', $text, $file->getPathname());
+            }
+        }
+    }
+
+    public function test_requests_reject_and_cancel_buttons_are_one_aligned_action_group(): void
+    {
+        $css = $this->read('public/css/operations.css');
+        $this->assertMatchesRegularExpression('/\.req-reject__actions\s*\{[^}]*align-items:\s*center/', $css);
+        $this->assertMatchesRegularExpression('/\.req-reject__actions > :is\(\.btn-reject, \.btn-ghost\)\s*\{[^}]*min-height:\s*var\(--rb-control-height\)[^}]*margin:\s*0[^}]*font-size:\s*\.8125rem/', $css, 'same height, margin, type for both');
+        $this->assertMatchesRegularExpression('/\.req-reject__actions > \.btn-ghost\s*\{[^}]*color:\s*var\(--rb-text-primary\)/', $css, 'Cancel is the neutral outline');
+        $view = $this->read('resources/views/requests/index.blade.php');
+        $this->assertStringContainsString('<button type="submit" class="btn-reject">Reject booking</button>', $view);
+        $this->assertStringContainsString('data-rb-reveal-close>Cancel</a>', $view, 'Cancel still only dismisses the form');
+        $this->assertSame(1, substr_count($view, 'route(\'bookings.reject\', $r)'));
+    }
+
+    public function test_my_bookings_cancel_is_a_button_styled_anchor_not_a_form_or_post(): void
+    {
+        $row = $this->read('resources/views/bookings/_row.blade.php');
+        $this->assertMatchesRegularExpression('/<a class="btn-ghost btn-ghost--danger btn-ghost--compact brow-cancel" href="\{\{ route\(\'bookings\.show\', \$b\) \}\}#cancel">Cancel booking/', $row);
+        $this->assertStringNotContainsString('<form', $row);
+        $this->assertStringNotContainsString('<button', $row);
+        $this->assertStringNotContainsString('Cancel…', $row);
+        $this->assertStringContainsString('$canCancel', $row, 'the eligibility rule decides whether the control shows');
+        $css = $this->read('public/css/booking.css');
+        $this->assertMatchesRegularExpression('/\.btn-ghost--compact\s*\{[^}]*min-height:\s*2rem/', $css);
+        $this->assertMatchesRegularExpression('/\(pointer: coarse\)\s*\{\s*\.rb-booking \.btn-ghost--compact\s*\{[^}]*min-height:\s*var\(--rb-control-height\)/', $css, 'touch-sized on phones and coarse pointers');
+    }
+
+    public function test_a_missing_capacity_has_no_placeholder_text_anywhere(): void
+    {
+        foreach (['resources/views', 'public/js', 'app'] as $dir) {
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 3).'/'.$dir, \FilesystemIterator::SKIP_DOTS)) as $file) {
+                if (! preg_match('/\.(php|js)$/', $file->getFilename())) {
+                    continue;
+                }
+                $text = file_get_contents($file->getPathname());
+                $this->assertStringNotContainsString('Capacity not specified', $text, $file->getPathname());
+                $this->assertStringNotContainsString("capacity ?? 'Not specified'", $text, $file->getPathname());
+                $this->assertDoesNotMatchRegularExpression('/capacity[^\n]{0,40}\?\?\s*[\'"]/i', $text, $file->getPathname().' must not default a missing capacity to text');
+            }
+        }
+        $book = $this->read('resources/views/bookings/create.blade.php');
+        $this->assertStringContainsString('@if (\\App\\Support\\RoomCapacity::known($room->capacity))', $book, 'conditional rendering, not CSS hiding');
+        $this->assertDoesNotMatchRegularExpression('/room-opt-cap[^}]*display:\s*none/', $this->read('public/css/booking.css').$this->read('public/css/style.css'), 'never hidden with CSS');
+        $this->assertStringContainsString('Reason not specified', $this->read('app/Support/BlockedReason.php'), 'the unrelated availability wording stays');
+    }
+
+    public function test_unavailable_rooms_on_the_booking_page_are_listed_directly(): void
+    {
+        $book = $this->read('resources/views/bookings/create.blade.php');
+        $this->assertStringNotContainsString('busy-rooms', $book);
+        $this->assertStringNotContainsString('busy then', $book);
+        $start = strpos($book, '<section class="unavail"');
+        $end = strpos($book, '</section>', $start);
+        $this->assertNotFalse($start);
+        $panel = substr($book, $start, $end - $start);
+        foreach (['<input', '<button', '<select', '<a ', '<details', '<summary'] as $control) {
+            $this->assertStringNotContainsString($control, $panel, 'informational only: '.$control);
+        }
+        foreach (["\$row['room']->name", "\$row['clash']['label']", "TimeSlots::span(\$row['clash']['start'], \$row['clash']['end'])"] as $field) {
+            $this->assertStringContainsString($field, $panel, 'the existing data is shown unchanged');
+        }
+        $this->assertStringContainsString('@if ($busyRooms->isNotEmpty())', $book, 'omitted when nothing is unavailable');
+        $this->assertStringNotContainsString('busy-rooms', $this->read('public/css/booking.css').$this->read('public/css/style.css'));
+    }
+
+    public function test_page_titles_share_one_size_token_across_pages(): void
+    {
+        $this->assertStringContainsString('--rb-text-title: 1.8125rem', $this->read('public/css/foundations/tokens.css'));
+        foreach (['booking', 'dashboard', 'availability', 'operations', 'auth', 'manage', 'timetable', 'layout'] as $sheet) {
+            $this->assertStringNotContainsString('1.8125rem', $this->read("public/css/$sheet.css"), "$sheet.css uses the token, not a literal");
+        }
+        $this->assertMatchesRegularExpression('/\.rb-booking__intro h1, \.rb-booking \.mine-head h1\s*\{\s*font-size:\s*var\(--rb-text-title\)/', $this->read('public/css/booking.css'), 'My bookings follows the other pages');
+        $this->assertMatchesRegularExpression('/\.rb-account-hero \.rb-heading--h1\s*\{\s*font-size:\s*var\(--rb-text-title\)/', $this->read('public/css/auth.css'));
+        $this->assertMatchesRegularExpression('/\.rb-dashboard h1\s*\{\s*font-size:\s*var\(--rb-text-title\)/', $this->read('public/css/dashboard.css'));
+        $this->assertMatchesRegularExpression('/\.rb-availability h1\s*\{\s*font-size:\s*var\(--rb-text-title\)/', $this->read('public/css/availability.css'));
+        $this->assertMatchesRegularExpression('/\.rb-ops \.today-head h1\s*\{\s*font-size:\s*var\(--rb-text-title\)/', $this->read('public/css/operations.css'));
+        // Labels and action buttons use one size each.
+        $this->assertMatchesRegularExpression('/\.rb-booking \.field-label\s*\{[^}]*font-size:\s*var\(--rb-text-small\)[^}]*font-weight:\s*var\(--rb-weight-semibold\)/', $this->read('public/css/booking.css'));
+        $this->assertMatchesRegularExpression('/\.rb-button[^{]*\{[^}]*font-size:\s*\.8125rem;\s*font-weight:\s*var\(--rb-weight-bold\)/', $this->read('public/css/foundations/components.css'));
+        $this->assertStringContainsString('rb-subnav rb-account-tabs', $this->read('resources/views/account/_tabs.blade.php'), 'account tabs use the shared underline navigation');
+    }
 }
