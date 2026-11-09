@@ -54,3 +54,16 @@ Presentation only. The one backend addition is read-only: `App\Services\DeskStat
 - The phase-era fixture scripts `rooms-correction-browser.cjs`, `task-ux-browser.cjs`, `availability-browser.cjs` and `visual-refinement-browser.cjs` assert expandable event details and other markup replaced earlier in this branch; they were not updated.
 - `render-manage.php --check` fails on the equipment search (`eq-filter-status` described-by contract) both before and after these changes.
 - At 320px with 200% text the Requests card content is still narrow (nested page, panel and card padding); the facts now stack in one column instead of two 53px ones.
+
+## Booking Details action layout (`fix/booking-detail-action-layout`)
+
+`/bookings/{id}` no longer hides its main actions in dropdowns.
+
+- **Lab staff and admins, Pending booking:** two always-visible white panels (`.review-panels`, about 1/3 and 2/3 on desktop, stacked at 56rem and below). *Approve booking* is the filled primary action. *Reject booking* holds the required reason field, with an outlined destructive button. Both actions sit at the foot of their panels so they line up. The rejection error (bag `reject{id}`) renders directly under the field with `aria-invalid` / `aria-describedby`, and focus lands on the field.
+- **Representative, cancellable booking:** one card (`#cancel.cancel-card`) with the deadline and a short explanation on the left, and the required reason plus the submit button on the right (stacked on narrow screens). The `#cancel` anchor used by "Cancel…" on My bookings still works. After the deadline only the existing explanation shows.
+- Unchanged: routes, POST methods, `@csrf`, field names, validation messages and bags, role/department checks, the staff Move / Cancel reveal workflow for other statuses. No controller, model, policy or migration change. Nothing is ever sent by revealing, focusing or typing in a field; there is no confirmation step.
+- The Reject / Cancel disclosure CSS (`details.reject`, `details.cancel-box`, `.review-actions`) was removed from `booking.css` and `style.css`.
+
+Tests: `tests/Feature/BookingActionLayoutTest.php` (DB-gated, 13 tests), `UiPolishPresentationTest::test_booking_detail_actions_are_always_visible_panels_not_dropdowns`, and the real-browser script `tests/Support/booking-actions-browser.cjs` (31 checks; `RB_MUTATE=1` also performs one real reject, approve and cancel on a disposable database).
+
+Known limits: `tests/Support/booking-browser.cjs` (fixture script) already failed at its equipment step on `origin/dev`; its cancel step was updated for the new markup but could not be reached. Text-only enlargement does not trigger the rem-based media queries (only page zoom does), but the layout was checked not to overflow either way.
