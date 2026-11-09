@@ -152,11 +152,25 @@ final class GroupFeedbackTest extends TestCase
             $user->forceFill(['photo_path' => 'photos/'.$user->id.'-test.jpg'])->save();
             $html = $this->as($user)->get('/account')->assertOk()->getContent();
 
-            $this->assertMatchesRegularExpression('/<div class="rb-account-photo__actions">\s*<button type="submit"[^>]*>Replace photo<\/button>\s*<button type="submit"[^>]*rb-button--danger-outline[^>]*form="photo-remove-form"[^>]*>Remove photo<\/button>\s*<\/div>/', $html, $user->role.': both actions in one row');
-            // Remove belongs to its own DELETE form, never to the upload form.
-            $this->assertMatchesRegularExpression('/<form id="photo-remove-form" method="post" action="'.preg_quote(route('account.photo.remove'), '/').'">\s*<input type="hidden" name="_token"[^>]*>\s*<input type="hidden" name="_method" value="DELETE">\s*<\/form>/', $html);
-            $this->assertMatchesRegularExpression('/<form id="photo-upload-form" method="post" action="'.preg_quote(route('account.photo'), '/').'" enctype="multipart\/form-data">/', $html);
-            $this->assertSame(1, substr_count($html, 'form="photo-remove-form"'));
+            // Two independent native forms, each owning exactly one submit button, inside one action grid.
+            $dom = new \DOMDocument();
+            @$dom->loadHTML($html);
+            $xp = new \DOMXPath($dom);
+            $forms = $xp->query('//div[contains(concat(" ", normalize-space(@class), " "), " rb-account-photo__forms ")]/form');
+            $this->assertSame($user->photo_path ? 2 : 1, $forms->length, $user->role);
+            [$upload, $remove] = [$forms->item(0), $forms->item(1)];
+            $this->assertSame(route('account.photo'), $upload->getAttribute('action'));
+            $this->assertSame('multipart/form-data', $upload->getAttribute('enctype'));
+            $this->assertSame('Replace photo', trim($xp->query('.//button[@type="submit"]', $upload)->item(0)->textContent));
+            $this->assertSame(route('account.photo.remove'), $remove->getAttribute('action'));
+            $this->assertSame('DELETE', $xp->query('.//input[@name="_method"]', $remove)->item(0)->getAttribute('value'));
+            $this->assertSame(1, $xp->query('.//input[@name="_token"]', $remove)->length, 'CSRF on the DELETE form');
+            $removeButton = $xp->query('.//button[@type="submit"]', $remove);
+            $this->assertSame(1, $removeButton->length);
+            $this->assertSame('Remove photo', trim($removeButton->item(0)->textContent));
+            $this->assertStringContainsString('rb-button--danger-outline', $removeButton->item(0)->getAttribute('class'));
+            $this->assertSame(1, $xp->query('.//button[@type="submit"]', $upload)->length, 'each form owns exactly one submit button');
+            $this->assertSame(0, $xp->query('//button[@form]')->length, 'no cross-form submitters: Remove cannot submit the upload form');
             $this->assertStringContainsString('accept="image/jpeg,image/png,image/webp"', $html);
         }
 
@@ -164,14 +178,14 @@ final class GroupFeedbackTest extends TestCase
         $html = $this->as($this->person($this->department, 'rep', 'No Photo'))->get('/account')->assertOk()->getContent();
         $this->assertStringContainsString('>Upload photo</button>', $html);
         $this->assertStringNotContainsString('Remove photo', $html);
-        $this->assertStringNotContainsString('photo-remove-form', $html);
+        $this->assertStringNotContainsString('name="_method" value="DELETE"', $html, 'no DELETE form without a photo');
     }
 
-    public function test_photo_validation_errors_still_show_with_the_new_action_row(): void
+    public function test_photo_validation_errors_still_show_with_the_new_action_grid(): void
     {
         $response = $this->as($this->rep)->from('/account')->post('/account/photo', []);
         $response->assertRedirect('/account')->assertSessionHasErrors('photo', null, 'photo');
-        $this->get('/account')->assertOk()->assertSee('rb-account-photo__actions', false);
+        $this->get('/account')->assertOk()->assertSee('rb-account-photo__forms', false);
     }
 
     // ---- 3 & 7: compact email status --------------------------------------------------------------------------------

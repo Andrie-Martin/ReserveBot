@@ -63,12 +63,13 @@
 .rb-account-photo .avatar-none { color: var(--rb-color-maroon); font-size: 1.5rem; }
 .rb-account-photo__content { min-width: 0; }
 .rb-account-photo__name { margin: 0; font-weight: var(--rb-weight-bold); font-size: var(--rb-text-h3); overflow-wrap: anywhere; }
-.rb-account-photo__forms { margin-block: var(--rb-space-4); }
-.rb-account-photo__forms form { display: grid; gap: var(--rb-space-4); min-width: 0; max-width: 100%; margin: 0; }
-/* Replace/Upload (primary) and Remove (secondary, destructive outline) share one row, one height, one radius; they wrap on narrow cards. */
-.rb-account-photo__actions { display: flex; flex-wrap: wrap; gap: var(--rb-space-2); }
-.rb-account-photo__actions > .rb-button { flex: 1 1 9rem; }
-#photo-remove-form { display: none; }   /* holds only the DELETE token; its button lives in the action row via the form attribute */
+.rb-account-photo__forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: var(--rb-space-4) var(--rb-space-2); align-items: start; margin-block: var(--rb-space-4); }
+.rb-account-photo__forms form { min-width: 0; max-width: 100%; margin: 0; }
+/* The upload form's children (the file field, then Replace/Upload) join this grid; the Remove form is the next cell. One row, one height, one radius;
+   below ~20rem the two buttons wrap into an equal-width stack. */
+.rb-account-photo__forms > form:first-child { display: contents; }
+.rb-account-photo__forms .rb-field { grid-column: 1 / -1; }
+.rb-account-photo__forms .rb-button { width: 100%; }
 .rb-account-photo__content > .rb-error-summary { margin-top: var(--rb-space-4); }
 .rb-account-photo .rb-control[type=file] { padding: var(--rb-space-2); font-size: var(--rb-text-small); overflow: hidden; }
 .rb-account-photo .rb-control::file-selector-button { padding: var(--rb-space-2); margin-right: var(--rb-space-2); font: inherit; color: var(--rb-color-maroon); background: var(--rb-surface-muted); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); }

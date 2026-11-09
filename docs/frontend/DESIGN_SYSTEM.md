@@ -238,3 +238,9 @@ Stage 3 retains the existing Inter faces, maroon `#6B1932`, deep maroon `#481021
 - **Timeline:** board and sticky identity/mobile action surfaces are white with a 16px outer radius. A 1px inset shadow paints the decorative border without consuming layout space. There is deliberately no added padding or layout border: axis, bands, columns, row heights and scroll geometry remain identical. The finder uses the same white surface. The calendar's redundant rounded outer frame is visually removed with a transparent border while preserving its dimensions, cell borders and keyboard scroll region.
 
 See [Stage 3 results, parity and screenshots](../codex/STAGE_03_VISUAL_REFINEMENT.md). This stage does not restyle unfinished workflow content or begin Stage 4.
+
+## Groupmate feedback pass
+
+Adds `x-ui.status-note` (compact non-critical status row; errors stay on `x-ui.alert`), the `danger-outline` button variant, phone cards for
+the Free rooms timetable and My bookings, a single `--tt-*` column system for the desktop timetable, and a guarded Delete for unused rooms and
+equipment. Palette, tokens and typography are unchanged. Details, audit and verification: [GROUP_FEEDBACK_PASS.md](GROUP_FEEDBACK_PASS.md).

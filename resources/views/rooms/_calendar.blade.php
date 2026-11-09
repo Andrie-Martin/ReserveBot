@@ -10,16 +10,16 @@
     <div class="rb-availability__cal-nav" role="group" aria-label="Change month">
       <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$todayUrl" aria-label="Go to today">Today</x-ui.link-button>
       @if ($calendar['prevUrl'])
-        <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['prevUrl']" :aria-label="'Previous month, '.$calendar['prevTitle']" :title="'Previous month, '.$calendar['prevTitle']"><span aria-hidden="true">‹</span></x-ui.link-button>
+        <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['prevUrl']" :aria-label="'Previous month, '.($calendar['prevTitle'] ?? 'earlier')" :title="'Previous month, '.($calendar['prevTitle'] ?? 'earlier')"><span aria-hidden="true">‹</span></x-ui.link-button>
       @else
         <button type="button" class="rb-button rb-button--secondary rb-button--regular rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-prev-why" title="Earlier months can’t be booked. The calendar starts today."><span aria-hidden="true">‹</span><span class="sr-only">Previous month, unavailable</span></button>
         <span class="sr-only" id="cal-prev-why">Earlier months can’t be booked. The calendar starts today.</span>
       @endif
       @if ($calendar['nextUrl'])
-        <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['nextUrl']" :aria-label="'Next month, '.$calendar['nextTitle']" :title="'Next month, '.$calendar['nextTitle']"><span aria-hidden="true">›</span></x-ui.link-button>
+        <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['nextUrl']" :aria-label="'Next month, '.($calendar['nextTitle'] ?? 'later')" :title="'Next month, '.($calendar['nextTitle'] ?? 'later')"><span aria-hidden="true">›</span></x-ui.link-button>
       @else
-        <button type="button" class="rb-button rb-button--secondary rb-button--regular rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-next-why" title="Nothing to pick in {{ $calendar['nextTitle'] }} yet. You can look ahead up to {{ $lastDay->format('F j') }}."><span aria-hidden="true">›</span><span class="sr-only">Next month, unavailable</span></button>
-        <span class="sr-only" id="cal-next-why">Nothing to pick in {{ $calendar['nextTitle'] }} yet. You can look ahead up to {{ $lastDay->format('F j') }}.</span>
+        <button type="button" class="rb-button rb-button--secondary rb-button--regular rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-next-why" title="Nothing to pick in {{ $calendar['nextTitle'] ?? 'the next month' }} yet. You can look ahead up to {{ $lastDay->format('F j') }}."><span aria-hidden="true">›</span><span class="sr-only">Next month, unavailable</span></button>
+        <span class="sr-only" id="cal-next-why">Nothing to pick in {{ $calendar['nextTitle'] ?? 'the next month' }} yet. You can look ahead up to {{ $lastDay->format('F j') }}.</span>
       @endif
     </div>
   </div>

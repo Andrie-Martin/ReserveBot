@@ -9,25 +9,21 @@
     </div>
     <div class="rb-account-photo__content">
       <x-ui.error-summary :bag="$errors->getBag('photo')" />
+      {{-- Two independent native forms, each with its own submit button. CSS lays them out as one action row (the upload form's
+           children join the grid), so Replace/Upload and Remove share a row, height and radius without nesting or form="" tricks. --}}
       <div class="rb-account-photo__forms">
-        {{-- Both buttons sit in one row. "Remove photo" belongs to the separate DELETE form below through its form attribute,
-             so it can never submit the upload form (and pressing Enter in the file field still means "Replace/Upload"). --}}
-        <form id="photo-upload-form" method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">
+        <form method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">
           @csrf
           <x-ui.field field-id="photo" label="Photo" :error="$errors->getBag('photo')->first('photo')">
             <x-ui.input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required aria-describedby="photo-guidance" />
           </x-ui.field>
-          <div class="rb-account-photo__actions">
-            <x-ui.button type="submit">{{ $user->photo_path ? 'Replace photo' : 'Upload photo' }}</x-ui.button>
-            @if ($user->photo_path)
-              <x-ui.button type="submit" variant="danger-outline" form="photo-remove-form">Remove photo</x-ui.button>
-            @endif
-          </div>
+          <x-ui.button type="submit">{{ $user->photo_path ? 'Replace photo' : 'Upload photo' }}</x-ui.button>
         </form>
         @if ($user->photo_path)
-          <form id="photo-remove-form" method="post" action="{{ route('account.photo.remove') }}">
+          <form method="post" action="{{ route('account.photo.remove') }}">
             @csrf
             @method('DELETE')
+            <x-ui.button type="submit" variant="danger-outline">Remove photo</x-ui.button>
           </form>
         @endif
       </div>
