@@ -33,7 +33,6 @@
         <p class="rb-auth-fineprint">No public registration. Your admin creates or manages accounts.</p>
       </x-slot:footer>
     </x-ui.auth-card>
-    <p class="rb-auth-disclaimer">Unofficial student design · Not an official PUP website</p>
   </section>
   @include('auth._aside')
 </div>

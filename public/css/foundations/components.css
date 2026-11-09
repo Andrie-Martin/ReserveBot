@@ -32,6 +32,9 @@
 .rb-button--quiet:hover { text-decoration: underline; }
 .rb-button--danger { background: var(--rb-danger-text); color: var(--rb-color-white); }
 .rb-button--danger:hover { background: var(--rb-danger-bg); color: var(--rb-danger-text); border-color: var(--rb-danger-text); }
+/* Secondary destructive action: outlined, same box as every other button (matches .btn-ghost--danger on booking pages). */
+.rb-button--danger-outline { border-color: var(--rb-danger-text); background: var(--rb-surface-panel); color: var(--rb-danger-text); }
+.rb-button--danger-outline:hover { background: var(--rb-danger-bg); color: var(--rb-danger-text); }
 .rb-button--compact, .rb-dashboard .answer-buttons .btn-mini { padding-inline: var(--rb-space-2); }
 .rb-button:disabled, .rb-button:disabled:hover, .rb-dashboard .answer-buttons .btn-mini:disabled {
   background: var(--rb-neutral-bg); border-color: var(--rb-border-control);
@@ -68,6 +71,27 @@ textarea.rb-control { resize: vertical; }
 .rb-alert, .rb-badge { background: var(--rb-tone-bg); color: var(--rb-tone-text); overflow-wrap: anywhere; }
 .rb-alert { padding: var(--rb-space-4); border: var(--rb-border-width) solid currentColor; border-radius: var(--rb-radius-control); }
 .rb-badge { display: inline-block; max-width: 100%; padding: var(--rb-space-1) var(--rb-space-2); border-radius: var(--rb-radius-pill); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+/* Compact status row (x-ui.status-note): non-critical state only. Errors and destructive warnings stay on .rb-alert. */
+.rb-status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2) var(--rb-space-4);
+  box-sizing: border-box; padding: var(--rb-space-2) var(--rb-space-4);
+  border: var(--rb-border-width) solid color-mix(in srgb, var(--rb-tone-text) 32%, var(--rb-surface-panel));
+  border-radius: var(--rb-radius-control);
+  background: color-mix(in srgb, var(--rb-tone-bg) 42%, var(--rb-surface-panel));
+  color: var(--rb-text-primary); font-family: var(--rb-font-family); font-size: var(--rb-text-small); line-height: var(--rb-leading-body);
+}
+.rb-status__icon { flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: var(--rb-radius-pill); background: var(--rb-tone-text); color: var(--rb-color-white); }
+.rb-status__icon svg { width: .875rem; height: .875rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rb-status__body { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.rb-status__body > p, .rb-status__title { margin: 0; }
+.rb-status__title { font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); color: var(--rb-tone-text); line-height: var(--rb-leading-body); }
+.rb-status__meta { color: var(--rb-text-muted); }
+.rb-status__actions { flex: none; margin-left: auto; }
+.rb-status__actions form { margin: 0; }
+@media (max-width: 40rem) {
+  .rb-status__actions { flex: 1 1 100%; margin-left: 0; }
+  .rb-status__actions .rb-button { width: 100%; }
+}
 .rb-error-summary > .error { margin: 0; padding: var(--rb-space-4); border: var(--rb-border-width) solid var(--rb-danger-text); border-radius: var(--rb-radius-control); background: var(--rb-danger-bg); color: var(--rb-danger-text); font-size: var(--rb-text-small); }
 .rb-error-summary > .error ul { margin: 0; padding-left: var(--rb-space-6); }
 .rb-error-summary > .error li { margin: var(--rb-space-1) 0; overflow-wrap: anywhere; }

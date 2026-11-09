@@ -10,18 +10,24 @@
     <div class="rb-account-photo__content">
       <x-ui.error-summary :bag="$errors->getBag('photo')" />
       <div class="rb-account-photo__forms">
-        <form method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">
+        {{-- Both buttons sit in one row. "Remove photo" belongs to the separate DELETE form below through its form attribute,
+             so it can never submit the upload form (and pressing Enter in the file field still means "Replace/Upload"). --}}
+        <form id="photo-upload-form" method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">
           @csrf
           <x-ui.field field-id="photo" label="Photo" :error="$errors->getBag('photo')->first('photo')">
             <x-ui.input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required aria-describedby="photo-guidance" />
           </x-ui.field>
-          <x-ui.button type="submit">{{ $user->photo_path ? 'Replace photo' : 'Upload photo' }}</x-ui.button>
+          <div class="rb-account-photo__actions">
+            <x-ui.button type="submit">{{ $user->photo_path ? 'Replace photo' : 'Upload photo' }}</x-ui.button>
+            @if ($user->photo_path)
+              <x-ui.button type="submit" variant="danger-outline" form="photo-remove-form">Remove photo</x-ui.button>
+            @endif
+          </div>
         </form>
         @if ($user->photo_path)
-          <form method="post" action="{{ route('account.photo.remove') }}">
+          <form id="photo-remove-form" method="post" action="{{ route('account.photo.remove') }}">
             @csrf
             @method('DELETE')
-            <x-ui.button type="submit" variant="quiet">Remove photo</x-ui.button>
           </form>
         @endif
       </div>

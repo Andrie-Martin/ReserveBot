@@ -1,6 +1,5 @@
 <header class="rb-header rb-ui">
   <x-ui.brand :href="url('/')" />
-  <span class="rb-header__description">Room &amp; equipment reservation system</span>
   @if ($workspace)
     {{-- Desktop topbar only (CSS hides it in the mobile layout); the page title comes from the view's own section. --}}
     @hasSection('title')
