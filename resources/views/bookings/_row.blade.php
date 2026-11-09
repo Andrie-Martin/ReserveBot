@@ -23,7 +23,7 @@
   <div class="brow-side">
     <span class="status-badge st-{{ strtolower($b->status) }}">{{ $b->statusLabel() }}</span>
     @if ($canCancel)
-      <a class="brow-cancel" href="{{ route('bookings.show', $b) }}#cancel">Cancel…</a>
+      <a class="btn-ghost btn-ghost--danger btn-ghost--compact brow-cancel" href="{{ route('bookings.show', $b) }}#cancel">Cancel booking<span class="sr-only">: {{ $b->purpose }}</span></a>
     @endif
   </div>
 </li>

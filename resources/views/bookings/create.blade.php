@@ -180,21 +180,27 @@
                 @php $room = $row['room']; @endphp
                 <label class="room-opt">
                   <input type="radio" name="room" value="{{ $room->id }}" @checked($pickedRoom === $room->id)>
-                  <span class="room-opt-name"><strong>{{ $room->name }}</strong>{{ \App\Support\RoomCapacity::label($room->capacity) }}</span>
+                  <span class="room-opt-name"><strong>{{ $room->name }}</strong>@if (\App\Support\RoomCapacity::known($room->capacity)) <span class="room-opt-cap">{{ \App\Support\RoomCapacity::label($room->capacity) }}</span>@endif</span>
                   <span class="room-opt-state free">Free</span>
                 </label>
               @endforeach
             </div>
           @endif
           @if ($busyRooms->isNotEmpty())
-            <details class="busy-rooms">
-              <summary>{{ $busyRooms->count() }} {{ $busyRooms->count() === 1 ? 'room is' : 'rooms are' }} busy then (rooms are shared, so other departments count too)</summary>
-              <ul>
+            {{-- Always visible: information only, so no radio and no way to pick one of these. --}}
+            <section class="unavail" aria-labelledby="unavail-title">
+              <h3 class="unavail__title" id="unavail-title">Unavailable rooms <span class="count">{{ $busyRooms->count() }}</span></h3>
+              <p class="unavail__hint">These rooms are occupied or restricted during your selected time. Rooms are shared, so other departments’ bookings count too.</p>
+              <ul class="unavail__list">
                 @foreach ($busyRooms as $row)
-                  <li><strong>{{ $row['room']->name }}</strong> {{ $row['clash']['label'] }} ({{ TimeSlots::span($row['clash']['start'], $row['clash']['end']) }})</li>
+                  <li class="unavail__row">
+                    <strong class="unavail__room">{{ $row['room']->name }}</strong>
+                    <span class="unavail__reason">{{ $row['clash']['label'] }}</span>
+                    <span class="unavail__time">{{ TimeSlots::span($row['clash']['start'], $row['clash']['end']) }}</span>
+                  </li>
                 @endforeach
               </ul>
-            </details>
+            </section>
           @endif
         @endif
       </section>

@@ -4,16 +4,14 @@ namespace App\Support;
 
 /**
  * Presentation only. A room's capacity is NULL until someone records it (see the rooms migration), which is different
- * from zero: unknown is shown as "Capacity not specified", never as 0 seats.
+ * from zero: unknown is shown as nothing at all (no placeholder), never as 0 seats.
  */
 final class RoomCapacity
 {
-    public const UNKNOWN = 'Capacity not specified';
-
     public static function label(int|string|null $capacity): string
     {
-        if ($capacity === null || $capacity === '' || ! is_numeric($capacity)) {
-            return self::UNKNOWN;
+        if (! self::known($capacity)) {
+            return '';
         }
         $n = (int) $capacity;
 
