@@ -146,6 +146,9 @@ class AvailabilityController extends Controller
             'weeks' => $weeks,
             'prevUrl' => $this->monthUrl($this->today->max($previous), $previous->endOfMonth()),
             'nextUrl' => $this->monthUrl($next, $next->endOfMonth()),
+            // Display only: names the month each arrow leads to (which days are pickable is decided by monthUrl above).
+            'prevTitle' => $previous->format('F Y'),
+            'nextTitle' => $next->format('F Y'),
         ];
     }
 

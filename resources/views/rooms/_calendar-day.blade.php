@@ -10,7 +10,7 @@
                   <div class="rb-availability__cell">
                 @endif
                     <span class="rb-availability__daynum" aria-hidden="true">@if ($day['date']->day === 1 && ! $day['inMonth'])<span class="rb-availability__mon">{{ $day['date']->format('M') }} </span>@endif{{ $day['date']->day }}</span>
-                    <span class="sr-only">{{ $day['date']->format('l, F j') }}{{ $day['isToday'] ? ', today' : '' }}{{ $day['state'] === 'closed' ? ', closed' : '' }}</span>
+                    <span class="sr-only">{{ $day['date']->format('l, F j') }}{{ $day['isToday'] ? ', today' : '' }}{{ $day['isSelected'] ? ', selected' : '' }}{{ $day['state'] === 'closed' ? ', closed' : '' }}</span>
                     @if ($day['state'] === 'closed')
                       <span class="rb-availability__daynote">Closed</span>
                     @endif
