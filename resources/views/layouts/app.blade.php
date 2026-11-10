@@ -26,7 +26,13 @@
   $workspace = $me && ! $settingUp;
   $representative = $workspace && $me->role === 'rep';
   $navigation = [];
-  if ($workspace) {
+  $collegeAdmin = $workspace && $me->isCollegeAdmin();
+  if ($collegeAdmin) {
+      // College-wide, with no department: only the departments and their Admin accounts
+      $navigation = [
+          ['label' => 'Departments', 'mobile' => 'Departments', 'icon' => 'accounts', 'href' => route('college.home'), 'active' => request()->routeIs('college.*')],
+      ];
+  } elseif ($workspace) {
       $navigation = [
           ['label' => 'Home', 'mobile' => 'Home', 'icon' => 'home', 'href' => url('/'), 'active' => request()->routeIs('rep.home', 'staff.home', 'admin.home')],
           ['label' => 'Free rooms', 'mobile' => 'Rooms', 'icon' => 'rooms', 'href' => route('rooms'), 'active' => request()->routeIs('rooms')],

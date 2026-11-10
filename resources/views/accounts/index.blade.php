@@ -110,6 +110,9 @@
         </tbody>
       </table>
     @endif
+    @if ($title === 'Admins')
+      <p class="hint">Admin accounts are made and looked after by the College admin, not here.</p>
+    @endif
     </div>
   @endforeach
 

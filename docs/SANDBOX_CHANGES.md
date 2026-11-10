@@ -119,6 +119,60 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   4. Choose "Room only": the borrower boxes disappear and the booking goes through without them.
   5. My account and the admin's Accounts pages no longer show an ID number anywhere.
 
+## Issue 8: the College admin (Option B of the multi-department discussion)
+
+The discussion paper ("ReserveBot Multi-Department Admin Discussion", 9 Nov 2026) asks one question: **who creates
+and supervises the departments' Admin accounts?** It offers Option A (department Admins only, the first one set up
+by hand) and Option B (a separate college-wide role). The project owner chose **Option B**, with the narrowest
+set of powers: the College admin looks after Admin accounts and nothing else.
+
+- **New role: College admin.** It is college-wide and belongs to no department.
+  - **Sees** every department on one page ("Departments"): how many Admins, lab staff, block accounts and rooms it
+    has, how many requests are waiting, and a warning when a department has no Admin who can log in.
+  - **Does**, for each department's Admin accounts: make one (with a starting password the person replaces at the
+    first login), edit the name and email, turn it off and on, set a new password for someone locked out, and delete
+    it (an Admin who has approved, rejected or changed bookings is turned off instead, so that history stays).
+  - **Cannot** do anything inside a department: every department page answers "403 Forbidden" (Free rooms, Today,
+    Requests, Manage, Accounts, booking pages). It cannot approve a booking, change a room, or make block or lab staff
+    accounts; those stay with the department's own Admins. It cannot edit another College admin either.
+- **Department Admins are unchanged**, except that their Accounts page now says "Admin accounts are made and looked
+  after by the College admin, not here." They still cannot make Admins themselves.
+- **The account.** A test account, like the others: **`college@reservebot.test`**, password `Password123!`.
+  - New databases get it automatically (`migrate:fresh --seed`, or Docker's first start).
+  - A database that already has data: `php artisan migrate`, then `php artisan db:seed --class=CollegeAdminSeeder`
+    (Docker: `docker compose exec app php artisan db:seed --class=CollegeAdminSeeder`). Running it twice adds nothing.
+  - A real College admin is made on the server, not on the website, because it is the top account:
+    `php artisan college-admin:make "CEA Dean's Office" someone@gmail.com`. It asks for a starting password
+    (typed twice, hidden) and the person picks their own at the first login.
+- **Database:** migration `2026_11_10_000023_add_college_admin_role` adds `college_admin` to `users.role`, lets
+  `users.department_id` be empty, and adds the CHECK `chk_users_department`: a College admin has no department
+  and every other account has one.
+- **Every change is logged** (`storage/logs/laravel.log`): which College admin did what to which Admin account.
+  Never a password or an email address.
+
+### How the paper's six worksheet questions are answered
+
+| # | Question | On `sandbox` |
+|---|---|---|
+| 01 | Admin coverage: at least one Admin per department? several? | Several are allowed. The Departments page warns when a department has none who can log in. Nothing forces at least one. |
+| 02 | Provisioning: who creates the first and later Admins? | The College admin, for every department. The College admin itself is made by a command on the server. |
+| 03 | Account transfers between departments | **Not built.** An account stays in its department; its bookings stay with it. Still open for the team. |
+| 04 | A college-wide role, or a manual process? | A college-wide role (this issue), limited to Admin accounts and a read-only overview. |
+| 05 | Shared rooms and competing requests | **Unchanged.** Shared rooms are still checked against every department's timetable and bookings, and each department approves its own requests. The College admin has no say. Still open if the team wants a referee. |
+| 06 | Recovery and auditing | Recovery: the College admin sets a new password or turns an account back on; a locked-out College admin is replaced with the server command. Auditing: the log lines above; there is no page for them yet. |
+
+- **Main files:** `app/Http/Controllers/CollegeController.php`, `resources/views/college/` (three pages),
+  `app/Console/Commands/MakeCollegeAdmin.php`, `database/seeders/CollegeAdminSeeder.php`, `routes/web.php`,
+  `app/Models/User.php`, `resources/views/layouts/app.blade.php` (its one-item menu). Free rooms and the booking
+  page are now limited to the three department roles. Tests: `tests/Feature/CollegeAdminTest.php` (database-backed)
+  and `tests/Feature/CollegeAdminRoleTest.php`.
+- **Check it:**
+  1. Log in as `college@reservebot.test`: you land on "Departments" and the menu has only that.
+  2. "Admin accounts" → "+ Add an admin" → make one, then log in as that person: they must pick a password, then
+     they can open Accounts and the rest of their department.
+  3. Back as the College admin, open `/today` or `/accounts`: "403".
+  4. Edit an Admin → "Set a new password", or untick "Can log in": that Admin is logged out at their next click.
+
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 
 - **What the tester saw:** a wrong password showed "Wrong email or password.", but pressing Log in again let them

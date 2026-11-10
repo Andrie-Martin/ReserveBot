@@ -24,12 +24,19 @@ class User extends Authenticatable
      * What each role is called on the pages. 'rep' is a block's account: it belongs to the block (one account per
      * block), not to one person. The block's current representative is named on it (the `name` column) and can
      * be changed by the department's admin or by the block itself. The key stays 'rep' in the database and the code.
+     *
+     * 'college_admin' is college-wide and belongs to no department: it makes and looks after each department's
+     * Admin accounts, and nothing else (it can't approve bookings or change rooms).
      */
     public const ROLE_LABELS = [
         'rep' => 'Block account',
         'lab_staff' => 'Lab staff',
         'admin' => 'Admin',
+        'college_admin' => 'College admin',
     ];
+
+    /** The roles that belong to a department and use its pages (Free rooms, bookings) */
+    public const DEPARTMENT_ROLES = ['rep', 'lab_staff', 'admin'];
 
     /** The accounts an admin makes and manages (admins manage their own account themselves) */
     public const MANAGED_ROLES = ['rep', 'lab_staff'];
@@ -76,6 +83,12 @@ class User extends Authenticatable
         return self::ROLE_LABELS[$this->role] ?? $this->role;
     }
 
+    /** The college-wide account that looks after the departments' Admin accounts (it has no department) */
+    public function isCollegeAdmin(): bool
+    {
+        return $this->role === 'college_admin';
+    }
+
     /** Is this a block's account? */
     public function isBlock(): bool
     {
@@ -104,6 +117,7 @@ class User extends Authenticatable
             'rep' => route('rep.home'),
             'lab_staff' => route('staff.home'),
             'admin' => route('admin.home'),
+            'college_admin' => route('college.home'),
         };
     }
 

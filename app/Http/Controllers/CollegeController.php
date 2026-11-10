@@ -1,0 +1,220 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Department;
+use App\Models\Reservation;
+use App\Models\User;
+use App\Services\Photos;
+use App\Support\AccountFields;
+use App\Support\EmailSetup;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
+/**
+ * The College admin (sandbox issue 8, Option B of the multi-department discussion).
+ *
+ * A college-wide account with one job: each department's Admin accounts. It sees every department at a glance,
+ * and makes, edits, turns off, deletes and resets the password of the departments' Admins. That is how a
+ * department gets its first Admin, and how an Admin who is locked out gets back in.
+ *
+ * It deliberately can do nothing inside a department: no bookings to approve, no rooms, equipment or timetable,
+ * and no block or lab staff accounts (those stay with the department's own Admins). It manages 'admin' accounts
+ * only, never another College admin: College admins are made with `php artisan reservebot:college-admin`.
+ * Every change is written to the log (who did what to which account; never a password).
+ */
+class CollegeController extends Controller
+{
+    private const MESSAGES = [
+        'name.required' => 'Type the admin’s name.',
+    ];
+
+    /** Every department, with how many accounts and rooms it has and how many requests are waiting */
+    public function home(Request $request): View
+    {
+        $departments = Department::query()
+            ->withCount([
+                'rooms',
+                'users as admins_count' => fn ($query) => $query->where('role', 'admin'),
+                'users as active_admins_count' => fn ($query) => $query->where('role', 'admin')->where('is_active', true),
+                'users as staff_count' => fn ($query) => $query->where('role', 'lab_staff'),
+                'users as blocks_count' => fn ($query) => $query->where('role', 'rep'),
+            ])
+            ->orderBy('name')
+            ->get();
+
+        // Requests waiting for approval, per department (through the account that booked)
+        $waiting = Reservation::query()->where('status', 'Pending')
+            ->join('users', 'users.id', '=', 'reservations.user_id')
+            ->groupBy('users.department_id')
+            ->selectRaw('users.department_id as department_id, count(*) as waiting')
+            ->pluck('waiting', 'department_id');
+
+        return view('college.home', [
+            'user' => $request->user(),
+            'departments' => $departments,
+            'waiting' => $waiting,
+        ]);
+    }
+
+    /** One department's Admin accounts, and the form that adds one */
+    public function department(Request $request, Department $department): View
+    {
+        return view('college.department', [
+            'department' => $department,
+            'admins' => User::where('department_id', $department->id)->where('role', 'admin')
+                ->get()->sortBy(fn (User $admin) => Str::lower($admin->name))->values(),
+            'emailSends' => EmailSetup::sends(),
+        ]);
+    }
+
+    /** Makes an Admin account for the department, with a starting password the person replaces at the first login */
+    public function store(Request $request, Department $department): RedirectResponse
+    {
+        AccountFields::tidy($request);
+        $data = $request->validateWithBag('add', [
+            'name' => ['required', 'string', 'max:100'],
+            'email' => AccountFields::email('admin'),
+            'password' => AccountFields::password(),
+        ], self::MESSAGES + AccountFields::MESSAGES);
+
+        $admin = User::create([
+            'department_id' => $department->id,
+            'role' => 'admin',
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'must_change_password' => true,
+            'is_active' => true,
+        ]);
+        $this->log('made an Admin account', $request->user(), $admin);
+
+        $message = 'Made an Admin account for '.$admin->name.' ('.$department->name.'). Give them the starting password; they’ll pick their own when they first log in.';
+        $back = redirect()->route('college.departments.show', $department);
+        if (! $admin->sendConnectEmail(welcome: true)) {
+            return $back->with('status', $message)
+                ->with('problem', 'The welcome email to '.$admin->email.' couldn’t be sent (see README, Email). After they log in, they can send the link again from My account.');
+        }
+
+        return $back->with('status', $message.' We emailed '.$admin->email.' a link to connect their email.');
+    }
+
+    public function edit(Request $request, User $account): View
+    {
+        $this->check($account);
+
+        return view('college.admin', [
+            'account' => $account->load('department'),
+            'hasHistory' => $account->hasHistory(),
+            'otherActiveAdmins' => $this->otherActiveAdmins($account),
+        ]);
+    }
+
+    /** Name, email and whether the account can log in */
+    public function update(Request $request, User $account): RedirectResponse
+    {
+        $this->check($account);
+        AccountFields::tidy($request);
+        $data = $request->validateWithBag('details', [
+            'name' => ['required', 'string', 'max:100'],
+            'email' => AccountFields::email('admin', $account->id),
+        ], self::MESSAGES + AccountFields::MESSAGES);
+
+        $wasActive = $account->is_active;
+        $emailChanged = $data['email'] !== $account->email;
+        $account->fill(['name' => $data['name'], 'is_active' => $request->boolean('is_active')]);
+        if ($emailChanged) {
+            $account->email = $data['email'];
+            $account->email_verified_at = null;     // the new email needs its own link
+        }
+        $account->save();
+        $this->log('changed an Admin account', $request->user(), $account, ['turned_off' => $wasActive && ! $account->is_active, 'turned_on' => ! $wasActive && $account->is_active, 'email_changed' => $emailChanged]);
+
+        $message = match (true) {
+            $wasActive && ! $account->is_active => $account->name.' is turned off: the account can’t log in anymore.'.$this->noAdminLeftNote($account),
+            ! $wasActive && $account->is_active => $account->name.' is turned on: the account can log in again.',
+            default => 'Saved '.$account->name.'.',
+        };
+        $problem = null;
+        if ($emailChanged) {
+            if ($account->sendConnectEmail()) {
+                $message .= ' We emailed '.$account->email.' a link to connect it.';
+            } else {
+                $problem = 'The email to '.$account->email.' couldn’t be sent (see README, Email). They can send the link again from My account.';
+            }
+        }
+
+        return redirect()->route('college.admins.edit', $account)->with('status', $message)->with('problem', $problem);
+    }
+
+    /** Recovery: the College admin types a new password; the Admin picks their own at the next login */
+    public function password(Request $request, User $account): RedirectResponse
+    {
+        $this->check($account);
+        $data = $request->validateWithBag('password', ['password' => AccountFields::password()], AccountFields::MESSAGES);
+
+        $account->forceFill([
+            'password' => $data['password'],
+            'must_change_password' => true,
+            'remember_token' => Str::random(60),
+        ])->save();
+        $this->log('set a new password for an Admin account', $request->user(), $account);
+
+        return redirect()->route('college.admins.edit', $account)->with('status', 'Set a new password for '.$account->name
+            .'. Give it to them; they’ll pick their own when they next log in. Any device logged in to the account is logged out.');
+    }
+
+    /** Deletes an Admin account, or turns it off when deleting would lose what it approved, rejected or changed */
+    public function destroy(Request $request, User $account): RedirectResponse
+    {
+        $this->check($account);
+        $department = $account->department;
+
+        if ($account->hasHistory()) {
+            $wasActive = $account->is_active;
+            $account->update(['is_active' => false]);
+            $this->log('turned off an Admin account (it has history)', $request->user(), $account);
+
+            return redirect()->route('college.admins.edit', $account)->with('status', $account->name.' has approved, rejected or changed bookings, so the account was '
+                .($wasActive ? 'turned off' : 'kept turned off').' instead of deleted: it can’t log in, and that history stays.'.$this->noAdminLeftNote($account));
+        }
+
+        $name = $account->name;
+        $this->log('deleted an Admin account', $request->user(), $account);
+        Photos::delete($account->photo_path);
+        DB::table('password_reset_tokens')->where('email', $account->email)->delete();
+        $account->delete();
+
+        return redirect()->route('college.departments.show', $department)->with('status', 'Deleted '.$name.'’s account.');
+    }
+
+    /** The College admin manages department Admin accounts only: never block or lab staff accounts, never another College admin */
+    private function check(User $account): void
+    {
+        abort_unless($account->role === 'admin' && $account->department_id !== null, 404);
+    }
+
+    private function otherActiveAdmins(User $account): int
+    {
+        return User::where('department_id', $account->department_id)->where('role', 'admin')->where('is_active', true)
+            ->whereKeyNot($account->id)->count();
+    }
+
+    /** Said when turning an account off leaves its department with no Admin who can log in */
+    private function noAdminLeftNote(User $account): string
+    {
+        return $this->otherActiveAdmins($account) === 0
+            ? ' '.$account->department->name.' now has no Admin who can log in.'
+            : '';
+    }
+
+    /** Who did what to which account, for whoever runs the system. Never a password or an email address. */
+    private function log(string $what, User $by, User $account, array $extra = []): void
+    {
+        Log::info('College admin '.$what, ['by' => $by->id, 'account' => $account->id, 'department_id' => $account->department_id] + array_filter($extra));
+    }
+}

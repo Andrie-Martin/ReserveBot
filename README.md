@@ -92,10 +92,20 @@ so they work right away (`@reservebot.test` addresses can't receive email).
 | rep1@reservebot.test | Block account of BSCPE 4-5 (representative: Bea Prieto) |
 | rep2@reservebot.test | Block account of BSCPE 3-1 (representative: Maria Santos) |
 | staff@reservebot.test | Lab staff |
-| admin@reservebot.test | Admin |
+| admin@reservebot.test | Admin (of the Computer Engineering Department) |
+| college@reservebot.test | College admin (makes each department's Admin accounts) |
+
+The College admin test account is new. A database that was built before it existed gets it with
+`php artisan db:seed --class=CollegeAdminSeeder` (Docker: put `docker compose exec app` in front).
 
 ## Accounts and email
 
+- There are four kinds of account. The **College admin** is college-wide: it sees every department
+  and makes, edits, turns off and resets the password of each department's **Admin** accounts, and
+  nothing else (no bookings, rooms or equipment). A department's Admins run that department: they
+  make its **lab staff** and **block** accounts. Make a real College admin on the server with
+  `php artisan college-admin:make "CEA Dean's Office" someone@gmail.com`; it asks for a starting
+  password, which the person replaces at the first login.
 - Admins make the block accounts and lab staff accounts on the **Accounts** page, with a starting
   password they give to the person. The person picks their own password at the first login.
   Deleting an account that has bookings turns it off instead, so its history stays.
@@ -237,6 +247,8 @@ Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is log
 
 Copy `database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of
 that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder`.
+The new department then shows on the College admin's **Departments** page, where its first Admin
+account is made (the `accounts()` list in the seeder can stay empty).
 
 ## Folders
 

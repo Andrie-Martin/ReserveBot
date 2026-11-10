@@ -326,3 +326,10 @@
   .rb-manage .mform-footer button.btn-small { width: 100%; }
 }
 .rb-manage .rules-form .mgrid { align-items: end; }
+
+/* College admin: one panel per department (its name and "Admin accounts" link on one line, then the counts). */
+.rb-manage .college-dept__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin: 0 0 var(--rb-space-4); }
+.rb-manage .college-dept__head h2 { margin: 0; overflow-wrap: anywhere; }
+.rb-manage .college-dept .bfacts { grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); }
+.rb-manage .college-dept .bfact dd { font-size: 1.25rem; font-weight: var(--rb-weight-bold); }
+.rb-manage .college-dept .bfact dd .muted { font-size: var(--rb-text-small); font-weight: var(--rb-weight-regular); }

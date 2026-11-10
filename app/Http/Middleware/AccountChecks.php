@@ -26,7 +26,10 @@ class AccountChecks
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors(['email' => 'This account is turned off. Ask your department’s admin.']);
+            // Block and lab staff accounts are looked after by their department's Admin; Admin accounts by the College admin
+            $ask = in_array($user->role, ['admin', 'college_admin'], true) ? 'Ask the College admin.' : 'Ask your department’s admin.';
+
+            return redirect()->route('login')->withErrors(['email' => 'This account is turned off. '.$ask]);
         }
 
         if ($user && $user->must_change_password && ! $request->routeIs(...self::FIRST_LOGIN_PAGES)) {
