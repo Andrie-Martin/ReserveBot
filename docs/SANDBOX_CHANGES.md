@@ -60,6 +60,24 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   like a placeholder. It now says "Review requests and run the day's room schedule."
 - **File:** `app/Http/Controllers/StaffController.php`.
 
+## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
+
+- **What the tester saw:** a wrong password showed "Wrong email or password.", but pressing Log in again let them
+  in. It only happened in a normal browser window, not in a private (incognito) one.
+- **The cause:** the site never accepted the wrong password. The browser had the account's real password saved, and
+  after the error it quietly typed the saved password back into the box. Pressing Log in again then sent the saved,
+  correct password. A private window has no saved passwords, so it behaved.
+- **Reproduced:** in a real Chromium 153 with rep1's password saved, on `dev` as it was: the box was refilled after
+  the error and the second press landed on `/rep`.
+- **The fix:** after a refused attempt the password box is marked `autocomplete="new-password"`, the standard way to
+  tell browsers not to fill a saved password in. The box stays empty, so pressing Log in again does nothing until a
+  password is typed. A first visit to the page is unchanged, so saved logins still fill in as usual.
+- **Checked with the fix, same browser:** the box stays empty after the error and the second press stays on `/login`.
+- **Files:** `resources/views/auth/login.blade.php`; tests in `tests/Feature/Frontend/LoginRetryPresentationTest.php`
+  and `AuthWorkflowTest` (the same wrong password is refused three times in a row).
+- **Check it:** in Chrome or Edge with the password saved, type a wrong password and press Log in. The password box
+  is empty and pressing Log in again shows "Please fill out this field".
+
 ## Issue 11: The password reset link lasts 20 minutes
 
 - **Before:** the link emailed by "Forgot your password?" worked for 60 minutes.

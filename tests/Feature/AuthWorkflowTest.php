@@ -121,6 +121,25 @@ final class AuthWorkflowTest extends TestCase
         }
     }
 
+    /** QA AUTH-01 (sandbox issue 9): pressing "Log in" again never gets a wrong password accepted. */
+    public function test_a_wrong_password_is_refused_every_time_and_the_retry_page_keeps_the_box_empty(): void
+    {
+        $user = $this->user();
+        foreach ([1, 2, 3] as $try) {
+            $page = $this->followingRedirects()->from('/login')->post('/login', ['email' => $user->email, 'password' => 'Wrong123'])->assertOk();
+            $this->assertGuest();
+            $page->assertSee('Wrong email or password.')
+                ->assertSee('value="'.$user->email.'"', false)                 // the email stays filled in
+                ->assertSee('autocomplete="new-password"', false)               // the browser is told not to refill a saved password
+                ->assertDontSee('autocomplete="current-password"', false)
+                ->assertDontSee('Wrong123');                                    // what was typed is never sent back
+        }
+        // A fresh visit to the page is an ordinary login form again, and the right password works
+        $this->get('/login')->assertOk()->assertSee('autocomplete="current-password"', false)->assertDontSee('autocomplete="new-password"', false);
+        $this->from('/login')->post('/login', ['email' => $user->email, 'password' => 'Starting123'])->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+    }
+
     // ---- QA F-01: login throttling (5 failures/min per email+IP, 20/min per IP) ----
 
     private function loginAs(string $email, string $password, string $ip = '203.0.113.10'): TestResponse
