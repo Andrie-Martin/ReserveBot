@@ -110,6 +110,29 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     ok('mascot shows only with room (desktop, tall enough); hidden on tablet, phone and short windows; never overlaps links');
     await ctx.close();
   }
+  {
+    // The door is held, not pointed at: the gripping hand turns with the right arm through the 180ms change (never detached) and
+    // ends on the door's edge, and the door sits on the body, not beside it.
+    const { ctx, page } = await open(browser, 'admin');
+    await page.goto(origin + '/'); await settle(page);
+    await link(page, 'Free rooms').hover();
+    const samples = [];
+    for (let i = 0; i < 9; i++) {
+      samples.push(await page.evaluate(() => { const t = (s) => getComputedStyle(document.querySelector(s)).transform; return { arm: t('.rbm-arm--r:not(.rbm-grip)'), grip: t('.rbm-grip') }; }));
+      await wait(25);
+    }
+    assert.ok(samples.every((s) => s.arm === s.grip), 'the gripping hand always has exactly the right arm\'s transform');
+    assert.ok(new Set(samples.map((s) => s.arm)).size > 1, 'and the arm really moved during the change');
+    await wait(300);
+    const geo = await page.evaluate(() => { const hand = document.querySelector('.rbm-grip circle').getBoundingClientRect(); const door = document.querySelector('.rbm-prop--door rect').getBoundingClientRect(); const body = document.querySelector('.rbm-maroon[rx="25"]').getBoundingClientRect(); const op = getComputedStyle(document.querySelector('.rbm-grip')).opacity; return { hx: hand.x + hand.width / 2, hy: hand.y + hand.height / 2, door: [door.x, door.y, door.right, door.bottom], body: [body.x, body.y, body.right, body.bottom], op }; });
+    assert.equal(geo.op, '1');
+    assert.ok(geo.hx >= geo.door[2] - 6 && geo.hx <= geo.door[2] + 3 && geo.hy > geo.door[1] && geo.hy < geo.door[3], 'the hand sits on the door\'s right edge: ' + JSON.stringify(geo));
+    assert.ok(geo.door[0] > geo.body[0] && geo.door[2] <= geo.body[2] + 1 && geo.door[3] <= geo.body[3] + 14, 'the door is in front of the body, not beside it');
+    await page.mouse.move(800, 500); await link(page, 'Home').hover(); await wait(300);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.rbm-grip')).opacity), '0', 'the gripping hand is gone in other poses');
+    ok('door pose: the hand turns with the arm through the transition, grips the door edge, and the door is held in front of the body');
+    await ctx.close();
+  }
   for (const site of ['rep', 'staff', 'admin', 'college']) {
     const shown = {};
     for (const zoom of [0.9, 1, 1.25, 1.5, 2]) {

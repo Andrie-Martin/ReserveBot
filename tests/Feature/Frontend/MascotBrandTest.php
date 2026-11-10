@@ -96,7 +96,9 @@ final class MascotBrandTest extends TestCase
         $this->assertSame(2, substr_count($svg, 'cy="69" r="5"'), 'two simple round eyes');
         $this->assertSame(1, substr_count($svg, 'class="rbm-gold rbm-pill"'), 'one gold chest accent');
         $this->assertSame(1, substr_count($svg, 'class="rbm-aerial"'), 'one short antenna');
-        $this->assertSame(2, substr_count($svg, 'class="rbm-arm '), 'two arms, posed by angle only');
+        $this->assertSame(3, substr_count($svg, 'class="rbm-arm '), 'two arms, posed by angle only, plus the door-gripping hand that turns with the right arm');
+        $this->assertStringContainsString('rbm-arm rbm-arm--r rbm-grip', $svg);
+        $this->assertMatchesRegularExpression('/\\.rb-mascot\\[data-pose="door"\\] \\.rbm-grip/', $css, 'the gripping hand only appears in the door pose');
         $this->assertSame(6, substr_count($svg, 'class="rbm-prop rbm-prop--'), 'six props and nothing else is duplicated per pose');
         // The character is centred on x=100 of a 200-wide artwork (translate 30 + centre 70), so centring the figure centres the robot.
         $this->assertStringContainsString('viewBox="0 6 200 140"', $svg);

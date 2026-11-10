@@ -8,20 +8,12 @@
      Poses: idle, attend (neutral), wave, door, calendar, clipboard, key, tool, badge. Hidden from assistive technology,
      never focusable, never announced.
      Geometry (viewBox 200x140, character centred on x=100 via the translate): body 26..114 x 40..123, shoulders (31,80)
-     and (109,80), arm length 32, feet on y=142. Props sit in front of the belly (x 44..96, y 96..133), except the door,
-     which stands to the right on the ground. --}}
+     and (109,80), arm length 32, feet on y=142. Props sit in front of the belly (x 44..96, y 96..133); the door is held a little to the right (x 72..100). --}}
 <div class="rb-mascot" data-rb-mascot data-pose="{{ $pose }}" aria-hidden="true">
   <div class="rb-mascot__stage">
     <svg class="rb-mascot__art" viewBox="0 6 200 140" width="200" height="140" focusable="false" aria-hidden="true">
       <g transform="translate(30 0)">
         <ellipse class="rbm-shadow" cx="70" cy="143" rx="36" ry="2.6"/>
-
-        {{-- Door the figure points at (pose: door) --}}
-        <g class="rbm-prop rbm-prop--door">
-          <rect class="rbm-cream rbm-gold-edge" x="150" y="96" width="22" height="46" rx="3.5"/>
-          <rect class="rbm-maroon" x="155" y="102" width="12" height="16" rx="2"/>
-          <circle class="rbm-gold" cx="167" cy="124" r="1.9"/>
-        </g>
 
         {{-- Arms are drawn first so the body overlaps their roots; each pivots on its shoulder --}}
         <g class="rbm-arm rbm-arm--l">
@@ -47,7 +39,14 @@
         <line class="rbm-aerial" x1="70" y1="16" x2="70" y2="41"/>
         <circle class="rbm-gold" cx="70" cy="16" r="8"/>
 
-        {{-- Held props (in front of the belly) --}}
+        {{-- Held props (in front of the belly). The door is held by its right edge: the arm hangs down to it and a hand drawn on top grips the frame. --}}
+        <g class="rbm-prop rbm-prop--door">
+          <rect class="rbm-cream rbm-gold-edge" x="72" y="92" width="28" height="42" rx="4"/>
+          <rect class="rbm-maroon" x="78" y="99" width="16" height="15" rx="2.5"/>
+          <circle class="rbm-gold" cx="77" cy="121" r="2.3"/>
+        </g>
+        {{-- The hand that grips the door: the right arm's tip, repeated in front of the door and turning with the arm (same angle variable), so it never detaches --}}
+        <g class="rbm-arm rbm-arm--r rbm-grip"><circle class="rbm-maroon" cx="109" cy="112" r="6.5"/></g>
         <g class="rbm-prop rbm-prop--calendar">
           <rect class="rbm-cream" x="44" y="96" width="52" height="37" rx="7"/>
           <rect class="rbm-maroon" x="45.5" y="106" width="49" height="5.5"/>
