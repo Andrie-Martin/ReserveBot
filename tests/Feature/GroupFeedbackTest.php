@@ -295,15 +295,15 @@ final class GroupFeedbackTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<a class="rb-availability__cell" href="[^"]*date=2026-11-15/', $html);
     }
 
-    public function test_month_arrows_are_explained_and_inert_when_the_adjacent_month_cannot_be_picked(): void
+    public function test_month_arrows_are_left_out_when_the_adjacent_month_cannot_be_picked(): void
     {
         $this->travelTo(Carbon::parse('2026-11-09 10:00', 'Asia/Manila'));   // window: Nov 9 to Nov 23
         $html = $this->as($this->rep)->get('/rooms')->assertOk()->getContent();
-        $this->assertSame(2, preg_match_all('/<button type="button" class="[^"]*rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-(prev|next)-why"/', $html));
-        $this->assertStringContainsString('Earlier months can’t be booked. The calendar starts today.', $html);
-        $this->assertStringContainsString('Nothing to pick in December 2026 yet. You can look ahead up to November 23.', $html);
+        $this->assertStringNotContainsString('rb-availability__cal-arrow', $html, 'no arrow, live or disabled, when there is nowhere to go');
+        $this->assertStringNotContainsString('aria-label="Previous month', $html);
+        $this->assertStringNotContainsString('aria-label="Next month', $html);
+        $this->assertStringContainsString('aria-label="Go to today"', $html, 'Today stays');
         $this->assertStringContainsString('You can look from today up to November 23.', $html);
-        $this->assertStringNotContainsString('aria-label="Previous month', $html, 'no live link to a month that cannot be picked');
         // The booking window itself is unchanged: a date beyond it is refused with the same message.
         $this->as($this->rep)->get('/rooms?date=2026-12-02')->assertOk()->assertSee('You can look from today up to November 23.');
     }
@@ -316,12 +316,12 @@ final class GroupFeedbackTest extends TestCase
         // Next: the first open day of December, with the search kept.
         $this->assertMatchesRegularExpression('/<a href="[^"]*rooms\?date=2026-12-01&amp;from=09%3A00&amp;to=10%3A00#day"[^>]*aria-label="Next month, December 2026"/', $html);
         // Previous: October is entirely past, so it is unavailable.
-        $this->assertStringContainsString('Previous month, unavailable', $html);
+        $this->assertStringNotContainsString('aria-label="Previous month', $html, 'October is entirely past, so no previous arrow');
 
         $dec = $this->as($this->rep)->get('/rooms?date=2026-12-02&from=09:00&to=10:00')->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/<h2 id="cal-title"[^>]*>December 2026<\/h2>/', $dec, 'the visible month follows the selected date');
         $this->assertMatchesRegularExpression('/<a href="[^"]*rooms\?date=2026-11-25&amp;from=09%3A00&amp;to=10%3A00#day"[^>]*aria-label="Previous month, November 2026"/', $dec, 'previous goes back to the first pickable day, today');
-        $this->assertStringContainsString('Next month, unavailable', $dec, 'January is beyond the window');
+        $this->assertStringNotContainsString('aria-label="Next month', $dec, 'January is beyond the window, so no next arrow');
         $this->assertStringNotContainsString('rooms?date=2026-01', $dec);
         // Today returns to the current day and keeps the search.
         $this->assertMatchesRegularExpression('/<a href="[^"]*rooms\?from=09%3A00&amp;to=10%3A00#day"[^>]*aria-label="Go to today"/', $dec);
@@ -392,7 +392,7 @@ final class GroupFeedbackTest extends TestCase
 
         foreach ([$this->staff, $this->admin] as $user) {
             $html = $this->as($user)->get('/today?date='.$day->toDateString())->assertOk()->getContent();
-            $link = '/<a href="'.preg_quote(route('bookings.show', $pending), '/').'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Review request<span class="sr-only"> for booking #'.$pending->id.'<\/span><\/a>/';
+            $link = '/<a href="'.preg_quote(route('bookings.show', [$pending, 'from' => 'today']), '/').'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Review request<span class="sr-only"> for booking #'.$pending->id.'<\/span><\/a>/';
             $this->assertMatchesRegularExpression($link, $html, $user->role.': an anchor styled as the shared outlined button');
             $this->assertStringNotContainsString('Approve or reject', $html);
             $this->assertStringNotContainsString('req-link', $html, 'the bare underlined link style is gone from this card');
@@ -400,8 +400,8 @@ final class GroupFeedbackTest extends TestCase
             $this->assertStringNotContainsString(route('bookings.approve', $pending), $html);
             $this->assertStringNotContainsString(route('bookings.reject', $pending), $html);
             // Other states use the same control with their existing destinations.
-            $this->assertStringContainsString('href="'.route('bookings.show', $confirmed).'#change" class="rb-button rb-button--secondary rb-button--compact tcard-link">Cancel or move', $html);
-            $this->assertStringContainsString('href="'.route('bookings.show', $done).'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Details', $html);
+            $this->assertStringContainsString('href="'.route('bookings.show', [$confirmed, 'from' => 'today']).'#change" class="rb-button rb-button--secondary rb-button--compact tcard-link">Cancel or move', $html);
+            $this->assertStringContainsString('href="'.route('bookings.show', [$done, 'from' => 'today']).'" class="rb-button rb-button--secondary rb-button--compact tcard-link">Details', $html);
         }
         // Following the link only opens the review page.
         $this->as($this->staff)->get(route('bookings.show', $pending))->assertOk()->assertSee('Approve');
@@ -595,7 +595,8 @@ final class GroupFeedbackTest extends TestCase
             $this->assertStringContainsString('<a class="row-edit" href="'.route('manage.rooms.edit', $used).'">Edit', $html, 'Edit is always there');
             $this->assertStringNotContainsString('href="'.route('manage.rooms.edit', $used).'#delete"', $html);
             $this->assertStringNotContainsString('href="'.route('manage.rooms.edit', $shared).'#delete"', $html);
-            $this->assertStringContainsString('<span class="sr-only">Actions</span>', $html);
+            $this->assertStringContainsString('<th class="col-action">Delete</th>', $html);
+            $this->assertStringContainsString('<td class="col-action room-delete"></td>', $html, 'a room that can’t be deleted leaves its Delete cell empty');
         }
     }
 
