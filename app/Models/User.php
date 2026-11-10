@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\AdminMoved;
 use App\Notifications\ConnectEmail;
 use App\Notifications\ResetPasswordLink;
 use App\Support\AccountRules;
@@ -20,12 +21,23 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /** What each role is called on the pages */
+    /**
+     * What each role is called on the pages. 'rep' is a block's account: it belongs to the block (one account per
+     * block), not to one person. The block's current representative is named on it (the `name` column) and can
+     * be changed by the department's admin or by the block itself. The key stays 'rep' in the database and the code.
+     *
+     * 'college_admin' is college-wide and belongs to no department: it makes and looks after each department's
+     * Admin accounts, and nothing else (it can't approve bookings or change rooms).
+     */
     public const ROLE_LABELS = [
-        'rep' => 'Block rep',
+        'rep' => 'Block account',
         'lab_staff' => 'Lab staff',
         'admin' => 'Admin',
+        'college_admin' => 'College admin',
     ];
+
+    /** The roles that belong to a department and use its pages (Free rooms, bookings) */
+    public const DEPARTMENT_ROLES = ['rep', 'lab_staff', 'admin'];
 
     /** The accounts an admin makes and manages (admins manage their own account themselves) */
     public const MANAGED_ROLES = ['rep', 'lab_staff'];
@@ -35,7 +47,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'department_id', 'section_id', 'name', 'email', 'password', 'role', 'is_active',
-        'school_id', 'photo_path', 'must_change_password',
+        'photo_path', 'must_change_password',
     ];
 
     // Never sent to the browser or included in JSON
@@ -56,7 +68,7 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
-    /** A rep: the block they represent. Lab staff: their own class section (optional). */
+    /** A block account: the block it belongs to. Lab staff: their own class section (optional). */
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
@@ -72,6 +84,33 @@ class User extends Authenticatable
         return self::ROLE_LABELS[$this->role] ?? $this->role;
     }
 
+    /** The college-wide account that looks after the departments' Admin accounts (it has no department) */
+    public function isCollegeAdmin(): bool
+    {
+        return $this->role === 'college_admin';
+    }
+
+    /** Is this a block's account? */
+    public function isBlock(): bool
+    {
+        return $this->role === 'rep';
+    }
+
+    /**
+     * What the account is called on the pages. A block account goes by its block ("BSCPE 4-5"), because it belongs
+     * to the block; lab staff and admins go by their own name.
+     */
+    public function displayName(): string
+    {
+        return $this->isBlock() && $this->section ? $this->section->name : (string) $this->name;
+    }
+
+    /** A block account's current representative (kept in `name`); null for lab staff and admins */
+    public function representativeName(): ?string
+    {
+        return $this->isBlock() ? (string) $this->name : null;
+    }
+
     /** Where this user lands after logging in */
     public function homeUrl(): string
     {
@@ -79,6 +118,7 @@ class User extends Authenticatable
             'rep' => route('rep.home'),
             'lab_staff' => route('staff.home'),
             'admin' => route('admin.home'),
+            'college_admin' => route('college.home'),
         };
     }
 
@@ -138,6 +178,20 @@ class User extends Authenticatable
             return true;
         } catch (Throwable $e) {
             report($e);     // the reason goes to the log (storage/logs/laravel.log)
+
+            return false;
+        }
+    }
+
+    /** Emails an Admin that the College admin moved them to another department. False if the email couldn't be sent. */
+    public function sendMovedEmail(Department $from, Department $to): bool
+    {
+        try {
+            $this->notify(new AdminMoved($from, $to));
+
+            return true;
+        } catch (Throwable $e) {
+            report($e);
 
             return false;
         }

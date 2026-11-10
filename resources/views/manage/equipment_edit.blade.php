@@ -74,7 +74,7 @@
       @foreach ($upcoming as $b)
         <li @class(['over' => in_array($b->id, $over, true)])>
           <span class="mlist-when">{{ $b->start_time->format('D, M j') }} · {{ TimeSlots::span($b->start_time->hour * 60 + $b->start_time->minute, $b->end_time->isSameDay($b->start_time) ? $b->end_time->hour * 60 + $b->end_time->minute : 1440) }}</span>
-          <span class="mlist-what">×{{ $b->asked }} · {{ $b->room?->name ?? 'No room' }} · {{ $b->user->name }}@if ($b->user->section) ({{ $b->user->section->name }})@endif</span>
+          <span class="mlist-what">×{{ $b->asked }} · {{ $b->room?->name ?? 'No room' }} · {{ $b->bookedBy() }}</span>
           @if (in_array($b->id, $over, true))<span class="tag-warn">Too many</span>@endif
           <span class="status-badge st-{{ strtolower($b->status) }}">{{ $b->statusLabel() }}</span>
           <a href="{{ route('bookings.show', $b) }}#change">Open</a>

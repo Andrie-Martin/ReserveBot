@@ -2,20 +2,24 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Models\Department;
 use App\Models\Section;
 use App\Models\User;
 use App\Notifications\ConnectEmail;
 use App\Notifications\ResetPasswordLink;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -29,6 +33,7 @@ use Tests\TestCase;
 final class AuthWorkflowTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
 
     protected function setUp(): void
@@ -61,9 +66,13 @@ final class AuthWorkflowTest extends TestCase
     {
         try {
             if ($this->transactionStarted) {
-                while (DB::transactionLevel() > 0) DB::rollBack();
+                while (DB::transactionLevel() > 0) {
+                    DB::rollBack();
+                }
             }
-        } finally { parent::tearDown(); }
+        } finally {
+            parent::tearDown();
+        }
     }
 
     private function user(string $role = 'rep', array $attributes = []): User
@@ -72,13 +81,13 @@ final class AuthWorkflowTest extends TestCase
             'department_id' => $this->department->id, 'name' => 'Example account',
             'email' => 'http-'.Str::lower(Str::random(16)).'@gmail.com',
             'role' => $role, 'password' => 'Starting123', 'is_active' => true,
-            'must_change_password' => false, 'school_id' => null,
+            'must_change_password' => false,
         ], $attributes));
     }
 
     private function info(User $user, array $changes = []): array
     {
-        return array_replace(['name' => $user->name, 'email' => $user->email, 'school_id' => '2021-00123-MN-0'], $changes);
+        return array_replace(['name' => $user->name, 'email' => $user->email], $changes);
     }
 
     public function test_guest_gates_role_redirects_login_normalization_and_logout(): void
@@ -112,21 +121,40 @@ final class AuthWorkflowTest extends TestCase
         }
     }
 
+    /** QA AUTH-01 (sandbox issue 9): pressing "Log in" again never gets a wrong password accepted. */
+    public function test_a_wrong_password_is_refused_every_time_and_the_retry_page_keeps_the_box_empty(): void
+    {
+        $user = $this->user();
+        foreach ([1, 2, 3] as $try) {
+            $page = $this->followingRedirects()->from('/login')->post('/login', ['email' => $user->email, 'password' => 'Wrong123'])->assertOk();
+            $this->assertGuest();
+            $page->assertSee('Wrong email or password.')
+                ->assertSee('value="'.$user->email.'"', false)                 // the email stays filled in
+                ->assertSee('autocomplete="new-password"', false)               // the browser is told not to refill a saved password
+                ->assertDontSee('autocomplete="current-password"', false)
+                ->assertDontSee('Wrong123');                                    // what was typed is never sent back
+        }
+        // A fresh visit to the page is an ordinary login form again, and the right password works
+        $this->get('/login')->assertOk()->assertSee('autocomplete="current-password"', false)->assertDontSee('autocomplete="new-password"', false);
+        $this->from('/login')->post('/login', ['email' => $user->email, 'password' => 'Starting123'])->assertRedirect('/rep');
+        $this->assertAuthenticatedAs($user);
+    }
+
     // ---- QA F-01: login throttling (5 failures/min per email+IP, 20/min per IP) ----
 
-    private function loginAs(string $email, string $password, string $ip = '203.0.113.10'): \Illuminate\Testing\TestResponse
+    private function loginAs(string $email, string $password, string $ip = '203.0.113.10'): TestResponse
     {
         return $this->withServerVariables(['REMOTE_ADDR' => $ip])->from('/login')->post('/login', ['email' => $email, 'password' => $password]);
     }
 
-    private function assertWrongLogin(\Illuminate\Testing\TestResponse $response): void
+    private function assertWrongLogin(TestResponse $response): void
     {
         $response->assertRedirect('/login')->assertSessionHasErrors(['email' => 'Wrong email or password.']);
         $this->assertGuest();
     }
 
     /** Asserts the throttled reply and returns the message shown to the visitor. */
-    private function assertThrottled(\Illuminate\Testing\TestResponse $response): string
+    private function assertThrottled(TestResponse $response): string
     {
         $response->assertRedirect('/login')->assertSessionHasErrors('email');
         $message = session('errors')->first('email');
@@ -358,7 +386,7 @@ final class AuthWorkflowTest extends TestCase
             $this->assertAuthenticatedAs($user);
             $this->post('/logout');
         }
-        $this->assertSame(19, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip));
+        $this->assertSame(19, (int) Cache::get('login-ip|'.$ip));
         $this->assertWrongLogin($this->loginAs('twentieth-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));   // the 20th failure is still allowed
         $this->assertThrottled($this->loginAs('twenty-first-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
     }
@@ -373,9 +401,9 @@ final class AuthWorkflowTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
         }
-        $key = \App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id);
-        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get($key, 0), 'Refusals caused by the IP limit must not use up the account allowance.');
-        $this->assertSame(20, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Refused attempts do not raise the IP counter either.');
+        $key = LoginController::accountKey($user->email, $ip, $user->id);
+        $this->assertSame(0, (int) Cache::get($key, 0), 'Refusals caused by the IP limit must not use up the account allowance.');
+        $this->assertSame(20, (int) Cache::get('login-ip|'.$ip), 'Refused attempts do not raise the IP counter either.');
     }
 
     public function test_an_attempt_refused_for_the_account_does_not_raise_the_ip_counter(): void
@@ -388,16 +416,16 @@ final class AuthWorkflowTest extends TestCase
         for ($i = 0; $i < 4; $i++) {
             $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
         }
-        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Hammering a locked account must not push the whole IP towards its limit.');
+        $this->assertSame(5, (int) Cache::get('login-ip|'.$ip), 'Hammering a locked account must not push the whole IP towards its limit.');
     }
 
     private function assertNoLeftoverTurnOrSlot(string $email, string $ip, ?int $accountId): void
     {
-        $key = \App\Http\Controllers\Auth\LoginController::accountKey($email, $ip, $accountId);
-        $lock = \Illuminate\Support\Facades\Cache::lock('login-lock|'.$key, 5);
+        $key = LoginController::accountKey($email, $ip, $accountId);
+        $lock = Cache::lock('login-lock|'.$key, 5);
         $this->assertTrue($lock->get(), 'The account turn must be released after every attempt.');
         $lock->release();
-        $this->assertSame(0, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip.':inflight', 0), 'The in-flight slot must be given up after every attempt.');
+        $this->assertSame(0, (int) Cache::get('login-ip|'.$ip.':inflight', 0), 'The in-flight slot must be given up after every attempt.');
     }
 
     public function test_the_account_turn_and_the_ip_slot_are_released_on_every_path(): void
@@ -432,7 +460,7 @@ final class AuthWorkflowTest extends TestCase
             $this->assertWrongLogin($this->loginAs($user->email, 'Wrong123', $ip));
         }
         $this->assertThrottled($this->loginAs($user->email, 'Wrong123', $ip));
-        $this->assertSame(5, (int) \Illuminate\Support\Facades\Cache::get('login-ip|'.$ip), 'Only the 5 failures are on the IP counter.');
+        $this->assertSame(5, (int) Cache::get('login-ip|'.$ip), 'Only the 5 failures are on the IP counter.');
     }
 
     public function test_valid_logins_still_succeed_when_the_ip_has_19_failures(): void
@@ -454,7 +482,7 @@ final class AuthWorkflowTest extends TestCase
         // Another request is holding this account's turn (held here by hand). Waiting attempts must fail closed.
         $ip = '203.0.113.73';
         $user = $this->user();
-        $held = \Illuminate\Support\Facades\Cache::lock('login-lock|'.\App\Http\Controllers\Auth\LoginController::accountKey($user->email, $ip, $user->id), 30);
+        $held = Cache::lock('login-lock|'.LoginController::accountKey($user->email, $ip, $user->id), 30);
         $this->assertTrue($held->get());
         $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
         $this->assertGuest();
@@ -470,11 +498,11 @@ final class AuthWorkflowTest extends TestCase
         for ($i = 0; $i < 15; $i++) {
             $this->assertWrongLogin($this->loginAs('spray'.$i.'-'.Str::lower(Str::random(6)).'@gmail.com', 'Wrong123', $ip));
         }
-        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 6, 30);
+        Cache::put('login-ip|'.$ip.':inflight', 6, 30);
         $user = $this->user();
         $this->assertThrottled($this->loginAs($user->email, 'Starting123', $ip));
         $this->assertGuest();
-        \Illuminate\Support\Facades\Cache::put('login-ip|'.$ip.':inflight', 4, 30);   // 15 + 4 + this one = 20: exactly at the limit, admitted
+        Cache::put('login-ip|'.$ip.':inflight', 4, 30);   // 15 + 4 + this one = 20: exactly at the limit, admitted
         $this->loginAs($user->email, 'Starting123', $ip)->assertRedirect('/rep');
     }
 
@@ -487,7 +515,7 @@ final class AuthWorkflowTest extends TestCase
             $this->loginAs($input, 'Wrong123', '203.0.113.65');
         }
 
-        $keys = (fn () => array_keys($this->storage))->call(\Illuminate\Support\Facades\Cache::getStore());
+        $keys = (fn () => array_keys($this->storage))->call(Cache::getStore());
         $this->assertNotEmpty($keys);
         foreach ($keys as $key) {
             $this->assertLessThan(200, strlen($key), 'Keys must fit the 255-character cache column with the store prefix and ":timer" suffix.');
@@ -507,31 +535,30 @@ final class AuthWorkflowTest extends TestCase
         $this->assertGuest();
         $user->update(['is_active' => true, 'must_change_password' => true]);
         $this->actingAs($user)->get('/account')->assertRedirect('/welcome');
-        $this->get('/welcome')->assertOk()->assertSee('school_id', false);
+        $this->get('/welcome')->assertOk()->assertSee('name="password"', false)->assertDontSee('school_id', false);
         $this->get('/photos/'.$user->id)->assertNotFound();
         $this->post('/logout')->assertRedirect('/login');
     }
 
-    public function test_onboarding_password_policy_confirmation_school_id_and_completion(): void
+    public function test_onboarding_password_policy_confirmation_and_completion(): void
     {
         $user = $this->user('rep', ['must_change_password' => true]);
         $this->actingAs($user);
         foreach ([['password' => 'Starting123', 'password_confirmation' => 'Starting123'], ['password' => 'short', 'password_confirmation' => 'other']] as $data) {
-            $this->from('/welcome')->put('/welcome', $data)->assertSessionHasErrors(['password', 'school_id']);
+            $this->from('/welcome')->put('/welcome', $data)->assertSessionHasErrors(['password'])->assertSessionDoesntHaveErrors(['school_id']);
         }
-        $this->put('/welcome', ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123', 'school_id' => '202100123mn0'])
+        // Only a password is asked at the first login: no ID number (it is asked for the borrower on equipment bookings)
+        $this->put('/welcome', ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123'])
             ->assertRedirect('/account')->assertSessionHas('status');
         $this->assertFalse($user->fresh()->must_change_password);
-        $this->assertSame('2021-00123-MN-0', $user->fresh()->school_id);
         $this->assertTrue(Hash::check('NewPassword123', $user->fresh()->password));
     }
 
-    public function test_staff_optional_and_admin_absent_onboarding_school_fields(): void
+    public function test_no_role_is_asked_for_an_id_number_at_the_first_login(): void
     {
         foreach (['lab_staff', 'admin'] as $role) {
             $user = $this->user($role, ['must_change_password' => true]);
-            $page = $this->actingAs($user)->get('/welcome')->assertOk();
-            if ($role === 'admin') $page->assertDontSee('name="school_id"', false);
+            $this->actingAs($user)->get('/welcome')->assertOk()->assertDontSee('name="school_id"', false)->assertDontSee('School ID');
             $this->put('/welcome', ['password' => 'OwnPassword123', 'password_confirmation' => 'OwnPassword123'])->assertRedirect('/account');
             $this->assertFalse($user->fresh()->must_change_password);
             // End this user's session before the next role signs in.
@@ -555,11 +582,11 @@ final class AuthWorkflowTest extends TestCase
         $this->get('/my-bookings')->assertOk();
     }
 
-    public function test_staff_can_choose_section_but_rep_cannot_change_block_and_admin_has_no_school_field(): void
+    public function test_staff_can_choose_section_but_rep_cannot_change_block_and_nobody_has_an_id_number_field(): void
     {
         $section = Section::create(['name' => 'TEST-'.Str::random(8), 'program' => 'TEST']);
         $staff = $this->user('lab_staff');
-        $this->actingAs($staff)->put('/account', $this->info($staff, ['school_id' => null, 'section_id' => $section->id]))->assertSessionHasNoErrors();
+        $this->actingAs($staff)->put('/account', $this->info($staff, ['section_id' => $section->id]))->assertSessionHasNoErrors();
         $this->assertSame($section->id, $staff->fresh()->section_id);
         $rep = $this->user();
         $this->actingAs($rep)->put('/account', $this->info($rep, ['section_id' => $section->id]))->assertSessionHasNoErrors();
@@ -572,7 +599,7 @@ final class AuthWorkflowTest extends TestCase
     {
         $user = $this->user();
         $this->actingAs($user);
-        foreach ([['Wrong123','Different123','Different123'], ['Starting123','Starting123','Starting123'], ['Starting123','Different123','Mismatch123']] as [$current,$password,$confirmation]) {
+        foreach ([['Wrong123', 'Different123', 'Different123'], ['Starting123', 'Starting123', 'Starting123'], ['Starting123', 'Different123', 'Mismatch123']] as [$current,$password,$confirmation]) {
             $this->put('/account/password', ['current_password' => $current, 'password' => $password, 'password_confirmation' => $confirmation])->assertSessionHasErrors();
         }
         $oldHash = $user->password;
@@ -585,7 +612,8 @@ final class AuthWorkflowTest extends TestCase
 
     public function test_recovery_generic_response_inactive_account_and_mail_failure(): void
     {
-        $active = $this->user(); $inactive = $this->user('rep', ['is_active' => false]);
+        $active = $this->user();
+        $inactive = $this->user('rep', ['is_active' => false]);
         foreach ([$active->email, $inactive->email, 'missing@example.invalid'] as $email) {
             $this->from('/forgot-password')->post('/forgot-password', ['email' => $email])->assertRedirect('/forgot-password')->assertSessionHas('status', fn ($s) => str_starts_with($s, 'If '));
         }
@@ -612,7 +640,7 @@ final class AuthWorkflowTest extends TestCase
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
         $this->travel(61)->minutes();
         $data['token'] = Password::broker()->createToken($fresh);
-        $this->travel(61)->minutes();
+        $this->travel(21)->minutes();     // the link works for 20 minutes
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
         $data['token'] = Password::broker()->createToken($fresh);
         $fresh->update(['is_active' => false]);
@@ -620,9 +648,35 @@ final class AuthWorkflowTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_reset_link_works_for_20_minutes_and_no_longer(): void
+    {
+        $this->assertSame(20, config('auth.passwords.users.expire'));
+        $user = $this->user();
+        $data = ['email' => $user->email, 'password' => 'Recovered123', 'password_confirmation' => 'Recovered123'];
+
+        // Still fine one minute before the end
+        $token = Password::broker()->createToken($user);
+        $this->travel(19)->minutes();
+        $this->post('/reset-password', $data + ['token' => $token])->assertRedirect('/login')->assertSessionHas('status');
+        $this->assertTrue(Hash::check('Recovered123', $user->fresh()->password));
+
+        // Expired one minute after it: the password stays as it was
+        $token = Password::broker()->createToken($user->fresh());
+        $this->travel(21)->minutes();
+        $this->post('/reset-password', ['password' => 'TooLate12345', 'password_confirmation' => 'TooLate12345', 'email' => $user->email, 'token' => $token])
+            ->assertSessionHasErrors('email');
+        $this->assertTrue(Hash::check('Recovered123', $user->fresh()->password));
+        $this->travelBack();
+
+        // The page that sent the link says how long it works
+        $this->from('/forgot-password')->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHas('status', fn ($s) => str_contains($s, 'It works for 20 minutes.'));
+    }
+
     public function test_signed_connection_success_reuse_changed_hash_and_invalid_signature_statuses(): void
     {
-        $user = $this->user(); $url = $user->connectEmailUrl();
+        $user = $this->user();
+        $url = $user->connectEmailUrl();
         $this->get($url)->assertOk()->assertSee('Email connected');
         $this->assertNotNull($user->fresh()->email_verified_at);
         $this->get($url)->assertOk();
@@ -635,7 +689,8 @@ final class AuthWorkflowTest extends TestCase
 
     public function test_resend_feedback_rate_limit_and_connected_noop(): void
     {
-        $user = $this->user(); $this->actingAs($user);
+        $user = $this->user();
+        $this->actingAs($user);
         $this->from('/account')->post('/account/email-link')->assertRedirect('/account')->assertSessionHas('connect_note');
         Notification::assertSentToTimes($user, ConnectEmail::class, 1);
         $this->post('/account/email-link')->assertSessionHas('connect_note', fn ($s) => str_contains($s, 'seconds'));
@@ -660,7 +715,7 @@ final class AuthWorkflowTest extends TestCase
         config(['app.debug' => false]);
         // Test-process routes only; no application route files or deployments change.
         foreach ([413, 500] as $code) {
-            \Illuminate\Support\Facades\Route::get('/test-only-error-'.$code, fn () => abort($code));
+            Route::get('/test-only-error-'.$code, fn () => abort($code));
         }
         $this->get('/test-only-error-413')->assertStatus(413)->assertSee('File too big')->assertDontSee('Log out');
         $this->get('/test-only-error-500')->assertStatus(500)->assertSee('Something went wrong')->assertDontSee('Log out');
@@ -668,40 +723,51 @@ final class AuthWorkflowTest extends TestCase
 
     public function test_route_throttles_return_429(): void
     {
-        for ($i=0; $i<5; $i++) $this->post('/forgot-password', ['email' => 'missing@example.invalid'])->assertRedirect();
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/forgot-password', ['email' => 'missing@example.invalid'])->assertRedirect();
+        }
         $this->post('/forgot-password', ['email' => 'missing@example.invalid'])->assertStatus(429);
-        for ($i=0; $i<10; $i++) $this->post('/reset-password', [])->assertRedirect();
+        for ($i = 0; $i < 10; $i++) {
+            $this->post('/reset-password', [])->assertRedirect();
+        }
         $this->post('/reset-password', [])->assertStatus(429);
-        $user=$this->user(); $url=$user->connectEmailUrl();
-        for ($i=0; $i<20; $i++) $this->get($url)->assertOk();
+        $user = $this->user();
+        $url = $user->connectEmailUrl();
+        for ($i = 0; $i < 20; $i++) {
+            $this->get($url)->assertOk();
+        }
         $this->get($url)->assertStatus(429);
     }
 
     public function test_photo_validation_private_access_replacement_and_independent_removal(): void
     {
-        if (!function_exists('imagecreatetruecolor')) $this->markTestSkipped('Valid image fixtures require GD.');
-        $user=$this->user(); $this->actingAs($user);
-        $this->post('/account/photo', [])->assertSessionHasErrorsIn('photo', 'photo');
-        foreach ([UploadedFile::fake()->create('not-image.txt', 10, 'text/plain'), UploadedFile::fake()->image('small.png', 50,50), UploadedFile::fake()->image('large.png',100,100)->size(5121)] as $file) {
-            $this->post('/account/photo', ['photo'=>$file])->assertSessionHasErrorsIn('photo','photo');
+        if (! function_exists('imagecreatetruecolor')) {
+            $this->markTestSkipped('Valid image fixtures require GD.');
         }
-        $this->post('/account/photo', ['photo'=>UploadedFile::fake()->image('face.png',200,200)])->assertRedirect('/account');
-        $path=$user->fresh()->photo_path; Storage::disk('local')->assertExists($path);
-        $url=$user->fresh()->photoUrl();
+        $user = $this->user();
+        $this->actingAs($user);
+        $this->post('/account/photo', [])->assertSessionHasErrorsIn('photo', 'photo');
+        foreach ([UploadedFile::fake()->create('not-image.txt', 10, 'text/plain'), UploadedFile::fake()->image('small.png', 50, 50), UploadedFile::fake()->image('large.png', 100, 100)->size(5121)] as $file) {
+            $this->post('/account/photo', ['photo' => $file])->assertSessionHasErrorsIn('photo', 'photo');
+        }
+        $this->post('/account/photo', ['photo' => UploadedFile::fake()->image('face.png', 200, 200)])->assertRedirect('/account');
+        $path = $user->fresh()->photo_path;
+        Storage::disk('local')->assertExists($path);
+        $url = $user->fresh()->photoUrl();
         $this->get($url)->assertOk()->assertHeader('Cache-Control', 'max-age=604800, private');
-        $this->post('/account/photo', ['photo'=>UploadedFile::fake()->image('replacement.png',200,200)])->assertRedirect('/account');
+        $this->post('/account/photo', ['photo' => UploadedFile::fake()->image('replacement.png', 200, 200)])->assertRedirect('/account');
         Storage::disk('local')->assertMissing($path);
-        $this->assertNotSame($url,$user->fresh()->photoUrl());
-        $staff=$this->user('lab_staff');
+        $this->assertNotSame($url, $user->fresh()->photoUrl());
+        $staff = $this->user('lab_staff');
         // Each viewer needs a separate session; keep it intact within their own requests.
         $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($staff)->get($user->fresh()->photoUrl())->assertOk();
         $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($this->user())->get($user->fresh()->photoUrl())->assertNotFound();
-        $other=Department::create(['name'=>'Other test department','slug'=>'other-'.Str::random(10)]);
+        $other = Department::create(['name' => 'Other test department', 'slug' => 'other-'.Str::random(10)]);
         $this->post('/logout')->assertRedirect('/login');
-        $this->actingAs($this->user('admin',['department_id'=>$other->id]))->get($user->fresh()->photoUrl())->assertNotFound();
-        $path=$user->fresh()->photo_path;
+        $this->actingAs($this->user('admin', ['department_id' => $other->id]))->get($user->fresh()->photoUrl())->assertNotFound();
+        $path = $user->fresh()->photo_path;
         $this->post('/logout')->assertRedirect('/login');
         $this->actingAs($user->fresh())->delete('/account/photo')->assertRedirect('/account');
         Storage::disk('local')->assertMissing($path);
@@ -715,8 +781,11 @@ final class AuthWorkflowTest extends TestCase
         $this->get('/this-route-does-not-exist')->assertNotFound();
         // Force the middleware's unit-test bypass off without changing application source.
         $this->app->instance('env', 'csrf-verification');
-        config(['app.debug'=>false]);
-        try { $this->post('/account/email-link', ['_token'=>'expired-token'])->assertStatus(419); }
-        finally { $this->app->instance('env', 'testing'); }
+        config(['app.debug' => false]);
+        try {
+            $this->post('/account/email-link', ['_token' => 'expired-token'])->assertStatus(419);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
     }
 }

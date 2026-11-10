@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\DepartmentConfig;
+use App\Models\Equipment;
+use App\Models\EquipmentCategory;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Section;
@@ -21,10 +23,15 @@ use Tests\TestCase;
 final class PaginationWorkflowTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Section $section;
+
     private Room $room;
+
     private User $admin;
+
     private User $rep;
 
     protected function setUp(): void
@@ -244,7 +251,7 @@ final class PaginationWorkflowTest extends TestCase
     {
         $staff = $this->person('lab_staff', 'Lab Stats');
         $admin = $this->admin;
-        $projector = \App\Models\Equipment::create(['category_id' => \App\Models\EquipmentCategory::create(['department_id' => $this->department->id, 'name' => 'Stats '.Str::random(6), 'sort_order' => 1])->id, 'name' => 'Proj '.Str::random(6), 'total_qty' => 9, 'max_per_request' => 5, 'sort_order' => 1, 'is_active' => true]);
+        $projector = Equipment::create(['category_id' => EquipmentCategory::create(['department_id' => $this->department->id, 'name' => 'Stats '.Str::random(6), 'sort_order' => 1])->id, 'name' => 'Proj '.Str::random(6), 'total_qty' => 9, 'max_per_request' => 5, 'sort_order' => 1, 'is_active' => true]);
 
         $this->booking('Pending', now()->addDays(2)->setTime(9, 0), 'Waiting one');
         $this->booking('Pending', now()->addDays(3)->setTime(9, 0), 'Waiting two');

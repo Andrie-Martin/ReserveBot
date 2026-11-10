@@ -1,5 +1,6 @@
 {{-- Phase 9: the fields shared by "Add an account" and editing one.
-     Needs $prefix (for unique ids), $account (a User, or null when adding), $blocks and $sections. --}}
+     Needs $prefix (for unique ids), $account (a User, or null when adding), $blocks and $sections.
+     A block account belongs to its block (one per block); its "name" is the block's representative. --}}
 @php
   // After a failed save: $bag (this form's errors) marks the invalid fields, and $focus names the first one, which takes focus.
   $bag = $bag ?? null;
@@ -11,18 +12,19 @@
 @endphp
 <fieldset class="role-pick">
   <legend class="field-label">Role</legend>
-  <label class="check"><input type="radio" name="role" value="rep" @checked($role === 'rep')> Block rep</label>
+  <label class="check"><input type="radio" name="role" value="rep" @checked($role === 'rep')> Block account</label>
   <label class="check"><input type="radio" name="role" value="lab_staff" @checked($role === 'lab_staff')> Lab staff</label>
 </fieldset>
 <div class="mgrid">
   <div>
-    <label for="{{ $prefix }}-name" class="field-label">Name</label>
+    <label for="{{ $prefix }}-name" class="field-label"><span class="for-rep">Representative’s name</span><span class="for-staff">Name</span></label>
     <input id="{{ $prefix }}-name" name="name" maxlength="100" required {!! $invalid('name') !!} value="{{ old('name', $account?->name) }}" placeholder="e.g. Juan Dela Cruz">
+    <p class="hint for-rep">Who represents the block now. It can be changed later, here or by the block in My account.</p>
   </div>
   <div>
     <label for="{{ $prefix }}-email" class="field-label">Email</label>
     <input id="{{ $prefix }}-email" name="email" type="email" maxlength="150" required {!! $invalid('email') !!} value="{{ old('email', $account?->email) }}">
-    <p class="hint for-rep">Reps: Gmail or PUP webmail (<span class="nowrap">…@iskolarngbayan.pup.edu.ph</span>).</p>
+    <p class="hint for-rep">Block accounts: Gmail or PUP webmail (<span class="nowrap">…@iskolarngbayan.pup.edu.ph</span>).</p>
   </div>
   <div class="for-rep">
     <label for="{{ $prefix }}-block" class="field-label">Block</label>
@@ -32,6 +34,7 @@
         <option value="{{ $block->id }}" @selected($blockId === $block->id)>{{ $block->name }}</option>
       @endforeach
     </select>
+    <p class="hint">The account belongs to this block. Each block has one account.</p>
   </div>
   <div class="for-staff">
     <label for="{{ $prefix }}-section" class="field-label">Program and section <span class="optional">(optional)</span></label>
@@ -45,9 +48,5 @@
         </optgroup>
       @endforeach
     </select>
-  </div>
-  <div>
-    <label for="{{ $prefix }}-school" class="field-label">School ID number <span class="optional">(optional)</span></label>
-    <input id="{{ $prefix }}-school" name="school_id" maxlength="20" {!! $invalid('school_id') !!} value="{{ old('school_id', $account?->school_id) }}" placeholder="e.g. 2021-00123-MN-0" spellcheck="false" autocapitalize="characters">
   </div>
 </div>

@@ -1,9 +1,9 @@
-{{-- Phase 9 (admins): one rep or lab staff account --}}
+{{-- Phase 9 (admins): one block account or lab staff account --}}
 @extends('layouts.app')
 @use('App\Support\AccountFields')
 @use('App\Support\TimeSlots')
 
-@section('title', 'Edit '.$account->name)
+@section('title', 'Edit '.$account->displayName())
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/booking.css') }}?v={{ filemtime(public_path('css/booking.css')) }}">
@@ -14,7 +14,7 @@
 <section class="card manage-card rb-booking rb-manage rb-ui">
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ auth()->user()->roleLabel() }}</p>
-  <h1>Edit {{ $account->name }}</h1>
+  <h1>Edit {{ $account->displayName() }}</h1>
   <p class="back"><a href="{{ route('accounts.index') }}">‹ All accounts</a></p>
   </header>
 
@@ -29,10 +29,14 @@
   <div class="acct-head">
     <x-avatar :user="$account" size="md" />
     <div>
-      <p class="edit-title">{{ $account->name }}</p>
+      <p class="edit-title">{{ $account->displayName() }}</p>
       <p class="muted small acct-meta">
-        <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
-        @if ($account->school_id)<span class="meta-unit">{{ $account->school_id }}</span>@endif
+        @if ($account->isBlock())
+          <span class="meta-unit">{{ $account->roleLabel() }}</span>
+          <span class="meta-unit">Representative: {{ $account->name }}</span>
+        @else
+          <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
+        @endif
         <span class="meta-unit">{{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}</span>
       </p>
       <p class="acct-status">
@@ -59,7 +63,7 @@
     @method('PUT')
     @php
       $detailsBag = $errors->getBag('details');
-      $detailsFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id'])->first(fn ($field) => $detailsBag->has($field));
+      $detailsFocus = collect(['name', 'email', 'block_id', 'section_id'])->first(fn ($field) => $detailsBag->has($field));
     @endphp
     @if ($detailsBag->any())<div id="edit-errors">@include('manage._errors', ['bag' => $detailsBag])</div>@endif
     @include('accounts._fields', ['prefix' => 'edit', 'bag' => $detailsBag, 'focus' => $detailsFocus])
@@ -109,13 +113,13 @@
   <div class="danger-box">
     <h2>Delete account</h2>
     @if ($hasHistory)
-      <p class="hint">{{ $account->name }} has bookings or history, so deleting turns the account off instead: it can’t log in, and its bookings and history stay.</p>
+      <p class="hint">{{ $account->displayName() }} has bookings or history, so deleting turns the account off instead: it can’t log in, and its bookings and history stay.</p>
     @else
-      <p class="hint">{{ $account->name }} has no bookings or history, so the account is deleted for good.</p>
+      <p class="hint">{{ $account->displayName() }} has no bookings or history, so the account is deleted for good.</p>
     @endif
     {{-- Js::from writes the question as safe JavaScript, whatever characters the name has --}}
     <form method="post" action="{{ route('accounts.destroy', $account) }}"
-          onsubmit="return confirm({{ \Illuminate\Support\Js::from(($hasHistory ? 'Turn off ' : 'Delete ').$account->name.'’s account?') }})">
+          onsubmit="return confirm({{ \Illuminate\Support\Js::from(($hasHistory ? 'Turn off ' : 'Delete ').$account->displayName().'’s account?') }})">
       @csrf
       @method('DELETE')
       <button type="submit" class="btn-danger">{{ $hasHistory ? 'Delete (turns it off)' : 'Delete account' }}</button>

@@ -51,12 +51,12 @@
         @if ($saved === 'online')<span class="check-tag">Your answer</span>@elseif ($chosen === 'online')<span class="check-tag check-tag--cue">Chosen in your email</span>@endif
       </button>
     </form>
-    <p class="hint">Answering for {{ $rep->name }}. You can change it until the class ends. If the room was freed, “Face-to-face” takes it back as long as nobody has booked it.</p>
+    <p class="hint">Answering for {{ $rep->displayName() }}. You can change it until the class ends. If the room was freed, “Face-to-face” takes it back as long as nobody has booked it.</p>
   @elseif ($state === 'booked')
     <p class="hint">This class meeting is booked as a class session, so it keeps its room. To change that, open the booking from My bookings.</p>
     <a class="check-next" href="{{ route('bookings.mine') }}">Open My bookings</a>
   @elseif (! $isRep)
-    <p class="hint">This link was for {{ $rep->name }}, who isn’t this block’s rep anymore.</p>
+    <p class="hint">This link was for {{ $rep->name }}’s account, which isn’t this block’s account anymore.</p>
     <a class="check-next" href="{{ url('/') }}">Go to my home page</a>
   @else
     <p class="hint">This class has ended.</p>

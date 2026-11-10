@@ -23,8 +23,13 @@
         <x-ui.field field-id="email" label="Email address" :error="$errors->getBag('default')->first('email')">
   <x-ui.input type="email" name="email" :value="old('email')" autocomplete="username" required autofocus />
 </x-ui.field>
+        {{-- After a refused attempt the password box must stay empty. A browser that has this account's password saved
+             would otherwise put it straight back, and pressing "Log in" again would log in with the saved password, as if
+             the wrong one had been accepted (QA AUTH-01). autocomplete="new-password" is the standard way to tell
+             browsers not to fill a saved password in; the first visit keeps "current-password", so saved logins still work. --}}
+        @php $retry = $errors->getBag('default')->any(); @endphp
         <x-ui.field field-id="password" label="Password" :error="$errors->getBag('default')->first('password')">
-  <x-ui.input type="password" name="password" autocomplete="current-password" required />
+  <x-ui.input type="password" name="password" :autocomplete="$retry ? 'new-password' : 'current-password'" required />
 </x-ui.field>
         <x-ui.button type="submit">Log in</x-ui.button>
       </form>

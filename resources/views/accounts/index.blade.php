@@ -14,7 +14,7 @@
   <header class="rb-booking__intro">
   <p class="rb-booking__kicker">{{ $admin->roleLabel() }}</p>
   <h1>Accounts</h1>
-  <p class="muted">Everyone in {{ $admin->department->name }} who can log in. You make and manage the block rep and lab staff accounts; each person picks their own password the first time they log in.</p>
+  <p class="muted">Everyone in {{ $admin->department->name }} who can log in. You make and manage the block accounts and lab staff accounts; each one picks its own password the first time it logs in. A block account belongs to its block, with the block’s representative named on it.</p>
   </header>
 
   @if (session('status'))
@@ -34,7 +34,7 @@
       @csrf
       @php
         $addBag = $errors->getBag('add');
-        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id', 'password'])->first(fn ($field) => $addBag->has($field));
+        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'password'])->first(fn ($field) => $addBag->has($field));
       @endphp
       @if ($addBag->any())<div id="add-errors">@include('manage._errors', ['bag' => $addBag])</div>@endif
       @include('accounts._fields', ['prefix' => 'add', 'account' => null, 'bag' => $addBag, 'focus' => $addFocus])
@@ -46,7 +46,7 @@
         </div>
       </div>
       <button type="submit" class="btn-small">Make account</button>
-      <p class="hint">We email them a link to connect their email. Block reps can book once it’s connected.</p>
+      <p class="hint">We email them a link to connect their email. Block accounts can book once it’s connected.</p>
     </form>
   </details>
   </div>
@@ -62,10 +62,9 @@
       <table class="mtable acct-table">
         <thead>
           <tr>
-            <th>Name</th>
+            <th>{{ $title === 'Block accounts' ? 'Block' : 'Name' }}</th>
             @if ($title !== 'Admins')
-              <th>{{ $title === 'Block reps' ? 'Block' : 'Section' }}</th>
-              <th class="hide-sm">School ID</th>
+              <th>{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}</th>
             @endif
             <th>Status</th>
             <th><span class="sr-only">Edit</span></th>
@@ -78,14 +77,13 @@
                 <span class="acct-name">
                   <x-avatar :user="$person" />
                   <span>
-                    <strong>{{ $person->name }}</strong>@if ($person->is($admin)) <span class="tag-shared">you</span>@endif
+                    <strong>{{ $person->displayName() }}</strong>@if ($person->is($admin)) <span class="tag-shared">you</span>@endif
                     <span class="acct-email">{{ $person->email }}</span>
                   </span>
                 </span>
               </td>
               @if ($title !== 'Admins')
-                <td class="acct-block" data-label="{{ $title === 'Block reps' ? 'Block' : 'Section' }}">{{ $person->section?->name ?? '—' }}</td>
-                <td class="hide-sm">{{ $person->school_id ?? '—' }}</td>
+                <td class="acct-block" data-label="{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}">{{ $title === 'Block accounts' ? $person->name : ($person->section?->name ?? '—') }}</td>
               @endif
               <td class="acct-status">
                 @if (! $person->is_active)
@@ -102,7 +100,7 @@
               </td>
               <td class="acct-edit">
                 @if (in_array($person->role, \App\Models\User::MANAGED_ROLES, true))
-                  <a href="{{ route('accounts.edit', $person) }}">Edit<span class="sr-only"> {{ $person->name }}</span></a>
+                  <a href="{{ route('accounts.edit', $person) }}">Edit<span class="sr-only"> {{ $person->displayName() }}</span></a>
                 @elseif ($person->is($admin))
                   <a href="{{ route('account') }}">My account</a>
                 @endif
@@ -111,6 +109,9 @@
           @endforeach
         </tbody>
       </table>
+    @endif
+    @if ($title === 'Admins')
+      <p class="hint">Admin accounts are made and looked after by the College admin, not here.</p>
     @endif
     </div>
   @endforeach

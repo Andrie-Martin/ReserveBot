@@ -33,16 +33,25 @@ use Tests\TestCase;
 final class ResourceDeletionConcurrencyTest extends TestCase
 {
     private Connection $other;
+
     private Department $department;
+
     private User $staff;
+
     private User $rep;
+
     private Room $room;
+
     private Equipment $item;
+
     /** @var list<int> */
     private array $roomIds = [];
+
     /** @var list<int> */
     private array $itemIds = [];
+
     private ?int $sectionId = null;
+
     private bool $ready = false;
 
     protected function setUp(): void

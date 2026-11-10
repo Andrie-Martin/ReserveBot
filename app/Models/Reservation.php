@@ -29,7 +29,8 @@ class Reservation extends Model
 
     protected $fillable = [
         'user_id', 'room_id', 'class_schedule_id', 'purpose', 'start_time', 'end_time',
-        'status', 'status_reason', 'other_items', 'reviewed_by',
+        'status', 'status_reason', 'other_items', 'reviewed_by', 'rep_name',
+        'borrower_name', 'borrower_id_number',
     ];
 
     protected function casts(): array
@@ -37,7 +38,7 @@ class Reservation extends Model
         return ['start_time' => 'datetime', 'end_time' => 'datetime'];
     }
 
-    /** The person who booked it (a rep, lab staff or an admin) */
+    /** The account that booked it (a block's account) */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -82,6 +83,34 @@ class Reservation extends Model
     public function scopeOverlapping(Builder $query, $start, $end): void
     {
         $query->where('start_time', '<', $end)->where('end_time', '>', $start);
+    }
+
+    /**
+     * The block's representative when the booking was made. A block can change its representative later, so the
+     * name is copied onto the booking (rep_name); bookings made before that column existed fall back to the
+     * account's current representative.
+     */
+    public function representativeName(): ?string
+    {
+        return filled($this->rep_name) ? $this->rep_name : $this->user?->representativeName();
+    }
+
+    /** Who booked it, for lists: "BSCPE 4-5 (Rep: Bea Prieto)" for a block account, or the person's name */
+    public function bookedBy(): string
+    {
+        $account = $this->user;
+        if (! $account) {
+            return 'Deleted account';
+        }
+        $representative = $this->representativeName();
+
+        return $account->displayName().($account->isBlock() && filled($representative) ? ' (Rep: '.$representative.')' : '');
+    }
+
+    /** Was the person who borrows the equipment written down? (Asked on every equipment booking since sandbox issue 7.) */
+    public function hasBorrower(): bool
+    {
+        return filled($this->borrower_name) && filled($this->borrower_id_number);
     }
 
     public function hasEquipment(): bool

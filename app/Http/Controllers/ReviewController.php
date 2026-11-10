@@ -83,7 +83,7 @@ class ReviewController extends Controller
                 .strtolower($now->statusLabel()).'.');
         }
 
-        $who = $reservation->user->name;
+        $who = $reservation->user->displayName();
 
         return back()->with('status', $status === 'Confirmed'
             ? 'Approved booking #'.$reservation->id.' for '.$who.'.'

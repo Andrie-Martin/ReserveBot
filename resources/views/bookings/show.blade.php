@@ -52,8 +52,20 @@
 
     <div class="bfact bfact--who">
       <dt>Booked by</dt>
-      <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->name }}@if ($booker->section) · {{ $booker->section->name }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
+      <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->displayName() }}@if ($reservation->representativeName()) · Rep: {{ $reservation->representativeName() }}@endif</span></span></dd>
     </div>
+
+    @if ($reservation->hasEquipment())
+      {{-- Who picks up the items (typed on the booking form). Lab staff check this ID when they hand the items out. --}}
+      <div class="bfact bfact--borrower">
+        <dt>Borrower</dt>
+        @if ($reservation->hasBorrower())
+          <dd>{{ $reservation->borrower_name }} · ID <span class="who-id-inline">{{ $reservation->borrower_id_number }}</span></dd>
+        @else
+          <dd class="muted">Not recorded (booked before a borrower was asked for)</dd>
+        @endif
+      </div>
+    @endif
 
     <div class="bfact">
       <dt>Sent</dt>
@@ -103,7 +115,7 @@
         <form method="post" action="{{ route('bookings.approve', $reservation) }}" class="action-panel action-panel--approve" aria-labelledby="approve-title">
           @csrf
           <h3 id="approve-title">Approve booking</h3>
-          <p class="hint">Confirms the room and any items for {{ $booker->name }}.</p>
+          <p class="hint">Confirms the room and any items for {{ $booker->displayName() }}.</p>
           <div class="action-panel__foot">
             <button type="submit" class="btn-approve">Approve booking</button>
           </div>
@@ -218,7 +230,7 @@
           <textarea id="staff-cancel-reason" name="reason" data-rb-focus rows="3" maxlength="255" required placeholder="e.g. The building is closed that day">{{ $cancelErrors->any() ? old('reason') : '' }}</textarea>
         </div>
         {{-- Confirmation only: it has no name, so it is never sent; the browser refuses to submit until it is ticked. --}}
-        <label class="check change-confirm" for="staff-cancel-confirm"><input type="checkbox" id="staff-cancel-confirm" required> Yes, cancel this booking for {{ $booker->name }}.</label>
+        <label class="check change-confirm" for="staff-cancel-confirm"><input type="checkbox" id="staff-cancel-confirm" required> Yes, cancel this booking for {{ $booker->displayName() }}.</label>
         <div class="change-footer">
           <button type="submit" class="btn-reject btn-reject--solid">Cancel booking</button>
           <a class="btn-ghost" href="#change" data-rb-reveal-close>Back</a>

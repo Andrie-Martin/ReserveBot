@@ -1,10 +1,22 @@
 <?php
 
 // Standalone CLI checks use the existing Laravel runtime, never a production route.
+use App\Models\Department;
+use App\Models\DepartmentConfig;
+use App\Models\User;
+use App\Support\BookingRules;
+use Carbon\CarbonImmutable;
+use Illuminate\Container\Container;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Bootstrap\HandleExceptions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\View\Component;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Releases the standalone application booted by foundationsApplication() and restores the environment it changed.
@@ -13,12 +25,12 @@ use Illuminate\Support\ViewErrorBag;
  */
 function foundationsRelease(): void
 {
-    Illuminate\Support\Facades\Facade::clearResolvedInstances();
-    Illuminate\Support\Facades\Facade::setFacadeApplication(null);
-    Illuminate\Container\Container::setInstance(null);
+    Facade::clearResolvedInstances();
+    Facade::setFacadeApplication(null);
+    Container::setInstance(null);
     // Component keeps the first app's view factory and compiled-string views in statics.
-    Illuminate\View\Component::flushCache();
-    Illuminate\View\Component::forgetFactory();
+    Component::flushCache();
+    Component::forgetFactory();
     // The leaked state behind "No hint path defined for [__components]" was exactly this static view factory: it stays
     // bound to the first standalone app's view finder, so the next test's own app resolves components against it.
     foreach ($GLOBALS['foundationsSavedEnv'] ?? [] as $key => [$env, $envArray, $server]) {
@@ -33,7 +45,7 @@ function foundationsRelease(): void
     $GLOBALS['foundationsSavedEnv'] = [];
 }
 
-function foundationsApplication(): Illuminate\Foundation\Application
+function foundationsApplication(): Application
 {
     $root = dirname(__DIR__, 2);
     require_once $root.'/vendor/autoload.php';
@@ -55,14 +67,14 @@ function foundationsApplication(): Illuminate\Foundation\Application
     $errorLevel = error_reporting();
     $app = require $root.'/bootstrap/app.php';
     $app->make(Kernel::class)->bootstrap();
-    if (class_exists(PHPUnit\Framework\TestCase::class, false)) {
+    if (class_exists(TestCase::class, false)) {
         // Kernel::bootstrap() installs Laravel's error and exception handlers (and raises error_reporting). Under PHPUnit
         // nothing removes them, which made every caller "risky"; remove exactly the two it pushed so PHPUnit's own
         // handlers keep reporting warnings and deprecations. CLI use (render-*.php) keeps Laravel's handlers.
         restore_error_handler();
         restore_exception_handler();
         error_reporting($errorLevel);
-        Illuminate\Foundation\Bootstrap\HandleExceptions::forgetApp();
+        HandleExceptions::forgetApp();
     }
     // Any accidental DB access fails; nothing can reach the configured application database.
     $app['config']->set('database.connections', []);
@@ -84,8 +96,8 @@ function foundationsData(): array
     $errors = (new ViewErrorBag)
         ->put('example', new MessageBag(['email' => ['Enter a valid example email.']]))
         ->put('other', new MessageBag(['email' => ['Other form error must remain isolated.']]));
-    $user = new App\Models\User(['name' => 'Example Person', 'role' => 'rep']);
-    $user->setRelation('department', new App\Models\Department(['name' => 'Example department']));
+    $user = new User(['name' => 'Example Person', 'role' => 'rep']);
+    $user->setRelation('department', new Department(['name' => 'Example department']));
     $user->setRelation('section', null);
 
     return ['errors' => $errors, 'user' => $user, 'hideUser' => true];
@@ -106,8 +118,8 @@ function foundationsBooking(bool $second, bool $hideUser = true): string
 {
     $data = foundationsData();
     $data['hideUser'] = $hideUser;
-    $day = Carbon\CarbonImmutable::parse('2026-11-10 00:00', 'Asia/Manila');
-    $rules = App\Support\BookingRules::for(new App\Models\DepartmentConfig(App\Models\DepartmentConfig::DEFAULTS), $day->subDay());
+    $day = CarbonImmutable::parse('2026-11-10 00:00', 'Asia/Manila');
+    $rules = BookingRules::for(new DepartmentConfig(DepartmentConfig::DEFAULTS), $day->subDay());
     $data += [
         'rules' => $rules, 'whenError' => null, 'picked' => [], 'canBookClass' => true,
         'for' => 'other', 'sessions' => [], 'days' => [$day],
@@ -171,7 +183,7 @@ function foundationsContracts(): int
         $check(str_contains($render, 'css/foundations/components.css?v='), $view.' must render without a database');
     }
     foreach (['rep', 'lab_staff', 'admin'] as $role) {
-        auth()->setUser(new App\Models\User(['name' => 'Example '.$role, 'role' => $role]));
+        auth()->setUser(new User(['name' => 'Example '.$role, 'role' => $role]));
         foreach (['errors.413', 'errors.500'] as $view) {
             $render = view($view)->render();
             $check(! str_contains($render, 'class="topnav"') && ! str_contains($render, 'Example '.$role), $view.' must hide user context for '.$role);
@@ -182,12 +194,12 @@ function foundationsContracts(): int
     $check(str_contains(foundationsBooking(false), 'book-form step1'), 'Existing booking step one failed to render');
     $check(str_contains(foundationsBooking(true), 'book-form step2'), 'Existing booking step two failed to render');
 
-    $disclosure = Illuminate\Support\Facades\Blade::render('<x-ui.disclosure :summary="$label" :open="true" id="sample-disclosure" class="caller-class" aria-label="Example details">{{ $content }}</x-ui.disclosure>', ['label' => '<script>label</script>', 'content' => '<b>sample</b>']);
+    $disclosure = Blade::render('<x-ui.disclosure :summary="$label" :open="true" id="sample-disclosure" class="caller-class" aria-label="Example details">{{ $content }}</x-ui.disclosure>', ['label' => '<script>label</script>', 'content' => '<b>sample</b>']);
     $dx = foundationsDocument($disclosure);
     $check($dx->query('//details[@id="sample-disclosure" and @open and @aria-label="Example details"]')->length === 1, 'Disclosure forwards native/ARIA attributes and open state');
     $check($dx->query('//details[contains(@class,"rb-disclosure") and contains(@class,"caller-class")]/summary')->length === 1, 'Disclosure preserves caller class and native summary');
     $check($dx->query('//script|//b')->length === 0 && str_contains($disclosure, '&lt;b&gt;sample&lt;/b&gt;'), 'Disclosure escapes caller content and summary');
-    $closed = Illuminate\Support\Facades\Blade::render('<x-ui.disclosure summary="Closed">Sample</x-ui.disclosure>');
+    $closed = Blade::render('<x-ui.disclosure summary="Closed">Sample</x-ui.disclosure>');
     $check(foundationsDocument($closed)->query('//details[not(@open)]')->length === 1, 'Disclosure is closed by default');
 
     return $checks;

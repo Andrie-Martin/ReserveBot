@@ -24,8 +24,11 @@ use Tests\TestCase;
 final class ManageRulesWorkflowTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private User $admin;
+
     private Term $term;
 
     protected function setUp(): void

@@ -13,7 +13,7 @@ use Illuminate\View\View;
 /**
  * Phase 9: passwords of the logged-in user.
  *  - Welcome page: after an admin typed a password (a new account or a reset), the user picks
- *    their own before anything else, plus their School ID if it's missing.
+ *    their own before anything else.
  *  - My account, Password tab: anyone can change their password by typing the current one.
  * Other devices logged in to the account are logged out (the 'auth.session' check in routes/web.php).
  */
@@ -26,7 +26,7 @@ class PasswordController extends Controller
             return redirect($user->homeUrl());
         }
 
-        return view('account.welcome', ['user' => $user, 'askSchoolId' => $this->asksSchoolId($user)]);
+        return view('account.welcome', ['user' => $user]);
     }
 
     public function saveWelcome(Request $request): RedirectResponse
@@ -37,11 +37,7 @@ class PasswordController extends Controller
         }
         AccountFields::tidy($request);
 
-        $rules = ['password' => AccountFields::password(confirmed: true)];
-        if ($this->asksSchoolId($user)) {
-            $rules['school_id'] = AccountFields::schoolId($user->role === 'rep', $user->id);
-        }
-        $validator = Validator::make($request->all(), $rules, AccountFields::MESSAGES);
+        $validator = Validator::make($request->all(), ['password' => AccountFields::password(confirmed: true)], AccountFields::MESSAGES);
         $validator->after(function ($validator) use ($request, $user) {
             if (! $validator->errors()->has('password') && Hash::check((string) $request->input('password'), $user->password)) {
                 $validator->errors()->add('password', 'Pick a password different from the one your admin gave you.');
@@ -51,9 +47,6 @@ class PasswordController extends Controller
 
         $user->password = $data['password'];
         $user->must_change_password = false;
-        if (array_key_exists('school_id', $data)) {
-            $user->school_id = $data['school_id'];
-        }
         $user->save();
 
         $next = $user->hasConnectedEmail()
@@ -86,11 +79,5 @@ class PasswordController extends Controller
         $user->update(['password' => $data['password']]);
 
         return redirect()->route('password.edit')->with('status', 'Your password is changed. Any other device logged in to your account is logged out.');
-    }
-
-    /** Reps and lab staff without a School ID are asked for it on the welcome page */
-    private function asksSchoolId(User $user): bool
-    {
-        return in_array($user->role, User::MANAGED_ROLES, true) && $user->school_id === null;
     }
 }

@@ -14,7 +14,7 @@ class BlockedReasonTest extends TestCase
         return [
             'spreadsheet colour remark, no label' => ['Not available (yellow on timetable, no label)', 'Reason not specified', false],
             'plain not available' => ['Not available', 'Reason not specified', false],
-            'case and spacing' => ["  NOT   available. ", 'Reason not specified', false],
+            'case and spacing' => ['  NOT   available. ', 'Reason not specified', false],
             'null note' => [null, 'Reason not specified', false],
             'empty note' => ['', 'Reason not specified', false],
             'only the colour remark' => ['(yellow on timetable)', 'Reason not specified', false],

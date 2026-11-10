@@ -8,16 +8,11 @@
 
 @section('content')
 <x-ui.auth-card class="rb-auth-card--panel">
-  <x-slot:heading><p class="rb-auth-eyebrow">Required first-login setup</p><h1 class="rb-heading rb-heading--h1">Hi, {{ $user->name }}!</h1><p class="rb-description">Your admin gave you a starting password. Pick your own before you continue; the starting one stops working.</p></x-slot:heading>
+  <x-slot:heading><p class="rb-auth-eyebrow">Required first-login setup</p><h1 class="rb-heading rb-heading--h1">Hi, {{ $user->name }}!</h1>@if ($user->isBlock() && $user->section)<p class="rb-description">This is the block account of <strong>{{ $user->section->name }}</strong>.</p>@endif<p class="rb-description">Your admin gave you a starting password. Pick your own before you continue; the starting one stops working.</p></x-slot:heading>
   <x-ui.error-summary :bag="$errors->getBag('default')" />
   <form method="post" action="{{ route('welcome.save') }}" class="rb-stack rb-auth-form">
     @csrf
     @method('PUT')
-    @if ($askSchoolId)
-      <x-ui.field field-id="school_id" :label="'School ID number'.($user->role === 'lab_staff' ? ' (optional)' : '')" hint="Your PUP student number." :error="$errors->getBag('default')->first('school_id')">
-        <x-ui.input name="school_id" maxlength="20" :value="old('school_id')" placeholder="e.g. 2021-00123-MN-0" :required="$user->role === 'rep'" spellcheck="false" autocapitalize="characters" />
-      </x-ui.field>
-    @endif
     <x-ui.field field-id="password" label="New password" :error="$errors->getBag('default')->first('password')" :hint="AccountFields::PASSWORD_HINT">
   <x-ui.input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="64" required autofocus />
 </x-ui.field>

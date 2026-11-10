@@ -24,49 +24,32 @@ class StaffRulesTest extends TestCase
         $this->end = CarbonImmutable::parse('2026-11-03 13:30');
     }
 
-    public function test_hand_out_and_no_show_work_on_the_bookings_own_day_and_afterwards(): void
+    public function test_hand_out_and_no_show_work_at_any_time_on_the_bookings_day(): void
     {
         foreach (['00:00', '06:00', '11:30', '13:30', '23:59'] as $time) {  // early, during, late: all the same day
-            $this->assertTrue($this->at($time)->canHandOut('Confirmed', $this->start), $time);
-            $this->assertTrue($this->at($time)->canMarkNoShow('Confirmed', $this->start), $time);
+            $this->assertTrue($this->at($time)->canHandOut('Confirmed'), $time);
+            $this->assertTrue($this->at($time)->canMarkNoShow('Confirmed'), $time);
         }
-        // A booking from an earlier day can still be handled (late pick-up, or recording a missed one).
-        $nextDay = new StaffRules(graceMinutes: 15, now: CarbonImmutable::parse('2026-11-05 08:00'));
-        $this->assertTrue($nextDay->canHandOut('Confirmed', $this->start));
-        $this->assertTrue($nextDay->canMarkNoShow('Confirmed', $this->start));
     }
 
-    public function test_hand_out_and_no_show_are_refused_for_a_booking_on_a_future_day(): void
+    public function test_hand_out_and_no_show_also_work_days_before_and_after_the_booking(): void
     {
-        $tomorrow = CarbonImmutable::parse('2026-11-04 08:00');
-        foreach (['2026-11-04 00:00', '2026-11-04 08:00', '2026-11-10 11:30'] as $start) {
-            $this->assertTrue($this->at('23:59')->isFutureDay(CarbonImmutable::parse($start)), $start);
+        // Lab staff and admins can step in by hand on any day: the booking here is on 2026-11-03.
+        foreach (['2026-10-27 09:00', '2026-11-02 23:59', '2026-11-04 00:00', '2026-11-10 08:00'] as $now) {
+            $rules = new StaffRules(graceMinutes: 15, now: CarbonImmutable::parse($now));
+            $this->assertTrue($rules->canHandOut('Confirmed'), $now);
+            $this->assertTrue($rules->canMarkNoShow('Confirmed'), $now);
         }
-        $this->assertFalse($this->at('23:59')->canHandOut('Confirmed', $tomorrow));
-        $this->assertFalse($this->at('00:00')->canMarkNoShow('Confirmed', $tomorrow));
-        // Midnight boundary: 23:59 today is still today, 00:00 tomorrow is not.
-        $this->assertFalse($this->at('23:59')->isFutureDay(CarbonImmutable::parse('2026-11-03 23:59')));
-        $this->assertTrue($this->at('23:59')->isFutureDay(CarbonImmutable::parse('2026-11-04 00:00')));
-    }
-
-    public function test_day_is_decided_in_the_clock_timezone_not_the_servers(): void
-    {
-        // 2026-11-03 20:00 UTC is already 2026-11-04 04:00 in Manila: a 2026-11-04 booking is "today" there.
-        $manila = new StaffRules(graceMinutes: 15, now: CarbonImmutable::parse('2026-11-03 20:00', 'UTC')->setTimezone('Asia/Manila'));
-        $start = CarbonImmutable::parse('2026-11-04 09:00', 'Asia/Manila');
-        $this->assertFalse($manila->isFutureDay($start));
-        $this->assertTrue($manila->canHandOut('Confirmed', $start));
-        $this->assertTrue($manila->isFutureDay(CarbonImmutable::parse('2026-11-05 00:30', 'Asia/Manila')));
     }
 
     public function test_hand_out_and_no_show_still_need_an_approved_booking(): void
     {
-        $this->assertFalse($this->at('11:00')->canHandOut('Pending', $this->start));      // not approved yet
-        $this->assertFalse($this->at('11:00')->canHandOut('InUse', $this->start));
-        $this->assertFalse($this->at('12:00')->canMarkNoShow('InUse', $this->start));     // they came
+        $this->assertFalse($this->at('11:00')->canHandOut('Pending'));      // not approved yet
+        $this->assertFalse($this->at('11:00')->canHandOut('InUse'));
+        $this->assertFalse($this->at('12:00')->canMarkNoShow('InUse'));     // they came
         foreach (['Completed', 'NoShow', 'Cancelled', 'Rejected'] as $status) {
-            $this->assertFalse($this->at('12:00')->canHandOut($status, $this->start), $status);
-            $this->assertFalse($this->at('12:00')->canMarkNoShow($status, $this->start), $status);
+            $this->assertFalse($this->at('12:00')->canHandOut($status), $status);
+            $this->assertFalse($this->at('12:00')->canMarkNoShow($status), $status);
         }
     }
 

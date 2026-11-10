@@ -1,5 +1,7 @@
 # Booking audit F-B: hand-out / no-show versus a concurrent move
 
+> **Note for the `sandbox` branch (2026-11-10).** The row lock and the locked re-read described here stay. The calendar-day rule they protected was removed (hand-out and no-show work on any day again), so a hand-out that meets a concurrent move now simply runs after it, on the moved booking. See [SANDBOX_CHANGES.md](../SANDBOX_CHANGES.md).
+
 **Status: merged into `dev` as PR #26 (merge commit `17720fb`, 2026-11-08).** Fix commit `f68510c`, tests `249203c`, this record `4d05ef0`.
 
 ## Defect

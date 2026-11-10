@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\ClassSchedule;
 use App\Models\Department;
 use App\Models\DepartmentConfig;
-use App\Models\ClassSchedule;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\Reservation;
@@ -12,6 +12,8 @@ use App\Models\Room;
 use App\Models\Section;
 use App\Models\Term;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -30,12 +32,19 @@ function status_offset(string $status): int
 final class GroupFeedbackTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Department $otherDepartment;
+
     private Room $room;
+
     private User $admin;
+
     private User $staff;
+
     private User $rep;
+
     private User $otherAdmin;
 
     protected function setUp(): void
@@ -153,7 +162,7 @@ final class GroupFeedbackTest extends TestCase
             $html = $this->as($user)->get('/account')->assertOk()->getContent();
 
             // Two independent native forms, each owning exactly one submit button, inside one action grid.
-            $dom = new \DOMDocument();
+            $dom = new \DOMDocument;
             @$dom->loadHTML($html);
             $xp = new \DOMXPath($dom);
             $forms = $xp->query('//div[contains(concat(" ", normalize-space(@class), " "), " rb-account-photo__forms ")]/form');
@@ -240,7 +249,7 @@ final class GroupFeedbackTest extends TestCase
     /** The classes of the calendar cell for a date, then its screen-reader text (never crosses into another cell). */
     private function cell(string $html, string $date): string
     {
-        $label = preg_quote(\Carbon\Carbon::parse($date)->format('l, F j'), '/');
+        $label = preg_quote(Carbon::parse($date)->format('l, F j'), '/');
         $this->assertSame(1, preg_match('/<td class="([^"]*)">((?:(?!<\/td>).)*?)<span class="sr-only">'.$label.'([^<]*)<\/span>/s', $html, $m), "cell for $date");
 
         return $m[1].' || '.$m[3];
@@ -248,7 +257,7 @@ final class GroupFeedbackTest extends TestCase
 
     public function test_today_and_selected_date_are_separate_markers_and_both_show_when_equal(): void
     {
-        $this->travelTo(\Carbon\Carbon::parse('2026-11-11 10:00', 'Asia/Manila'));   // a Wednesday: open
+        $this->travelTo(Carbon::parse('2026-11-11 10:00', 'Asia/Manila'));   // a Wednesday: open
         $other = $this->as($this->rep)->get('/rooms?date=2026-11-13')->assertOk()->getContent();
         $today = $this->cell($other, '2026-11-11');
         $this->assertStringContainsString('rb-availability__today', $today);
@@ -270,7 +279,7 @@ final class GroupFeedbackTest extends TestCase
     public function test_today_follows_the_application_timezone_not_utc(): void
     {
         // 00:30 on Nov 10 in Manila is still Nov 9 in UTC.
-        $this->travelTo(\Carbon\Carbon::parse('2026-11-10 00:30', 'Asia/Manila'));
+        $this->travelTo(Carbon::parse('2026-11-10 00:30', 'Asia/Manila'));
         $html = $this->as($this->rep)->get('/rooms?date=2026-11-10')->assertOk()->getContent();
         $this->assertStringContainsString('rb-availability__today', $this->cell($html, '2026-11-10'));
         $this->assertStringNotContainsString('rb-availability__today', $this->cell($html, '2026-11-09'));
@@ -278,7 +287,7 @@ final class GroupFeedbackTest extends TestCase
 
     public function test_a_closed_today_is_still_marked_but_cannot_be_picked(): void
     {
-        $this->travelTo(\Carbon\Carbon::parse('2026-11-15 10:00', 'Asia/Manila'));   // a Sunday: the department is closed
+        $this->travelTo(Carbon::parse('2026-11-15 10:00', 'Asia/Manila'));   // a Sunday: the department is closed
         $html = $this->as($this->rep)->get('/rooms')->assertOk()->getContent();
         $cell = $this->cell($html, '2026-11-15');
         $this->assertStringContainsString('rb-availability__today', $cell);
@@ -288,7 +297,7 @@ final class GroupFeedbackTest extends TestCase
 
     public function test_month_arrows_are_explained_and_inert_when_the_adjacent_month_cannot_be_picked(): void
     {
-        $this->travelTo(\Carbon\Carbon::parse('2026-11-09 10:00', 'Asia/Manila'));   // window: Nov 9 to Nov 23
+        $this->travelTo(Carbon::parse('2026-11-09 10:00', 'Asia/Manila'));   // window: Nov 9 to Nov 23
         $html = $this->as($this->rep)->get('/rooms')->assertOk()->getContent();
         $this->assertSame(2, preg_match_all('/<button type="button" class="[^"]*rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-(prev|next)-why"/', $html));
         $this->assertStringContainsString('Earlier months can’t be booked. The calendar starts today.', $html);
@@ -301,7 +310,7 @@ final class GroupFeedbackTest extends TestCase
 
     public function test_month_arrows_navigate_within_the_window_keep_the_search_and_stay_in_sync(): void
     {
-        $this->travelTo(\Carbon\Carbon::parse('2026-11-25 10:00', 'Asia/Manila'));   // window: Nov 25 to Dec 9
+        $this->travelTo(Carbon::parse('2026-11-25 10:00', 'Asia/Manila'));   // window: Nov 25 to Dec 9
         $html = $this->as($this->rep)->get('/rooms?from=09:00&to=10:00')->assertOk()->getContent();
         $this->assertStringContainsString('November 2026', $html);
         // Next: the first open day of December, with the search kept.
@@ -439,7 +448,7 @@ final class GroupFeedbackTest extends TestCase
         return EquipmentCategory::create(['department_id' => $department->id, 'name' => 'Cat-'.Str::random(8), 'sort_order' => 1]);
     }
 
-    private function item(EquipmentCategory $category, string $name = null): Equipment
+    private function item(EquipmentCategory $category, ?string $name = null): Equipment
     {
         return Equipment::create(['category_id' => $category->id, 'name' => $name ?? 'Item-'.Str::random(8), 'total_qty' => 5, 'max_per_request' => 2, 'sort_order' => 1, 'is_active' => true]);
     }
@@ -562,7 +571,7 @@ final class GroupFeedbackTest extends TestCase
         try {
             DB::transaction(fn () => DB::table('rooms')->where('id', $room->id)->delete());
             $this->fail('the foreign key should have refused');
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             $this->assertStringContainsString('foreign key', strtolower($e->getMessage()));
         }
         $this->assertNotNull(Room::find($room->id));

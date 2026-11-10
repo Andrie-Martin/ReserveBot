@@ -94,6 +94,11 @@
 
 .rb-booking .part-equipment > .field-label { margin-top: var(--rb-space-4); }
 
+/* Book: who borrows the equipment (name and ID number side by side; one under the other on phones). */
+.rb-booking .borrower-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-2) var(--rb-space-4); align-items: start; }
+.rb-booking .borrower-grid .hint { margin: var(--rb-space-1) 0 0; }
+@media (max-width: 40rem) { .rb-booking .borrower-grid { grid-template-columns: minmax(0, 1fr); } }
+
 /* Book: the chosen time. */
 .rb-booking .when-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); padding: .75rem var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
 .rb-booking .when-summary > div { min-width: 0; }

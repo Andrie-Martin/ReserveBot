@@ -5,7 +5,10 @@
     <x-ui.error-summary :bag="$errors->getBag('info')" />
     <div class="rb-grid">
       <div>
-        <x-ui.field field-id="name" label="Name" :error="$errors->getBag('info')->first('name')">
+        {{-- A block account's "name" is its representative: the block changes it here when a new one takes over --}}
+        <x-ui.field field-id="name" :label="$user->isBlock() ? 'Representative’s name' : 'Name'"
+            :hint="$user->isBlock() ? 'Who represents '.($user->section?->name ?? 'your block').' now. Change it when a new representative takes over.' : null"
+            :error="$errors->getBag('info')->first('name')">
           <x-ui.input name="name" maxlength="100" required :value="old('name', $user->name)" autocomplete="name" />
         </x-ui.field>
       </div>
@@ -21,19 +24,11 @@
 
       </div>
 
-      @if ($user->role !== 'admin')
-        <div>
-          <x-ui.field field-id="school_id" :label="'School ID number'.($user->role === 'lab_staff' ? ' (optional)' : '')" :error="$errors->getBag('info')->first('school_id')">
-          <x-ui.input name="school_id" maxlength="20" :value="old('school_id', $user->school_id)" placeholder="e.g. 2021-00123-MN-0" :required="$user->role === 'rep'" spellcheck="false" autocapitalize="characters" />
-        </x-ui.field>
-        </div>
-      @endif
-
       @if ($user->role === 'rep')
         <div>
           <span class="rb-field__label">Program and block</span>
           <p class="rb-account-readonly">{{ $user->section ? $user->program().' · '.$user->section->name : 'No block yet' }}</p>
-          <p class="rb-description">Set by your admin: your block decides which classes you can book for.</p>
+          <p class="rb-description">Set by your admin: the block decides which classes this account can book for.</p>
         </div>
       @elseif ($user->role === 'lab_staff')
         <div>

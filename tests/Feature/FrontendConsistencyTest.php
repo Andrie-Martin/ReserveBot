@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Section;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -21,11 +22,17 @@ use Tests\TestCase;
 final class FrontendConsistencyTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Department $otherDepartment;
+
     private Room $room;
+
     private User $admin;
+
     private User $staff;
+
     private User $rep;
 
     protected function setUp(): void
@@ -99,7 +106,7 @@ final class FrontendConsistencyTest extends TestCase
         return $this->booking('Pending', now()->addDays(3)->setTime(9, 0));
     }
 
-    private function workingDay(): \Illuminate\Support\Carbon
+    private function workingDay(): Carbon
     {
         $day = now()->addDays(2)->startOfDay();
         while ($day->isSunday()) {

@@ -108,7 +108,7 @@
         <li><strong>{{ Str::plural('Room', count($check['rooms']['shared'])) }} another department has:</strong> {{ implode(', ', $check['rooms']['shared']) }}. {{ count($check['rooms']['shared']) === 1 ? 'It’s' : 'They’re' }} shared with you, so bookings are checked against both timetables.</li>
       @endif
       @if ($check['blocks'])
-        <li><strong>New {{ Str::plural('block', count($check['blocks'])) }}:</strong> {{ implode(', ', $check['blocks']) }}. Check the spelling: reps are linked to blocks, and a misspelled block gets no reminders.</li>
+        <li><strong>New {{ Str::plural('block', count($check['blocks'])) }}:</strong> {{ implode(', ', $check['blocks']) }}. Check the spelling: block accounts are linked to blocks, and a misspelled block gets no reminders.</li>
       @endif
       @if ($check['courses'])
         <li><strong>New {{ Str::plural('course', count($check['courses'])) }}:</strong> {{ implode(', ', $check['courses']) }}.</li>
@@ -116,9 +116,9 @@
     </ul>
   @endif
 
-  {{-- 4. Reps left without classes --}}
+  {{-- 4. Block accounts left without classes --}}
   @if ($check['orphans'])
-    <h3 class="tt-section">Reps whose block has no class in it</h3>
+    <h3 class="tt-section">Block accounts whose block has no class in it</h3>
     <ul class="tt-adds">
       @foreach ($check['orphans'] as $block => $names)
         <li><strong>{{ $block }}:</strong> {{ implode(', ', $names) }}</li>
@@ -154,7 +154,7 @@
         @foreach ($check['sessions'] as $b)
           <li>
             <span class="mlist-when">{{ $b->start_time->format('D, M j') }} · {{ $b->start_time->format('g:i A') }}</span>
-            <span class="mlist-what">{{ $b->room?->name }} · {{ $b->classSchedule?->course?->code ?? 'Class' }} · {{ $b->user->name }}@if ($b->user->section) ({{ $b->user->section->name }})@endif</span>
+            <span class="mlist-what">{{ $b->room?->name }} · {{ $b->classSchedule?->course?->code ?? 'Class' }} · {{ $b->bookedBy() }}</span>
             <a href="{{ route('bookings.show', $b) }}">Open<span class="sr-only"> booking {{ $b->id }}</span></a>
           </li>
         @endforeach

@@ -17,8 +17,9 @@
     @endif
   </div>
   <div class="tcard-main">
-    <p class="tcard-title">{{ $r->room?->name ?? 'Equipment only' }} · {{ $r->user->name }}@if ($r->user->section) <span class="muted">({{ $r->user->section->name }})</span>@endif</p>
-    <p class="tcard-who"><x-avatar :user="$r->user" size="md" /> <span>@if ($r->user->school_id)School ID <span class="who-id-inline">{{ $r->user->school_id }}</span>@else No School ID yet @endif</span></p>
+    <p class="tcard-title">{{ $r->room?->name ?? 'Equipment only' }} · {{ $r->user->displayName() }}@if ($r->representativeName()) <span class="muted">(Rep: {{ $r->representativeName() }})</span>@endif</p>
+    {{-- Who to expect: for equipment, the borrower typed on the booking (check their ID); otherwise only the room's key --}}
+    <p class="tcard-who"><x-avatar :user="$r->user" size="md" /> <span>@if (! $r->hasEquipment())Room key only @elseif ($r->hasBorrower())Borrower: <strong>{{ $r->borrower_name }}</strong> · ID <span class="who-id-inline">{{ $r->borrower_id_number }}</span>@else Borrower not recorded @endif</span></p>
     <p class="tcard-reason">{{ $r->purpose }}@if ($r->classSchedule) <span class="muted">· {{ $r->classSchedule->course?->code ?? 'Class' }} class</span>@endif</p>
     @if ($r->hasEquipment())
       <p class="tcard-items">{{ $r->itemsText() }}</p>

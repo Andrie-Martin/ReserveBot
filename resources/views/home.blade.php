@@ -20,10 +20,15 @@
       {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
     </p>
   </header>
+  @include('home._login-notice')
   <div class="rb-dashboard__banner">
     <p class="rb-dashboard__banner-kicker">Your workspace</p>
     <p class="rb-dashboard__banner-text">{{ $intro }}</p>
   </div>
+
+  @if (! empty($setup) && ! $setup['complete'])
+    @include('home._setup')
+  @endif
 
   @if (! empty($stats))
     {{-- Three read-only counts for the viewer's own department; each says what it counts. --}}

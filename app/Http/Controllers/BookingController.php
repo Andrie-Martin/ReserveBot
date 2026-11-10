@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\Bookings;
+use App\Support\AccountRules;
 use App\Support\BookingRules;
 use App\Support\StaffRules;
 use Carbon\CarbonImmutable;
@@ -20,7 +21,8 @@ use Illuminate\View\View;
  * Phase 5: booking a room, equipment, or both, always with a reason.
  *
  * Step 1 (GET /book): what it's for (one of your classes, or something else) and when.
- * Step 2 (the same page, once "when" checks out): what you need, the room, the equipment and the reason.
+ * Step 2 (the same page, once "when" checks out): what you need, the room, the equipment, who will borrow the
+ * equipment (a name and an ID number, whenever the booking includes equipment) and the reason.
  * Sending step 2 (POST /book) checks everything again and saves the booking.
  */
 class BookingController extends Controller
@@ -94,6 +96,7 @@ class BookingController extends Controller
         $room = null;
         $items = [];        // [equipment id => how many]
         $otherItems = null;
+        $borrower = null;   // ['name' => ..., 'id' => ...]: who picks up the equipment (none for a room-only booking)
         $validator = Validator::make($request->all(), [
             'need' => ['required', Rule::in(array_keys(self::NEEDS))],
             'room' => ['nullable', 'integer'],
@@ -101,15 +104,19 @@ class BookingController extends Controller
             'qty.*' => ['nullable', 'integer', 'min:0', 'max:99'],
             'other_items' => ['nullable', 'string', 'max:200'],
             'purpose' => ['required', 'string', 'max:150'],
+            'borrower_name' => ['nullable', 'string', 'max:100'],
+            'borrower_id' => ['nullable', 'string', 'max:30'],
         ], [
             'need.*' => 'Choose what you need: room and equipment, room only, or equipment only.',
             'qty.*.*' => 'Pick how many of each item from the lists.',
             'purpose.required' => 'Please give a reason for the booking.',
             'purpose.max' => 'Keep the reason under 150 characters.',
             'other_items.max' => 'Keep the other items under 200 characters.',
+            'borrower_name.*' => 'Keep the borrower’s name under 100 characters.',
+            'borrower_id.*' => 'An ID number looks like 2021-00123-MN-0.',
         ]);
 
-        $validator->after(function ($validator) use ($request, $when, $user, &$room, &$items, &$otherItems) {
+        $validator->after(function ($validator) use ($request, $when, $user, &$room, &$items, &$otherItems, &$borrower) {
             $need = $request->input('need');
             if (! array_key_exists((string) $need, self::NEEDS)) {
                 return;     // the 'need' rule above already says what's wrong
@@ -145,6 +152,19 @@ class BookingController extends Controller
                 if (! $items && ! $otherItems) {
                     $validator->errors()->add('qty', $need === 'both' ? 'Pick at least one item, or choose Room only.' : 'Pick at least one item.');
                 }
+
+                // Who borrows the items: a name and a PUP ID number, on every booking that includes equipment
+                $name = (string) preg_replace('/\s+/u', ' ', trim((string) $request->input('borrower_name')));
+                $idNumber = AccountRules::schoolId($request->input('borrower_id'));
+                if ($name === '') {
+                    $validator->errors()->add('borrower_name', 'Type the name of the person who will borrow the equipment.');
+                }
+                if ($idNumber === '') {
+                    $validator->errors()->add('borrower_id', 'Type the borrower’s ID number, e.g. 2021-00123-MN-0.');
+                } elseif (! AccountRules::isSchoolId($idNumber) && ! $validator->errors()->has('borrower_id')) {
+                    $validator->errors()->add('borrower_id', 'An ID number looks like 2021-00123-MN-0.');
+                }
+                $borrower = ['name' => $name, 'id' => $idNumber];
             }
         });
 
@@ -159,6 +179,7 @@ class BookingController extends Controller
             'room' => $room,
             'items' => $items,
             'other_items' => $otherItems,
+            'borrower' => $borrower,
             'purpose' => trim($data['purpose']),
             'rules' => $rules,
         ]);

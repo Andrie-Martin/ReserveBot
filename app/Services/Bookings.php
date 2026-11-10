@@ -188,6 +188,9 @@ class Bookings
                 'end_time' => $b['end'],
                 'status' => $b['rules']->needsApproval ? 'Pending' : 'Confirmed',
                 'other_items' => $b['other_items'],
+                'borrower_name' => $b['borrower']['name'] ?? null,        // who picks up the equipment (none for room only)
+                'borrower_id_number' => $b['borrower']['id'] ?? null,
+                'rep_name' => $b['user']->representativeName(),   // the block's representative today; it can change later
             ]);
             $reservation->equipment()->attach(
                 collect($b['items'])->map(fn ($qty) => ['qty_requested' => $qty])->all()

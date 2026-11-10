@@ -13,7 +13,7 @@
     <li>
       <span class="mlist-when">{{ $b->start_time->format('D, M j') }} · {{ TimeSlots::span($from, $to) }}</span>
       <span class="mlist-what">
-        {{ $b->room?->name }} · “{{ $b->purpose }}” <span class="muted">({{ $b->user->name }}@if ($b->user->section), {{ $b->user->section->name }}@endif)</span>
+        {{ $b->room?->name }} · “{{ $b->purpose }}” <span class="muted">({{ $b->bookedBy() }})</span>
         <span class="extra">
           @if ($row['type'] === 'Blocked')
             The timetable says the room isn’t available then ({{ TimetableRules::span($row) }}{{ $row['note'] ? ', '.$row['note'] : '' }}).

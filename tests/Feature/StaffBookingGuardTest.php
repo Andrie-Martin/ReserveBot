@@ -17,17 +17,24 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * QA F-07: hand-out and no-show are refused for a booking on a future calendar day (Asia/Manila), whatever
- * the client sends; same-day (even early) and past bookings, and every return, keep working.
+ * Hand-out and no-show work for an approved booking on any day: a future day, the booking's own day (even early)
+ * and a past day, and so does every return. The future-day refusal that QA F-07 added was taken out again on the
+ * project owner's decision, so lab staff and admins can always step in by hand. Statuses, roles and departments
+ * are still enforced, whatever the client sends.
  * Needs a disposable MariaDB: set RB_STAFF_HTTP_TESTS=1 (tests/Support/run-db-tests.sh does everything).
  */
 class StaffBookingGuardTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Section $section;
+
     private Room $room;
+
     private User $rep;
+
     private User $staff;
 
     protected function setUp(): void
@@ -106,15 +113,15 @@ class StaffBookingGuardTest extends TestCase
 
     // ---- hand-out ----
 
-    public function test_future_day_booking_cannot_be_handed_out_even_by_a_crafted_post(): void
+    public function test_future_day_booking_can_be_handed_out(): void
     {
         foreach (['2026-11-05 00:00', '2026-11-05 13:00', '2026-11-09 13:00'] as $start) {
             $r = $this->booking($start);
             $this->actingAs($this->staff)->from('/today')->post(route('bookings.hand-out', $r))
                 ->assertRedirect('/today')
-                ->assertSessionHas('problem', fn ($m) => str_contains($m, 'can’t be handed out yet') && str_contains($m, '#'.$r->id));
-            $this->assertSame('Confirmed', $this->statusOf($r), $start);
-            $this->assertSame(0, OverrideLog::where('reservation_id', $r->id)->count());
+                ->assertSessionHas('status', fn ($m) => str_contains($m, 'Handed out booking #'.$r->id));
+            $this->assertSame('InUse', $this->statusOf($r), $start);
+            $this->assertSame(1, OverrideLog::where('reservation_id', $r->id)->count());
         }
     }
 
@@ -134,30 +141,29 @@ class StaffBookingGuardTest extends TestCase
         $this->assertSame('InUse', $this->statusOf($r));
     }
 
-    public function test_midnight_in_manila_decides_the_day(): void
+    public function test_midnight_makes_no_difference(): void
     {
         Carbon::setTestNow(CarbonImmutable::parse('2026-11-04 23:59', 'Asia/Manila'));
         CarbonImmutable::setTestNow(Carbon::now());
         $today = $this->booking('2026-11-04 23:30');
         $tomorrow = $this->booking('2026-11-05 00:00');
-        $this->actingAs($this->staff)->post(route('bookings.hand-out', $tomorrow));
-        $this->post(route('bookings.hand-out', $today));
-        $this->assertSame('Confirmed', $this->statusOf($tomorrow));
+        $this->actingAs($this->staff)->post(route('bookings.hand-out', $tomorrow))->assertSessionHas('status');
+        $this->post(route('bookings.hand-out', $today))->assertSessionHas('status');
+        $this->assertSame('InUse', $this->statusOf($tomorrow));
         $this->assertSame('InUse', $this->statusOf($today));
     }
 
     // ---- no-show ----
 
-    public function test_no_show_follows_the_same_day_rule(): void
+    public function test_no_show_works_on_any_day(): void
     {
         $future = $this->booking('2026-11-06 10:00');
         $today = $this->booking('2026-11-04 15:00');
         $past = $this->booking('2026-11-01 10:00');
-        $this->actingAs($this->staff)->from('/today')->post(route('bookings.no-show', $future))
-            ->assertSessionHas('problem', fn ($m) => str_contains($m, 'can’t be a no-show yet'));
+        $this->actingAs($this->staff)->from('/today')->post(route('bookings.no-show', $future))->assertSessionHas('status');
         $this->post(route('bookings.no-show', $today))->assertSessionHas('status');
         $this->post(route('bookings.no-show', $past))->assertSessionHas('status');
-        $this->assertSame('Confirmed', $this->statusOf($future));
+        $this->assertSame('NoShow', $this->statusOf($future));
         $this->assertSame('NoShow', $this->statusOf($today));
         $this->assertSame('NoShow', $this->statusOf($past));
     }
@@ -249,37 +255,38 @@ class StaffBookingGuardTest extends TestCase
         $this->assertSame('InUse', $this->statusOf($inUse));
     }
 
-    public function test_admin_is_bound_by_the_same_day_rule(): void
+    public function test_admin_can_hand_out_on_any_day_too(): void
     {
         $future = $this->booking('2026-11-05 10:00');
         $today = $this->booking('2026-11-04 13:00');
         $this->actingAs($this->user('admin'));
-        $this->post(route('bookings.hand-out', $future))->assertSessionHas('problem');
+        $this->post(route('bookings.hand-out', $future))->assertSessionHas('status');
         $this->post(route('bookings.hand-out', $today))->assertSessionHas('status');
-        $this->assertSame('Confirmed', $this->statusOf($future));
+        $this->assertSame('InUse', $this->statusOf($future));
         $this->assertSame('InUse', $this->statusOf($today));
     }
 
     // ---- UI ----
 
-    public function test_future_day_shows_a_note_instead_of_the_buttons_and_today_keeps_them(): void
+    public function test_the_buttons_show_on_a_future_day_and_today_alike(): void
     {
         $future = $this->booking('2026-11-05 10:00');
         $today = $this->booking('2026-11-04 13:00');
 
-        $page = $this->actingAs($this->staff)->get('/today?date=2026-11-05')->assertOk();
-        $page->assertSee('Hand out and no-show open on Thursday, November 5.')
-            ->assertDontSee(route('bookings.hand-out', $future), false)
-            ->assertDontSee(route('bookings.no-show', $future), false);
+        $this->actingAs($this->staff)->get('/today?date=2026-11-05')->assertOk()
+            ->assertSee(route('bookings.hand-out', $future), false)
+            ->assertSee(route('bookings.no-show', $future), false)
+            ->assertSee('The buttons work at any time, on any day.')
+            ->assertDontSee('open on Thursday');
 
         $this->get('/today')->assertOk()
             ->assertSee(route('bookings.hand-out', $today), false)
-            ->assertSee(route('bookings.no-show', $today), false)
-            ->assertDontSee('open on Thursday');
+            ->assertSee(route('bookings.no-show', $today), false);
 
         $this->get(route('bookings.show', $future))->assertOk()
-            ->assertSee('Hand out and no-show open on Thursday, November 5.')
-            ->assertDontSee(route('bookings.hand-out', $future), false);
+            ->assertSee(route('bookings.hand-out', $future), false)
+            ->assertSee(route('bookings.no-show', $future), false)
+            ->assertDontSee('Hand out and no-show open on');
         $this->get(route('bookings.show', $today))->assertOk()->assertSee(route('bookings.hand-out', $today), false);
     }
 }

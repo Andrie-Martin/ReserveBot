@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             BscpeSeeder::class,      // the BSCpE department: rooms, timetable, equipment
             TestDataSeeder::class,   // test accounts and sample reservations (not for real use)
+            CollegeAdminSeeder::class,  // the test College admin, who makes the departments' Admin accounts (not for real use)
         ]);
     }
 }

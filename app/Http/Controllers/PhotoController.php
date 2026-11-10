@@ -10,14 +10,17 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Phase 9: shows a profile photo. Only the account itself and the lab staff and admins of its
- * department can see it (staff use it to check who picks up a key). Everyone else gets "not found".
+ * department can see it (staff use it to check who picks up a key), plus the College admin for the
+ * department Admins it looks after. Everyone else gets "not found".
  */
 class PhotoController extends Controller
 {
     public function show(Request $request, User $user): BinaryFileResponse
     {
         $viewer = $request->user();
-        $allowed = $viewer->is($user) || ($viewer->role !== 'rep' && $viewer->department_id === $user->department_id);
+        $allowed = $viewer->is($user)
+            || (in_array($viewer->role, ['lab_staff', 'admin'], true) && $viewer->department_id === $user->department_id)
+            || ($viewer->isCollegeAdmin() && $user->role === 'admin');
         abort_unless($allowed && $user->photo_path && Storage::disk(Photos::DISK)->exists($user->photo_path), 404);
 
         // Browsers may keep it a week (its address changes whenever the photo does), but shared caches may not

@@ -424,7 +424,7 @@ fs.writeFileSync(photoFile, png);
       const res = await go(page, url);
       assert.ok(res.status() < 400, `${role} ${url}: ${res.status()}`);
       assert.ok(await page.locator('.rb-masthead').first().innerText().then(t => /College of Engineering/i.test(t)), `${role} ${url}: global identity`);
-      assert.ok(/Computer Engineering Department|Block rep|Lab staff|Admin/.test(await page.locator('body').innerText()), `${role} ${url}: user-specific department/role text retained`);
+      assert.ok(/Computer Engineering Department|Block account|Lab staff|Admin/.test(await page.locator('body').innerText()), `${role} ${url}: user-specific department/role text retained`);
       assert.ok((await overflow(page)) <= 0, `${role} ${url}: no overflow at 1438`);
     }
     await context.close();

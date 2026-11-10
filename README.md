@@ -89,20 +89,36 @@ so they work right away (`@reservebot.test` addresses can't receive email).
 
 | Email | Role |
 |---|---|
-| rep1@reservebot.test | Block rep, BSCPE 4-5 (Bea Prieto) |
-| rep2@reservebot.test | Block rep, BSCPE 3-1 (Maria Santos) |
+| rep1@reservebot.test | Block account of BSCPE 4-5 (representative: Bea Prieto) |
+| rep2@reservebot.test | Block account of BSCPE 3-1 (representative: Maria Santos) |
 | staff@reservebot.test | Lab staff |
-| admin@reservebot.test | Admin |
+| admin@reservebot.test | Admin (of the Computer Engineering Department) |
+| college@reservebot.test | College admin (makes each department's Admin accounts) |
+
+The College admin test account is new. A database that was built before it existed gets it with
+`php artisan db:seed --class=CollegeAdminSeeder` (Docker: put `docker compose exec app` in front).
 
 ## Accounts and email
 
-- Admins make the block rep and lab staff accounts on the **Accounts** page, with a starting
+- There are four kinds of account. The **College admin** is college-wide: it sees every department,
+  adds departments, and makes, edits, turns off and resets the password of each department's
+  **Admin** accounts. It does nothing inside a department (no bookings, rooms or equipment). A department's Admins run that department: they
+  make its **lab staff** and **block** accounts. Make a real College admin on the server with
+  `php artisan college-admin:make "CEA Dean's Office" someone@gmail.com`; it asks for a starting
+  password, which the person replaces at the first login.
+- Admins make the block accounts and lab staff accounts on the **Accounts** page, with a starting
   password they give to the person. The person picks their own password at the first login.
   Deleting an account that has bookings turns it off instead, so its history stays.
-- Everyone has **My account** (click your name at the top): photo, name, email, School ID,
-  and a Password tab. **Forgot your password?** on the login page emails a link.
-- New accounts get an email with a **Connect my email** button. Block reps can't book until
-  they click it, and their email must be Gmail or PUP webmail (`@iskolarngbayan.pup.edu.ph`).
+- A **block account** belongs to its block (BSCPE 4-5, say), not to one person, and each block has
+  one. The block's **representative** is named on the account. The admin (Accounts) or the block
+  itself (My account) changes the name when a new representative takes over; every booking keeps
+  the representative it was made under.
+- Everyone has **My account** (click your name at the top): photo, name, email,
+  and a Password tab. No profile has an ID number: instead, every booking that includes
+  equipment asks for the **borrower's name and PUP ID number** (like 2021-00123-MN-0), and lab
+  staff see them where they approve and hand out. **Forgot your password?** on the login page emails a link.
+- New accounts get an email with a **Connect my email** button. Block accounts can't book until
+  it is clicked, and their email must be Gmail or PUP webmail (`@iskolarngbayan.pup.edu.ph`).
 - Photos are kept in `storage/app/private/photos` (in Docker, in the `photos` volume). Only the
   person and their department's lab staff and admins can see them.
 
@@ -135,7 +151,7 @@ was opened with, so while you test on `localhost`, open them on the same PC.
 
 ## Reminders and the face-to-face check
 
-Block reps get emails 1 day, 5 hours and 1 hour before:
+Block accounts get emails 1 day, 5 hours and 1 hour before:
 
 - **their approved bookings** (a reminder), and
 - **their block's classes**, asking *"Is it face-to-face?"*. **Online** frees the class's room
@@ -220,15 +236,23 @@ Other examples: `StartTime` → `start_time`, `PasswordHash` → `password`,
 
 Added since then: `class_checks` and `reminder_log` (the face-to-face answers and the
 reminders already sent), and `timetable_drafts` and `timetable_backups` (a new timetable in
-progress, and the timetables it replaced).
+progress, and the timetables it replaced). On the `sandbox` branch, `reservations` gained
+`rep_name` (the block's representative when it was booked) and `borrower_name` /
+`borrower_id_number` (who borrows the equipment), and `users.school_id` was removed.
 
 Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is logged in),
 `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`.
 
 ### Adding a department
 
-Copy `database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of
-that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder`.
+**On the site:** the College admin opens **Departments → + Add a department**, types its name, and then
+gives it an Admin. The department starts empty, with the usual booking rules; its Admin adds the rooms,
+timetable, equipment and accounts.
+
+**With a file** (when you already have the whole timetable as data): copy
+`database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of that file. It ends
+with one command, e.g. `php artisan db:seed --class=EceSeeder`. The department then shows on the
+College admin's Departments page too (the `accounts()` list in the seeder can stay empty).
 
 ## Folders
 
@@ -252,6 +276,30 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | `Dockerfile`, `docker-compose.yml`, `docker/` | The Docker setup |
 | `storage/app/private/photos/` | Profile photos (never committed) |
 | `.env` | Your own settings and secrets. Never committed. |
+
+## Going online (not yet)
+
+The site still runs on one PC. Before it is opened to other people through a tunnel or a proxy (ngrok, a campus
+reverse proxy), set **`TRUSTED_PROXIES`** in `.env`.
+
+Why: the login page locks out a network address after too many wrong passwords (5 for one account, 20 in all, per
+minute). Behind a tunnel every visitor reaches the site from the tunnel's own address, so they would all share one
+count and could lock each other out. `TRUSTED_PROXIES` tells Laravel which address is the tunnel, so it reads each
+visitor's real address from it instead.
+
+1. Find the address the tunnel connects from:
+   - **XAMPP / `php artisan serve`, ngrok on the same PC:** `127.0.0.1` (add `::1` too: `TRUSTED_PROXIES=127.0.0.1,::1`).
+   - **Docker:** open the site once through the tunnel and look at the newest request line in the `docker compose up`
+     window. It starts with the address that connected (usually the Docker network's gateway, like `172.18.0.1`).
+2. Put it in `.env`, e.g. `TRUSTED_PROXIES=172.18.0.1`, and restart the site (`docker compose up`, or stop and start
+   `php artisan serve`).
+3. Check it: log in from a phone through the tunnel, then open the `sessions` table in phpMyAdmin. The newest row's
+   `ip_address` should be the phone's address, not `127.0.0.1` or `172.…`.
+
+Only exact addresses or ranges work (commas between several). `*` ("trust everyone") is refused on purpose: with it
+anyone could fake their address and get around the lockout. Leave the setting empty while the site is only on your PC.
+
+Also before going online: set `APP_DEBUG=false` and `APP_URL` to the real address, and remove or protect `/test-db`.
 
 ## Messenger bot (paused)
 

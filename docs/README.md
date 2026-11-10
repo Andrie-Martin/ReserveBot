@@ -11,6 +11,7 @@ and are *not* edited to look current (several carry a status banner pointing to 
 | Document | Use it for |
 |---|---|
 | [frontend/QA_HANDOFF.md](frontend/QA_HANDOFF.md) | What is merged, what was tested and how, open risks, how to review `dev` by hand |
+| [SANDBOX_CHANGES.md](SANDBOX_CHANGES.md) | **`sandbox` branch only (2026-11-10):** the project owner's list of fixes on top of `dev`, one commit each: block accounts, the borrower on equipment bookings, the College admin, login fixes. Not merged into `dev` or `main`. |
 | [frontend/LOGIN_CARD_AND_PAGE_LOAD_FIXES.md](frontend/LOGIN_CARD_AND_PAGE_LOAD_FIXES.md) | PR #27 (login maroon card) and PR #28 (page-load flicker): root causes, fixes, evidence |
 | [../AGENTS.md](../AGENTS.md) and [../CLAUDE.md](../CLAUDE.md) | Rules for AI-assisted work in this repository |
 

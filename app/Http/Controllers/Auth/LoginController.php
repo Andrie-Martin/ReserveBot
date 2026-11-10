@@ -8,10 +8,10 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -21,10 +21,15 @@ class LoginController extends Controller
     // (or, for an address that matches nothing, on its canonical form), and every reply looks the same for real and
     // made-up emails.
     public const MAX_FAILURES_PER_ACCOUNT_AND_IP = 5;   // same email from the same IP
+
     public const MAX_FAILURES_PER_IP = 20;              // one IP trying many emails
+
     public const DECAY_SECONDS = 60;
+
     private const LOCK_SECONDS = 10;        // longest one attempt may hold its account's turn
+
     private const LOCK_WAIT_SECONDS = 5;    // longest an attempt waits for its turn before being refused
+
     private const ADMISSION_WAIT_SECONDS = 3.0;   // longest an attempt waits for in-flight attempts from its IP to settle
 
     /**
@@ -64,6 +69,12 @@ class LoginController extends Controller
     {
         $email = Str::lower(trim((string) $request->input('email')));
         $password = (string) $request->input('password');
+
+        // A browser keeps one login, shared by all its tabs. If this one is already logged in, that account stays
+        // and nothing typed here is checked or counted; the person is told why (sandbox issue 10).
+        if ($current = $request->user()) {
+            return $this->alreadyLoggedIn($current, $email);
+        }
 
         // Resolve the account with the same comparison Auth::attempt uses (the database collation), so that
         // spellings the database treats as one address cannot be spread over several counters.
@@ -124,6 +135,24 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         return redirect($request->user()->homeUrl());
+    }
+
+    /**
+     * The login form was sent from a browser that is already logged in (it was open in another tab or window).
+     * The first account stays logged in. Typing that same account's email just goes to its home page; any other
+     * email gets a message saying why it wasn't used and how to use two accounts at once. The typed email and
+     * password are never checked here, so the reply is the same for real and made-up accounts.
+     */
+    private function alreadyLoggedIn(User $current, string $typedEmail): RedirectResponse
+    {
+        $home = redirect($current->homeUrl());
+        if ($typedEmail === '' || $typedEmail === Str::lower($current->email)) {
+            return $home;
+        }
+
+        // Shown at the top of the home page (resources/views/home/_login-notice.blade.php)
+        return $home->with('login_notice', 'This browser is already logged in as '.$current->displayName().' ('.$current->roleLabel().'), so the other login was not used. '
+            .'To switch accounts, log out first. To use two accounts at the same time, open the second one in a private window or in another browser.');
     }
 
     private function tooManyAttempts(Request $request, string $email, string $accountKey, string $ipKey): RedirectResponse
@@ -187,13 +216,19 @@ class LoginController extends Controller
         return false;
     }
 
-    /** Gives up this attempt's in-flight place (never below zero; nothing if the short-lived counter has expired). */
+    /**
+     * Gives up this attempt's in-flight place. The step down is one atomic decrement, so two attempts leaving at the
+     * same moment can never both act on the same stale reading. If that step took the counter below zero (it expired
+     * and started again while this attempt was in flight), the step is given straight back: the counter never stays negative.
+     */
     private function leaveIp(string $ipKey): void
     {
         $cache = Cache::store(config('cache.limiter'));
         $inFlightKey = $ipKey.':inflight';
-        if ((int) $cache->get($inFlightKey, 0) > 0) {
-            $cache->decrement($inFlightKey);
+        $cache->add($inFlightKey, 0, self::LOCK_SECONDS * 2);   // an expired counter starts again from zero, with its short life
+        $left = $cache->decrement($inFlightKey);
+        if ($left !== false && (int) $left < 0) {
+            $cache->increment($inFlightKey);
         }
     }
 

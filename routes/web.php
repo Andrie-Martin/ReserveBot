@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClassCheckController;
+use App\Http\Controllers\CollegeController;
 use App\Http\Controllers\EmailLinkController;
 use App\Http\Controllers\ManageEquipmentController;
 use App\Http\Controllers\ManageRoomsController;
@@ -25,7 +26,6 @@ use Illuminate\Support\Facades\Route;
 // 'guest' = only for people who aren't logged in (others go to their home page)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
 
     // Phase 9: "Forgot password?" emails a link to pick a new one
     Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
@@ -33,6 +33,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:reset-password')->name('password.update');
 });
+// Not 'guest': a browser that is already logged in (the form was still open in another tab) is told so,
+// instead of the new login being dropped without a word. See LoginController::login.
+Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // Phase 9: the button in the "connect your email" email. 'signed' = only the exact link we sent,
@@ -67,10 +70,10 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
     Route::put('/account/password', [PasswordController::class, 'update'])->name('password.change');
     Route::get('/photos/{user}', [PhotoController::class, 'show'])->name('photos.show');
 
-    // Phase 4: which rooms are free (every role)
-    Route::get('/rooms', [AvailabilityController::class, 'index'])->name('rooms');
+    // Phase 4: which rooms are free (every role of a department; the College admin has no department)
+    Route::get('/rooms', [AvailabilityController::class, 'index'])->middleware('role:rep,lab_staff,admin')->name('rooms');
 
-    // Phase 5: booking a room, equipment, or both (block reps)
+    // Phase 5: booking a room, equipment, or both (block accounts; the role key is still 'rep')
     Route::middleware('role:rep')->group(function () {
         // Phase 9: only after the rep's Gmail or PUP webmail is connected
         Route::middleware('email.connected')->group(function () {
@@ -87,8 +90,8 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
             ->where('date', '\d{4}-\d{2}-\d{2}')->name('classes.answer');
     });
 
-    // One booking: the rep who made it, and their department's lab staff and admins
-    Route::get('/bookings/{reservation}', [BookingController::class, 'show'])->name('bookings.show');
+    // One booking: the block that made it, and its department's lab staff and admins
+    Route::get('/bookings/{reservation}', [BookingController::class, 'show'])->middleware('role:rep,lab_staff,admin')->name('bookings.show');
 
     // Phase 6: lab staff and admins approve or reject requests
     Route::middleware('role:lab_staff,admin')->group(function () {
@@ -150,7 +153,7 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         });
     });
 
-    // Block reps
+    // Block accounts
     Route::prefix('rep')->name('rep.')->middleware('role:rep')->group(function () {
         Route::get('/', [RepController::class, 'home'])->name('home');
     });
@@ -165,7 +168,25 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         Route::get('/', [AdminController::class, 'home'])->name('home');
     });
 
-    // Phase 9 (admins only): the department's rep and lab staff accounts
+    // The College admin (sandbox issue 8): every department at a glance, adding a department, and each department's
+    // Admin accounts. Nothing inside a department: it can't approve bookings, manage rooms or make block and lab staff accounts.
+    Route::prefix('college')->name('college.')->middleware('role:college_admin')->group(function () {
+        Route::get('/', [CollegeController::class, 'home'])->name('home');
+        Route::post('/departments', [CollegeController::class, 'storeDepartment'])->name('departments.store');
+        Route::get('/departments/{department}', [CollegeController::class, 'department'])->name('departments.show');
+        Route::put('/departments/{department}', [CollegeController::class, 'updateDepartment'])->name('departments.update');
+        Route::post('/departments/{department}/admins', [CollegeController::class, 'store'])->name('admins.store');
+        // Assigning an existing Admin to another department: from the department's page (pick the Admin) ...
+        Route::post('/departments/{department}/admins/move', [CollegeController::class, 'moveHere'])->name('admins.move-here');
+        Route::get('/admins/{account}', [CollegeController::class, 'edit'])->name('admins.edit');
+        Route::put('/admins/{account}', [CollegeController::class, 'update'])->name('admins.update');
+        Route::put('/admins/{account}/password', [CollegeController::class, 'password'])->name('admins.password');
+        // ... or from the Admin's own page (pick the department)
+        Route::put('/admins/{account}/department', [CollegeController::class, 'move'])->name('admins.move');
+        Route::delete('/admins/{account}', [CollegeController::class, 'destroy'])->name('admins.destroy');
+    });
+
+    // Phase 9 (admins only): the department's block accounts and lab staff accounts
     Route::prefix('accounts')->name('accounts.')->middleware('role:admin')->group(function () {
         Route::get('/', [AccountsController::class, 'index'])->name('index');
         Route::post('/', [AccountsController::class, 'store'])->name('store');

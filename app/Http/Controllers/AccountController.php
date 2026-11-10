@@ -12,9 +12,11 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Phase 9: My account, Information tab, for everyone: photo, name, email and, for reps and lab
- * staff, School ID and program/section. A rep's block is set by an admin (it decides which
- * classes they can book for). Changing the email needs the current password and a new link.
+ * Phase 9: My account, Information tab, for everyone: photo, name, email and, for block accounts and lab
+ * staff, program/section. (No ID number here anymore: it is asked for the borrower on equipment bookings.)
+ * A block account's "name" is the block's representative, which the
+ * block can change here when a new representative takes over. Its block is set by an admin (it decides which
+ * classes it can book for). Changing the email needs the current password and a new link.
  */
 class AccountController extends Controller
 {
@@ -40,21 +42,19 @@ class AccountController extends Controller
             'email' => AccountFields::email($user->role, $user->id, keep: $user->email),
             'current_password' => $emailChanged ? ['required', 'current_password'] : ['nullable'],
         ];
-        if ($user->role !== 'admin') {
-            $rules['school_id'] = AccountFields::schoolId($user->role === 'rep', $user->id);
-        }
         if ($user->role === 'lab_staff') {
             $rules['section_id'] = ['nullable', 'integer', 'exists:sections,id'];
         }
         $data = $request->validateWithBag('info', $rules, [
             'current_password.required' => 'Type your current password to change your email.',
             'section_id.*' => 'Pick your section from the list.',
-        ] + AccountFields::MESSAGES);
+        ] + ($user->isBlock() ? [
+            'name.required' => 'Type the name of your block’s representative.',
+            'name.max' => 'Keep the representative’s name under 100 characters.',
+        ] : []) + AccountFields::MESSAGES);
 
+        $newRepresentative = $user->isBlock() && $data['name'] !== $user->name;
         $user->name = $data['name'];
-        if ($user->role !== 'admin') {
-            $user->school_id = $data['school_id'] ?? null;
-        }
         if ($user->role === 'lab_staff') {
             $user->section_id = $data['section_id'] ?? null;
         }
@@ -64,14 +64,18 @@ class AccountController extends Controller
         }
         $user->save();
 
+        // A block that changed its representative is told so in plain words
+        $saved = $newRepresentative
+            ? 'Saved. '.$user->displayName().'’s representative is now '.$user->name.'.'
+            : null;
         if (! $emailChanged) {
-            return redirect()->route('account')->with('status', 'Saved your information.');
+            return redirect()->route('account')->with('status', $saved ?? 'Saved your information.');
         }
         if (! $user->sendConnectEmail()) {
             return redirect()->route('account')->with('problem', 'Saved, but the email to '.$user->email.' couldn’t be sent. Try “Send the link again” in a while.');
         }
 
-        return redirect()->route('account')->with('status', 'Saved. We sent a link to '.$user->email.': click it to connect your new email.'
+        return redirect()->route('account')->with('status', ($saved ?? 'Saved.').' We sent a link to '.$user->email.': click it to connect your new email.'
             .($user->role === 'rep' ? ' Until then you can’t book.' : ''));
     }
 

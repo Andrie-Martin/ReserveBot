@@ -144,3 +144,22 @@
 .rb-dashboard__stats .rb-stat-card__note { margin: 0; color: var(--rb-text-secondary); font-size: var(--rb-text-caption); line-height: var(--rb-leading-body); }
 @media (max-width: 56rem) { .rb-dashboard__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 40rem) { .rb-dashboard__stats { grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-2); } }
+
+
+/* "Set up your department": the steps a new department still has to do (home/_setup.blade.php). */
+.rb-dashboard__setup { background: var(--rb-surface-panel); }
+.rb-dashboard__setup h2 { margin-bottom: var(--rb-space-2); }
+.rb-setup__intro { margin: 0 0 var(--rb-space-4); color: var(--rb-text-secondary); font-size: var(--rb-text-small); }
+.rb-setup { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rb-border-warm); }
+.rb-setup__step { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--rb-space-2) var(--rb-space-4); padding: var(--rb-space-4) 0; border-bottom: 1px solid var(--rb-border-warm); }
+.rb-setup__what { min-width: 0; }
+.rb-setup__title { margin: 0; font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); overflow-wrap: anywhere; }
+.rb-setup__count { font-weight: var(--rb-weight-regular); color: var(--rb-text-secondary); }
+.rb-setup__text { margin: var(--rb-space-1) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
+.rb-setup__who { font-size: var(--rb-text-small); color: var(--rb-text-secondary); text-align: right; }
+.rb-setup__note { margin: var(--rb-space-4) 0 0; font-size: var(--rb-text-small); color: var(--rb-text-muted); }
+@media (max-width: 40rem) {
+  .rb-setup__step { grid-template-columns: minmax(0, 1fr); }
+  .rb-setup__link { justify-self: start; }
+  .rb-setup__who { text-align: left; }
+}
