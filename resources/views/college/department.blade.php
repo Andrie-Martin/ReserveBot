@@ -60,6 +60,29 @@
   </details>
   </div>
 
+  @if ($otherAdmins->isNotEmpty())
+    {{-- Assign an Admin of another department to this one. The same can be done from that Admin's own page. --}}
+    <div class="rb-booking__panel" id="move">
+    <h2>Move an existing Admin here</h2>
+    <form method="post" action="{{ route('college.admins.move-here', $department) }}" class="mform">
+      @csrf
+      @php $moveBag = $errors->getBag('move'); @endphp
+      @if ($moveBag->any())<div id="move-errors">@include('manage._errors', ['bag' => $moveBag])</div>@endif
+      <div class="inline-form">
+        <label for="move-account" class="sr-only">Admin to move here</label>
+        <select id="move-account" name="account_id" required @if ($moveBag->any()) autofocus aria-invalid="true" aria-describedby="move-errors" @endif>
+          <option value="">Pick an Admin…</option>
+          @foreach ($otherAdmins as $person)
+            <option value="{{ $person->id }}" @selected((int) old('account_id') === $person->id)>{{ $person->name }} · now in {{ $person->department->name }}@unless ($person->is_active) (turned off)@endunless</option>
+          @endforeach
+        </select>
+        <button type="submit" class="btn-small">Move here</button>
+      </div>
+      <p class="hint">The Admin keeps the same account, email and password. From their next click they run {{ $department->name }} and no longer see their old department. We email them about it.</p>
+    </form>
+    </div>
+  @endif
+
   <div class="rb-booking__panel">
     <h2>Admins <span class="count">{{ $admins->count() }}</span></h2>
     @if ($admins->isEmpty())

@@ -80,6 +80,29 @@
   </form>
   </div>
 
+  <div class="rb-booking__panel" id="department">
+  <h2>Department</h2>
+  <form method="post" action="{{ route('college.admins.move', $account) }}" class="mform">
+    @csrf
+    @method('PUT')
+    @php $moveBag = $errors->getBag('move'); @endphp
+    @if ($moveBag->any())<div id="move-errors">@include('manage._errors', ['bag' => $moveBag])</div>@endif
+    <div class="inline-form">
+      <label for="move-department" class="sr-only">Department</label>
+      <select id="move-department" name="department_id" required @if ($moveBag->any()) autofocus aria-invalid="true" aria-describedby="move-errors" @endif>
+        @foreach ($departments as $option)
+          <option value="{{ $option->id }}" @selected((int) ($moveBag->any() ? old('department_id') : $account->department_id) === $option->id)>{{ $option->name }}@if ($option->id === $account->department_id) (now)@endif</option>
+        @endforeach
+      </select>
+      <button type="submit" class="btn-small">Move to this department</button>
+    </div>
+    <p class="hint">Assigns {{ $account->name }} to another department, for example a new one. The account, its email and its password stay the same. From their next click they run that department and no longer see {{ $account->department->name }}. We email them about it.</p>
+    @if ($account->is_active && $otherActiveAdmins === 0)
+      <p class="hint">This is the only Admin of {{ $account->department->name }} who can log in. Moving them leaves that department with nobody to run it.</p>
+    @endif
+  </form>
+  </div>
+
   <div class="rb-booking__panel">
   <h2>Set a new password</h2>
   <form method="post" action="{{ route('college.admins.password', $account) }}" class="mform">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\AdminMoved;
 use App\Notifications\ConnectEmail;
 use App\Notifications\ResetPasswordLink;
 use App\Support\AccountRules;
@@ -177,6 +178,20 @@ class User extends Authenticatable
             return true;
         } catch (Throwable $e) {
             report($e);     // the reason goes to the log (storage/logs/laravel.log)
+
+            return false;
+        }
+    }
+
+    /** Emails an Admin that the College admin moved them to another department. False if the email couldn't be sent. */
+    public function sendMovedEmail(Department $from, Department $to): bool
+    {
+        try {
+            $this->notify(new AdminMoved($from, $to));
+
+            return true;
+        } catch (Throwable $e) {
+            report($e);
 
             return false;
         }

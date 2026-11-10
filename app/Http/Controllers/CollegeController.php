@@ -112,6 +112,10 @@ class CollegeController extends Controller
             'department' => $department,
             'admins' => User::where('department_id', $department->id)->where('role', 'admin')
                 ->get()->sortBy(fn (User $admin) => Str::lower($admin->name))->values(),
+            // Admins of the other departments, who could be moved here
+            'otherAdmins' => User::with('department')->where('role', 'admin')->whereNotNull('department_id')
+                ->where('department_id', '!=', $department->id)->get()
+                ->sortBy(fn (User $admin) => Str::lower($admin->department->name.' '.$admin->name))->values(),
             'emailSends' => EmailSetup::sends(),
         ]);
     }
@@ -155,6 +159,7 @@ class CollegeController extends Controller
             'account' => $account->load('department'),
             'hasHistory' => $account->hasHistory(),
             'otherActiveAdmins' => $this->otherActiveAdmins($account),
+            'departments' => Department::orderBy('name')->get(),
         ]);
     }
 
@@ -193,6 +198,57 @@ class CollegeController extends Controller
         }
 
         return redirect()->route('college.admins.edit', $account)->with('status', $message)->with('problem', $problem);
+    }
+
+    /** Assigns this Admin to the department picked on their page */
+    public function move(Request $request, User $account): RedirectResponse
+    {
+        $this->check($account);
+        $data = $request->validateWithBag('move', [
+            'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
+        ], ['department_id.*' => 'Pick a department from the list.']);
+
+        return $this->assign($request, $account, Department::findOrFail($data['department_id']));
+    }
+
+    /** Assigns the Admin picked on a department's page to that department */
+    public function moveHere(Request $request, Department $department): RedirectResponse
+    {
+        $data = $request->validateWithBag('move', [
+            'account_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'admin')],
+        ], ['account_id.*' => 'Pick an Admin from the list.']);
+
+        return $this->assign($request, User::findOrFail($data['account_id']), $department);
+    }
+
+    /**
+     * Moves an Admin to another department. The account, its login and what it did before stay as they are; from
+     * its next click it runs the new department and no longer sees the old one. Bookings it approved in the old
+     * department keep its name. The Admin is emailed about it.
+     */
+    private function assign(Request $request, User $account, Department $to): RedirectResponse
+    {
+        $this->check($account);
+        $from = $account->department;
+        if ($to->is($from)) {
+            return back()->withErrors(['department_id' => $account->name.' is already an Admin of '.$to->name.'.'], 'move')->withInput();
+        }
+
+        $account->update(['department_id' => $to->id]);
+        $this->log('moved an Admin account to another department', $request->user(), $account, ['from_department_id' => $from->id]);
+
+        $message = 'Moved '.$account->name.' from '.$from->name.' to '.$to->name.'. From their next click they run '.$to->name
+            .' and no longer see '.$from->name.'.';
+        $fromHasAdmin = User::where('department_id', $from->id)->where('role', 'admin')->where('is_active', true)->exists();
+        if (! $fromHasAdmin) {
+            $message .= ' '.$from->name.' now has no Admin who can log in.';
+        }
+        $back = redirect()->route('college.departments.show', $to);
+        if (! $account->sendMovedEmail($from, $to)) {
+            return $back->with('status', $message)->with('problem', 'The email telling '.$account->name.' couldn’t be sent (see README, Email). Let them know yourself.');
+        }
+
+        return $back->with('status', $message.' We emailed '.$account->email.' about it.');
     }
 
     /** Recovery: the College admin types a new password; the Admin picks their own at the next login */

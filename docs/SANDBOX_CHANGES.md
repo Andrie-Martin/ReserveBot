@@ -156,7 +156,7 @@ set of powers: the College admin looks after Admin accounts and nothing else.
 |---|---|---|
 | 01 | Admin coverage: at least one Admin per department? several? | Several are allowed. The Departments page warns when a department has none who can log in. Nothing forces at least one. |
 | 02 | Provisioning: who creates the first and later Admins? | The College admin, for every department, and it adds the departments too (see the follow-up below). The College admin itself is made by a command on the server. |
-| 03 | Account transfers between departments | **Not built.** An account stays in its department; its bookings stay with it. Still open for the team. |
+| 03 | Account transfers between departments | Admins: the College admin can move one to another department (see the follow-up below); what they approved before stays with the old department. Block accounts and lab staff: **not built**, they stay in their department. |
 | 04 | A college-wide role, or a manual process? | A college-wide role (this issue), limited to Admin accounts and a read-only overview. |
 | 05 | Shared rooms and competing requests | **Unchanged.** Shared rooms are still checked against every department's timetable and bookings, and each department approves its own requests. The College admin has no say. Still open if the team wants a referee. |
 | 06 | Recovery and auditing | Recovery: the College admin sets a new password or turns an account back on; a locked-out College admin is replaced with the server command. Auditing: the log lines above; there is no page for them yet. |
@@ -192,6 +192,21 @@ them, and a new department's Admin should be asked to add its data. Done in thre
   `resources/views/college/home.blade.php` and `department.blade.php`. Tests: `tests/Feature/CollegeDepartmentsTest.php`.
 - **Check it:** as `college@reservebot.test`, add "Electronics Engineering Department". It appears on Departments
   with "This department has no Admin yet." Add an Admin for it and log in as that Admin: every page opens, empty.
+
+### The College admin assigns an Admin to another department
+
+- **Two places do the same thing:** on an Admin's page, "Department" → pick the department → "Move to this
+  department"; or on a department's page, "Move an existing Admin here" → pick the Admin → "Move here".
+- **What moves:** only which department the Admin runs. The account, its email and its password stay the same.
+  From their next click the Admin's pages show the new department's name and data, and the old department's pages
+  are closed to them. Nothing has to be logged out or made again.
+- **What stays:** bookings the Admin approved or rejected in the old department keep showing their name.
+- The Admin gets an email about it, and the page says when the old department is left with no Admin who can log in.
+- Only Admin accounts can be moved. Block accounts and lab staff stay in their department.
+- **Files:** `CollegeController` (`move`, `moveHere`, `assign`), `app/Notifications/AdminMoved.php`,
+  `resources/views/college/admin.blade.php` and `department.blade.php`. Tests: `tests/Feature/CollegeMoveAdminTest.php`.
+- **Check it:** add a department, open it, pick an Admin under "Move an existing Admin here". Log in as that Admin:
+  the home page shows the new department's name.
 
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 

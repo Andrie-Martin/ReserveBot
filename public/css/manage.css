@@ -333,3 +333,6 @@
 .rb-manage .college-dept .bfacts { grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr)); }
 .rb-manage .college-dept .bfact dd { font-size: 1.25rem; font-weight: var(--rb-weight-bold); }
 .rb-manage .college-dept .bfact dd .muted { font-size: var(--rb-text-small); font-weight: var(--rb-weight-regular); }
+/* College admin: a list to pick from beside its button (moving an Admin), like the "Set a new password" row. */
+.rb-manage .mform .inline-form select { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
+@media (max-width: 40rem) { .rb-manage .mform .inline-form select { flex-basis: 100%; } }

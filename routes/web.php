@@ -176,9 +176,13 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         Route::get('/departments/{department}', [CollegeController::class, 'department'])->name('departments.show');
         Route::put('/departments/{department}', [CollegeController::class, 'updateDepartment'])->name('departments.update');
         Route::post('/departments/{department}/admins', [CollegeController::class, 'store'])->name('admins.store');
+        // Assigning an existing Admin to another department: from the department's page (pick the Admin) ...
+        Route::post('/departments/{department}/admins/move', [CollegeController::class, 'moveHere'])->name('admins.move-here');
         Route::get('/admins/{account}', [CollegeController::class, 'edit'])->name('admins.edit');
         Route::put('/admins/{account}', [CollegeController::class, 'update'])->name('admins.update');
         Route::put('/admins/{account}/password', [CollegeController::class, 'password'])->name('admins.password');
+        // ... or from the Admin's own page (pick the department)
+        Route::put('/admins/{account}/department', [CollegeController::class, 'move'])->name('admins.move');
         Route::delete('/admins/{account}', [CollegeController::class, 'destroy'])->name('admins.destroy');
     });
 
