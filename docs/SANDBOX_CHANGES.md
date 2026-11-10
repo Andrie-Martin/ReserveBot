@@ -44,3 +44,14 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
 - The lab staff home page said "This is where you will review requests and run the day's room schedule.", which read
   like a placeholder. It now says "Review requests and run the day's room schedule."
 - **File:** `app/Http/Controllers/StaffController.php`.
+
+## Issue 11: The password reset link lasts 20 minutes
+
+- **Before:** the link emailed by "Forgot your password?" worked for 60 minutes.
+- **Now:** it works for 20 minutes, once. The message on the page and the email both say "20 minutes".
+- **Not changed:** the "Connect my email" link in the welcome email is a different link and still works for 3 days
+  (`User::EMAIL_LINK_DAYS`). Asking for another reset link still needs a 60-second wait.
+- **Files:** `config/auth.php` (`passwords.users.expire`), `app/Http/Controllers/PasswordResetController.php`,
+  `app/Notifications/ResetPasswordLink.php`; tests in `tests/Feature/ResetLinkLifetimeTest.php` and `AuthWorkflowTest`.
+- **Check it:** on the login page click "Forgot your password?", send a link, and read the message: "It works for
+  20 minutes." Open the link after more than 20 minutes: "This link has expired or was already used…".

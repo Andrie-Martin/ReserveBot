@@ -13,8 +13,8 @@ use Illuminate\View\View;
 use Throwable;
 
 /**
- * Phase 9: "Forgot password?" on the login page. The link is emailed (it works for 60 minutes,
- * once). The page never says whether an email has an account, so nobody can probe for accounts.
+ * Phase 9: "Forgot password?" on the login page. The link is emailed (it works for 20 minutes,
+ * once; config/auth.php, passwords.users.expire). The page never says whether an email has an account, so nobody can probe for accounts.
  * Turned-off accounts get no link.
  */
 class PasswordResetController extends Controller
@@ -38,7 +38,7 @@ class PasswordResetController extends Controller
         }
 
         return back()->with('status', 'If '.$email.' has an account here, we sent it a link to pick a new password. It works for '
-            .config('auth.passwords.users.expire', 60).' minutes. Check your spam folder too.');
+            .config('auth.passwords.users.expire', 20).' minutes. Check your spam folder too.');
     }
 
     public function edit(Request $request, string $token): View

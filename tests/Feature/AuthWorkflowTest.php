@@ -624,12 +624,37 @@ final class AuthWorkflowTest extends TestCase
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
         $this->travel(61)->minutes();
         $data['token'] = Password::broker()->createToken($fresh);
-        $this->travel(61)->minutes();
+        $this->travel(21)->minutes();     // the link works for 20 minutes
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
         $data['token'] = Password::broker()->createToken($fresh);
         $fresh->update(['is_active' => false]);
         $this->post('/reset-password', $data)->assertSessionHasErrors('email');
         $this->travelBack();
+    }
+
+    public function test_reset_link_works_for_20_minutes_and_no_longer(): void
+    {
+        $this->assertSame(20, config('auth.passwords.users.expire'));
+        $user = $this->user();
+        $data = ['email' => $user->email, 'password' => 'Recovered123', 'password_confirmation' => 'Recovered123'];
+
+        // Still fine one minute before the end
+        $token = Password::broker()->createToken($user);
+        $this->travel(19)->minutes();
+        $this->post('/reset-password', $data + ['token' => $token])->assertRedirect('/login')->assertSessionHas('status');
+        $this->assertTrue(Hash::check('Recovered123', $user->fresh()->password));
+
+        // Expired one minute after it: the password stays as it was
+        $token = Password::broker()->createToken($user->fresh());
+        $this->travel(21)->minutes();
+        $this->post('/reset-password', ['password' => 'TooLate12345', 'password_confirmation' => 'TooLate12345', 'email' => $user->email, 'token' => $token])
+            ->assertSessionHasErrors('email');
+        $this->assertTrue(Hash::check('Recovered123', $user->fresh()->password));
+        $this->travelBack();
+
+        // The page that sent the link says how long it works
+        $this->from('/forgot-password')->post('/forgot-password', ['email' => $user->email])
+            ->assertSessionHas('status', fn ($s) => str_contains($s, 'It works for 20 minutes.'));
     }
 
     public function test_signed_connection_success_reuse_changed_hash_and_invalid_signature_statuses(): void

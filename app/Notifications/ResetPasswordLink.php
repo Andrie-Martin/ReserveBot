@@ -18,7 +18,7 @@ class ResetPasswordLink extends Notification
 
     public function toMail(User $user): MailMessage
     {
-        $minutes = (int) config('auth.passwords.users.expire', 60);
+        $minutes = (int) config('auth.passwords.users.expire', 20);
 
         return (new MailMessage)
             ->subject('Pick a new ReserveBot password')
