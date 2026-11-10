@@ -38,3 +38,9 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   straight back, so the count never stays negative.
 - **Files:** `app/Http/Controllers/Auth/LoginController.php` (`leaveIp`), new `tests/Feature/LoginInFlightCounterTest.php`.
 - **Check it:** `vendor/bin/phpunit --filter LoginInFlightCounterTest` passes. Logging in behaves the same as before.
+
+### Wording
+
+- The lab staff home page said "This is where you will review requests and run the day's room schedule.", which read
+  like a placeholder. It now says "Review requests and run the day's room schedule."
+- **File:** `app/Http/Controllers/StaffController.php`.

@@ -15,7 +15,7 @@ class StaffController extends Controller
         return view('home', [
             'title' => 'Lab staff',
             'user' => $user,
-            'intro' => "This is where you will review requests and run the day's room schedule.",
+            'intro' => 'Review requests and run the day’s room schedule.',
             'stats' => DeskStats::for($user),
             'classes' => null,
             'ready' => [
