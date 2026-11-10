@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title') · ReserveBot</title>
   {{-- Start the above-the-fold Inter weights with the document, not after the CSS is parsed, so text does not swap late. --}}
-  @foreach (['Regular', 'SemiBold', 'Bold'] as $weight)
+  @foreach (['Regular', 'Medium', 'SemiBold', 'Bold'] as $weight)
     <link rel="preload" href="{{ asset('fonts/inter/Inter-'.$weight.'.woff2') }}" as="font" type="font/woff2" crossorigin>
   @endforeach
   {{-- ?v= changes whenever style.css changes, so browsers never keep an old copy --}}
@@ -15,9 +15,11 @@
   <link rel="stylesheet" href="{{ asset('css/foundations/tokens.css') }}?v={{ filemtime(public_path('css/foundations/tokens.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/foundations/components.css') }}?v={{ filemtime(public_path('css/foundations/components.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/mascot.css') }}?v={{ filemtime(public_path('css/mascot.css')) }}">
   @stack('styles')
   <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}" defer></script>
   <script src="{{ asset('js/ui.js') }}?v={{ filemtime(public_path('js/ui.js')) }}" defer></script>
+  <script src="{{ asset('js/mascot.js') }}?v={{ filemtime(public_path('js/mascot.js')) }}" defer></script>
 </head>
 @php
   // Keep this guard before authentication: server/upload error pages must not resolve a user.
