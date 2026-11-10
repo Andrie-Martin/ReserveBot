@@ -83,5 +83,7 @@
     </ul>
   @endif
   </div>
+
+  @include('manage._delete', ['what' => 'item', 'name' => $item->name, 'action' => route('manage.equipment.destroy', $item), 'blockers' => $deleteBlockers])
 </section>
 @endsection

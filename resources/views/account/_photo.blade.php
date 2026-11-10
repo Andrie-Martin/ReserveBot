@@ -9,6 +9,8 @@
     </div>
     <div class="rb-account-photo__content">
       <x-ui.error-summary :bag="$errors->getBag('photo')" />
+      {{-- Two independent native forms, each with its own submit button. CSS lays them out as one action row (the upload form's
+           children join the grid), so Replace/Upload and Remove share a row, height and radius without nesting or form="" tricks. --}}
       <div class="rb-account-photo__forms">
         <form method="post" action="{{ route('account.photo') }}" enctype="multipart/form-data">
           @csrf
@@ -21,7 +23,7 @@
           <form method="post" action="{{ route('account.photo.remove') }}">
             @csrf
             @method('DELETE')
-            <x-ui.button type="submit" variant="quiet">Remove photo</x-ui.button>
+            <x-ui.button type="submit" variant="danger-outline">Remove photo</x-ui.button>
           </form>
         @endif
       </div>

@@ -13,7 +13,6 @@
 .rb-brand__words, .rb-account__identity { display: flex; flex-direction: column; }
 .rb-brand__name { font-size: 1.25rem; font-weight: var(--rb-weight-bold); letter-spacing: -.02em; line-height: 1.2; }
 .rb-brand__college { font-size: .6875rem; font-weight: var(--rb-weight-medium); color: var(--rb-text-secondary); line-height: 1.25; }
-.rb-header__description { font-size: var(--rb-text-caption); color: var(--rb-text-secondary); }
 .rb-account { display: flex; align-items: center; gap: var(--rb-space-8); margin-left: auto; min-width: 0; font-size: var(--rb-text-small); }
 .rb-account__link { display: flex; align-items: center; gap: .75rem; color: var(--rb-text-primary); text-decoration: none; min-height: var(--rb-control-height); min-width: 0; padding: .125rem .5rem .125rem .25rem; border-radius: var(--rb-radius-control); }
 .rb-account__link[aria-current] { background: var(--rb-surface-active); }
@@ -36,17 +35,12 @@
 .rb-nav-item__count { margin-left: auto; padding: 0 .375rem; border-radius: .375rem; background: color-mix(in srgb, var(--rb-color-maroon) 16%, var(--rb-color-white)); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); }
 .rb-account__link:hover { color: var(--rb-color-maroon); background: var(--rb-surface-active); }
 .rb-header__crumb { display: none; }
-.rb-role-card { display: grid; gap: .125rem; padding: .625rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
-.rb-role-card__label { font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .08em; text-transform: uppercase; color: var(--rb-color-maroon); }
-.rb-role-card__role { font-size: var(--rb-text-small); }
 .rb-shell__content { min-width: 0; }
 .rb-shell--workspace .rb-shell__main { max-width: none; margin: 0; padding: var(--rb-space-8) var(--rb-shell-gutter) var(--rb-space-12); }
 /* Keep page-owned .narrow/.book-card/.account-card/.tt-card constraints intact.
    Availability's wide main uses the full shell column, including above 1240px. */
 .rb-shell--workspace .rb-shell__main.wide { max-width: none; }
-.rb-email-notice { margin: var(--rb-space-6) var(--rb-shell-gutter) 0; }
-.rb-email-notice p { margin: 0; overflow-wrap: anywhere; }
-.rb-email-notice form { margin-top: var(--rb-space-2); }
+.rb-email-notice { margin: var(--rb-space-4) var(--rb-shell-gutter) 0; }
 .rb-menu-toggle[hidden] { display: none; }
 /* Without scripting the toggle could do nothing, and the account/navigation stay open (see the mobile block below). */
 @media (scripting: none) { .rb-menu-toggle { display: none; } }
@@ -65,7 +59,7 @@
   /* Prototype composition: the brand fills the sidebar column of the header row, and the
      topbar (page crumb + account) spans the content column. Same DOM, so tab order is unchanged. */
   .rb-shell--workspace .rb-header { display: grid; grid-template-columns: var(--rb-sidebar-width) minmax(0, 1fr) fit-content(24rem); align-items: stretch; gap: 0; min-height: 4.25rem; padding: 0; }
-  .rb-shell--workspace .rb-header__description, .rb-shell--workspace .rb-menu-toggle { display: none; }
+  .rb-shell--workspace .rb-menu-toggle { display: none; }
   .rb-shell--workspace .rb-brand { grid-column: 1; padding: .75rem 1.25rem; border-right: 1px solid var(--rb-border-warm); min-width: 0; }
   .rb-shell--workspace .rb-header__crumb { display: flex; grid-column: 2; align-items: center; gap: var(--rb-space-2); min-width: 0; margin: 0; padding-inline: var(--rb-shell-gutter) var(--rb-space-4); font-size: var(--rb-text-small); color: var(--rb-text-secondary); }
   .rb-shell--workspace .rb-header__crumb strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--rb-text-primary); font-weight: var(--rb-weight-semibold); }
@@ -88,7 +82,6 @@
   .rb-brand__monogram { width: 2.25rem; height: 2.25rem; flex-shrink: 0; font-size: var(--rb-text-small); }
   .rb-brand__name { font-size: var(--rb-text-body); }
   .rb-brand__college { max-width: 12rem; line-height: 1.25; }
-  .rb-header__description, .rb-role-card { display: none; }
   .rb-menu-toggle { margin-left: auto; padding: var(--rb-space-2); flex-shrink: 0; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
   .rb-account { flex-basis: 100%; flex-wrap: wrap; margin: var(--rb-space-2) 0 0; gap: var(--rb-space-4); }
   .rb-account form { order: 0; }
@@ -113,12 +106,5 @@
   .rb-shell--rep .rb-shell__content :focus { scroll-margin-bottom: var(--rb-bottom-space, calc(7rem + env(safe-area-inset-bottom))); }
 }
 
-/* Measured at 200% text: a 473px wrapped header plus the tallest 150px
-   action and 8px focus clearance require the 632px boundary. Sidebar padding
-   is compact here so its 92px navigation rows also remain reachable. */
-@media (min-width: 80rem) and (min-height: 39.5rem) and (max-height: 48rem) {
-  .rb-sidebar { padding-block: var(--rb-space-2); gap: var(--rb-space-4); }
-  .rb-role-card { display: none; }
-}
 /* Touch devices: 44px navigation rows (the desktop sidebar keeps its compact 40px rows for pointers). */
 @media (pointer: coarse) { .rb-nav-item { min-height: var(--rb-control-height); } }

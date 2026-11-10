@@ -9,6 +9,10 @@
       }
       $axisValid = $axisValid && is_int($axisStart) && is_int($axisEnd) && $axisStart >= 0 && $axisEnd <= 1440 && $axisEnd > $axisStart;
       $ticks = $axisValid ? array_unique([0, (int) ceil(count($slots) / 4), (int) ceil(count($slots) / 2), (int) ceil(3 * count($slots) / 4), count($slots)]) : [];
+      // Same positions as the axis labels, as percentages of the window: each track draws faint marks at them so the labels visibly line up with every row.
+      $tickPercents = $axisValid ? array_map(fn ($tick) => 100 * $tick / count($slots), array_values($ticks)) : [];
+      // Phone cards repeat a short start / middle / end scale under each bar (the shared axis header is hidden there).
+      $scaleLabels = $axisValid ? array_map(fn ($tick) => \App\Support\TimeSlots::clock($axisStart + $tick * $step), [array_values($ticks)[0], array_values($ticks)[intdiv(count($ticks), 2)], array_values($ticks)[count($ticks) - 1]]) : [];
     @endphp
     <div class="rb-availability__section-head">
       <h3 class="rb-availability__list-title" id="room-results-title">Free times in each room</h3>
@@ -26,6 +30,7 @@
         </div>
       @endif
     </div>
+    <div class="rb-availability__boardwrap">
     <div @class(['rb-availability__board' => $axisValid]) @if ($axisValid) role="region" aria-label="Room availability timeline; scroll horizontally for all times and actions" tabindex="0" @endif>
     @if ($axisValid)
       <div class="rb-availability__axis">
@@ -44,5 +49,6 @@
         <li><p class="rb-availability__empty">No rooms listed for this department.</p></li>
       @endforelse
     </ul>
+    </div>
     </div>
 </section>

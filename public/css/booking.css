@@ -171,8 +171,21 @@
 
 @media (max-width: 40rem) {
   .rb-booking .book-form, .rb-booking__panel { padding: var(--rb-space-4); }
-  .rb-booking .brow, .rb-booking .history li { grid-template-columns: minmax(0, 1fr); }
-  .rb-booking .brow-side { align-items: flex-start; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .rb-booking .history li { grid-template-columns: minmax(0, 1fr); }
+  /* My bookings on a phone: each booking is its own stacked card instead of three squeezed columns.
+       row 1: date + time (left) and the status badge (right)
+       row 2: purpose, room/equipment summary, items, reason
+       row 3: the cancel action, full width (only when cancelling is still possible)
+     Explicit grid placement also cancels the legacy phone rules in style.css that pinned the date and side to other columns. */
+  .rb-booking .blist { display: grid; gap: var(--rb-space-2); margin: 0; padding: 0; }
+  .rb-booking .blist .brow, .rb-booking .blist.past .brow { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: none; gap: var(--rb-space-2) var(--rb-space-2); align-items: start; padding: var(--rb-space-4); border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); }
+  .rb-booking .blist.past .brow { background: var(--rb-surface-canvas); }
+  .rb-booking .blist .brow:first-child { border-top: 1px solid var(--rb-border-warm); }
+  .rb-booking .brow-when { grid-column: 1; grid-row: 1; display: block; min-width: 0; }
+  .rb-booking .brow-what { grid-column: 1 / -1; grid-row: 2; }
+  .rb-booking .brow-side { display: contents; }
+  .rb-booking .brow-side .status-badge { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; max-width: 100%; white-space: normal; }
+  .rb-booking .brow-side .brow-cancel { grid-column: 1 / -1; grid-row: 3; justify-content: center; width: 100%; margin-top: var(--rb-space-1); }
   .rb-booking .facts { grid-template-columns: minmax(0, 1fr); gap: var(--rb-space-1); }
   .rb-booking .facts dd { margin-bottom: var(--rb-space-2); }
 }
@@ -344,4 +357,13 @@
 @media (max-width: 40rem) {
   .rb-booking .action-panel { padding: var(--rb-space-4); }
   .rb-booking :is(.action-panel__foot, .cancel-card__form) :is(.btn-approve, .btn-reject) { width: 100%; }
+}
+
+/* Very narrow phones, or text enlarged to 200% (rem-based): the status badge moves under the date instead of squeezing it. */
+@media (max-width: 24rem) {
+  .rb-booking .blist .brow { grid-template-columns: minmax(0, 1fr); }
+  .rb-booking .brow-when { grid-column: 1; grid-row: 1; }
+  .rb-booking .brow-side .status-badge { grid-column: 1; grid-row: 2; justify-self: start; }
+  .rb-booking .brow-what { grid-row: 3; }
+  .rb-booking .brow-side .brow-cancel { grid-row: 4; }
 }

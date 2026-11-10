@@ -5,15 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\User;
+use App\Support\ResourceDeletion;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
  * Phase 8: lab staff and admins manage their department's rooms: add one, edit its seats and
  * notes, or turn it off (it can't be booked anymore, but old bookings keep it). Rooms are
- * shared between departments, so a change shows for every department that uses the room.
+ * shared between departments, so a change shows for every department that uses the room. A room entered by mistake (never
+ * booked, never in the timetable, not shared) can be deleted; anything with history is turned off instead.
  */
 class ManageRoomsController extends Controller
 {
@@ -32,7 +37,7 @@ class ManageRoomsController extends Controller
 
         return view('manage.rooms', [
             'department' => $department,
-            'rooms' => $department->rooms()->withCount('departments')->orderBy('name')->get(),
+            'rooms' => $department->rooms()->withCount(['departments', 'reservations', 'classSchedules'])->orderBy('name')->get(),
         ]);
     }
 
@@ -80,6 +85,7 @@ class ManageRoomsController extends Controller
             'room' => $room,
             'sharedWith' => $room->departments()->where('departments.id', '!=', $user->department_id)->pluck('name'),
             'upcoming' => $this->upcoming($room),
+            'deleteBlockers' => ResourceDeletion::roomBlockers($room, $user->department_id),
         ]);
     }
 
@@ -112,6 +118,55 @@ class ManageRoomsController extends Controller
         };
 
         return redirect()->route('manage.rooms.edit', $room)->with('status', $message);
+    }
+
+    /**
+     * Delete a room nothing has ever used. Same roles and department check as editing; a POST with _method=DELETE and CSRF only.
+     * The checks run again inside the transaction with the room row locked, so a booking made at the same moment either
+     * waits and then finds the room gone, or is seen here and refuses the delete. No history is ever cascaded away.
+     */
+    public function destroy(Request $request, Room $room): RedirectResponse
+    {
+        $user = $request->user();
+        $this->checkDepartment($user, $room);
+        if (! $request->boolean('confirm')) {
+            return $this->refuse($room, ['Tick the box to confirm that you want to delete '.$room->name.'.']);
+        }
+
+        $name = $room->name;
+        try {
+            $blockers = DB::transaction(function () use ($room, $user) {
+                $locked = Room::whereKey($room->id)->lockForUpdate()->first();
+                if (! $locked) {
+                    return null;   // already gone
+                }
+                $blockers = ResourceDeletion::roomBlockers($locked, $user->department_id);
+                if ($blockers === []) {
+                    $locked->departments()->detach();
+                    $locked->delete();
+                }
+
+                return $blockers;
+            });
+        } catch (QueryException $e) {
+            // The database refused (a foreign key, a busy server, or something unexpected). Nothing was changed.
+            return $this->refuse($room, [ResourceDeletion::messageForFailure($e, $name, ['room_id' => $room->id, 'user_id' => $user->id])]);
+        }
+
+        if ($blockers === null) {
+            return redirect()->route('manage.rooms')->with('status', $name.' was already deleted.');
+        }
+        if ($blockers !== []) {
+            return $this->refuse($room, [...$blockers, ResourceDeletion::TURN_OFF_ADVICE]);
+        }
+        Log::info('Room deleted', ['room' => $name, 'by' => $user->id, 'department_id' => $user->department_id]);
+
+        return redirect()->route('manage.rooms')->with('status', 'Deleted '.$name.'. It had no bookings or classes, so no history was lost.');
+    }
+
+    private function refuse(Room $room, array $messages): RedirectResponse
+    {
+        return redirect()->route('manage.rooms.edit', $room)->withErrors($messages, 'delete');
     }
 
     /** Bookings in this room that haven't ended and still hold it */

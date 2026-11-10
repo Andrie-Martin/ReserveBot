@@ -123,7 +123,7 @@
       @else
         <table class="mtable eq-table">
           <colgroup><col class="c-item"><col class="c-stock"><col class="c-max"><col class="c-status"><col class="c-edit"></colgroup>
-          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr></thead>
+          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
             @foreach ($category->equipment as $item)
               <tr @class(['off' => ! $item->is_active]) data-eq-row>
@@ -131,7 +131,7 @@
                 <td>{{ $item->total_qty }}</td>
                 <td>{{ $item->max_per_request }}</td>
                 <td><span @class(['status-badge', 'st-confirmed' => $item->is_active, 'st-cancelled' => ! $item->is_active])>{{ $item->is_active ? 'On' : 'Off' }}</span></td>
-                <td class="eq-edit"><a class="row-edit" href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a></td>
+                <td class="eq-edit"><div class="row-actions"><a class="row-edit" href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a>@if (\App\Support\ResourceDeletion::equipmentLooksDeletable($item))<a class="row-delete" href="{{ route('manage.equipment.edit', $item) }}#delete">Delete<span class="sr-only"> {{ $item->name }}: review and confirm on its page</span></a>@endif</div></td>
               </tr>
             @endforeach
           </tbody>

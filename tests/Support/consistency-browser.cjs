@@ -278,7 +278,7 @@ const ok = (name) => { passed++; console.log('  PASS', name); };
       assert.equal(await overflow(page), 0);
       if (name === 'desktop') {
         const kids = await page.locator('.rb-sidebar > *').evaluateAll(es => es.map(e => e.className.split(' ')[0]));
-        assert.deepEqual(kids, ['rb-role-card', 'rb-navigation'], `${role}: the sidebar holds only the role card and navigation`);
+        assert.deepEqual(kids, ['rb-navigation'], `${role}: the sidebar holds only the navigation`);
         const sidebar = await box(page, '.rb-sidebar'), nav = await box(page, '.rb-navigation');
         assert.ok(sidebar.width > 200 && sidebar.width < 300, 'sidebar width unchanged: ' + sidebar.width);
         assert.ok(await page.locator('.rb-navigation a[aria-current="page"]').count() === 1, 'active indicator stays');

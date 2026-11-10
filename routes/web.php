@@ -115,10 +115,12 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
             Route::post('/rooms', [ManageRoomsController::class, 'store'])->name('rooms.store');
             Route::get('/rooms/{room}', [ManageRoomsController::class, 'edit'])->name('rooms.edit');
             Route::put('/rooms/{room}', [ManageRoomsController::class, 'update'])->name('rooms.update');
+            Route::delete('/rooms/{room}', [ManageRoomsController::class, 'destroy'])->name('rooms.destroy');
             Route::get('/equipment', [ManageEquipmentController::class, 'index'])->name('equipment');
             Route::post('/equipment', [ManageEquipmentController::class, 'store'])->name('equipment.store');
             Route::get('/equipment/{equipment}', [ManageEquipmentController::class, 'edit'])->name('equipment.edit');
             Route::put('/equipment/{equipment}', [ManageEquipmentController::class, 'update'])->name('equipment.update');
+            Route::delete('/equipment/{equipment}', [ManageEquipmentController::class, 'destroy'])->name('equipment.destroy');
             Route::post('/categories', [ManageEquipmentController::class, 'storeCategory'])->name('categories.store');
             Route::put('/categories/{category}', [ManageEquipmentController::class, 'updateCategory'])->name('categories.update');
             Route::get('/rules', [ManageRulesController::class, 'edit'])->name('rules');

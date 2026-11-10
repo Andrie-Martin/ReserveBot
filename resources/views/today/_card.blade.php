@@ -30,12 +30,13 @@
   <div class="tcard-side">
     <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
     @include('bookings._staff_actions', ['r' => $r, 'staff' => $staff])
+    {{-- Navigation only (an anchor styled as the shared outlined secondary button); nothing is approved or rejected from here. --}}
     @if ($staff->canChange($r->status, $end))
-      <a class="req-link" href="{{ route('bookings.show', $r) }}#change">Cancel or move…</a>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r).'#change'">Cancel or move<span class="sr-only"> booking #{{ $r->id }}</span></x-ui.link-button>
     @elseif ($r->status === 'Pending')
-      <a class="req-link" href="{{ route('bookings.show', $r) }}">Approve or reject…</a>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r)">Review request<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
     @else
-      <a class="req-link" href="{{ route('bookings.show', $r) }}">Details</a>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r)">Details<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
     @endif
   </div>
 </article>

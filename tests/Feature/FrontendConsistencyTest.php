@@ -124,6 +124,10 @@ final class FrontendConsistencyTest extends TestCase
             $this->assertStringNotContainsString('PUP CEA / NDC Campus', $html, $user->role);
             $this->assertStringNotContainsString('Reservations follow your department', $html);
             $this->assertStringNotContainsString('rb-workspace-note', $html);
+            // The "Signed in as" role card is gone too; the role is still shown in the header account chip.
+            $this->assertStringNotContainsString('rb-role-card', $html, $user->role);
+            $this->assertStringNotContainsString('Signed in as', $html, $user->role);
+            $this->assertStringContainsString('<span class="rb-account__role">'.$user->roleLabel().'</span>', $html, $user->role.': role still identified');
         }
     }
 

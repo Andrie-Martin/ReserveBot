@@ -6,17 +6,21 @@ use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Support\ResourceDeletion;
 use App\Support\StockCheck;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
  * Phase 8: lab staff and admins manage their department's equipment: categories, items, how many
  * there are (stock) and how many one booking may ask for. Turning an item off keeps old bookings.
- * Lowering the stock is allowed; bookings that now ask for more than there is are listed.
+ * Lowering the stock is allowed; bookings that now ask for more than there is are listed. An item entered by mistake (on no
+ * booking, ever) can be deleted; anything with history is turned off instead.
  */
 class ManageEquipmentController extends Controller
 {
@@ -99,6 +103,7 @@ class ManageEquipmentController extends Controller
             'categories' => $this->categories($user),
             'upcoming' => $upcoming,
             'over' => $over,
+            'deleteBlockers' => ResourceDeletion::equipmentBlockers($equipment),
         ]);
     }
 
@@ -139,6 +144,54 @@ class ManageEquipmentController extends Controller
     }
 
     /**
+     * Delete an item that is on no booking. Same roles and department check as editing; DELETE + CSRF only. The check runs again
+     * inside the transaction with the item locked; the database's restrict foreign key is the last line of defence.
+     * Categories and every booking's history are never touched.
+     */
+    public function destroy(Request $request, Equipment $equipment): RedirectResponse
+    {
+        $user = $request->user();
+        $this->checkDepartment($user, $equipment);
+        if (! $request->boolean('confirm')) {
+            return $this->refuse($equipment, ['Tick the box to confirm that you want to delete '.$equipment->name.'.']);
+        }
+
+        $name = $equipment->name;
+        try {
+            $blockers = DB::transaction(function () use ($equipment) {
+                $locked = Equipment::whereKey($equipment->id)->lockForUpdate()->first();
+                if (! $locked) {
+                    return null;   // already gone
+                }
+                $blockers = ResourceDeletion::equipmentBlockers($locked);
+                if ($blockers === []) {
+                    $locked->delete();
+                }
+
+                return $blockers;
+            });
+        } catch (QueryException $e) {
+            // The database refused (a foreign key, a busy server, or something unexpected). Nothing was changed.
+            return $this->refuse($equipment, [ResourceDeletion::messageForFailure($e, $name, ['equipment_id' => $equipment->id, 'user_id' => $request->user()->id])]);
+        }
+
+        if ($blockers === null) {
+            return redirect()->route('manage.equipment')->with('status', $name.' was already deleted.');
+        }
+        if ($blockers !== []) {
+            return $this->refuse($equipment, [...$blockers, ResourceDeletion::TURN_OFF_ADVICE]);
+        }
+        Log::info('Equipment deleted', ['item' => $name, 'by' => $user->id, 'department_id' => $user->department_id]);
+
+        return redirect()->route('manage.equipment')->with('status', 'Deleted '.$name.'. It was on no booking, so no history was lost.');
+    }
+
+    private function refuse(Equipment $item, array $messages): RedirectResponse
+    {
+        return redirect()->route('manage.equipment.edit', $item)->withErrors($messages, 'delete');
+    }
+
+    /**
      * Bookings that include this item, haven't ended and still hold it, with how many each asks for
      * (->asked), and the ids of those that ask for more than the stock (StockCheck).
      */
@@ -169,7 +222,7 @@ class ManageEquipmentController extends Controller
 
     private function categories(User $user)
     {
-        return EquipmentCategory::with(['equipment' => fn ($q) => $q->orderBy('sort_order')->orderBy('name')])
+        return EquipmentCategory::with(['equipment' => fn ($q) => $q->withCount('reservations')->orderBy('sort_order')->orderBy('name')])
             ->where('department_id', $user->department_id)
             ->orderBy('sort_order')
             ->orderBy('name')

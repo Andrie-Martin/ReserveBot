@@ -392,6 +392,29 @@ final class UiPolishPresentationTest extends TestCase
         }
     }
 
+    public function test_the_signed_in_as_role_card_is_gone_and_the_sidebar_does_not_depend_on_viewport_height(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $nav = $this->read('resources/views/layouts/partials/navigation.blade.php');
+        $this->assertStringNotContainsString('Signed in as', $nav);
+        $this->assertStringContainsString('class="rb-navigation"', $nav, 'the Workspace navigation stays');
+        foreach (['resources/views', 'public/css', 'public/js'] as $dir) {
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/'.$dir, \FilesystemIterator::SKIP_DOTS)) as $file) {
+                $text = file_get_contents($file->getPathname());
+                $this->assertStringNotContainsString('rb-role-card', $text, 'no markup, CSS or script left over for the role card: '.$file->getPathname());
+                $this->assertStringNotContainsString('Signed in as', $text, $file->getPathname());
+            }
+        }
+        // Root cause of the zoom-dependent card: a height-only media query on desktop. Nothing in the sidebar may change with
+        // viewport height again, or the Workspace navigation would sit in a different place at different browser zoom levels.
+        $css = $this->read('public/css/layout.css');
+        preg_match_all('/@media[^{]*max-height:\s*48rem[^{]*\{((?:[^{}]|\{[^{}]*\})*)\}/', $css, $short);
+        foreach ($short[1] as $body) {
+            $this->assertStringNotContainsString('.rb-sidebar', $body, 'the desktop sidebar must not change with viewport height');
+        }
+        $this->assertStringNotContainsString('max-height: 48rem', $css);
+    }
+
     public function test_requests_reject_and_cancel_buttons_are_one_aligned_action_group(): void
     {
         $css = $this->read('public/css/operations.css');

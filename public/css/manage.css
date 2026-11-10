@@ -212,15 +212,28 @@
 .rb-manage .eq-search[hidden] { display: none; }
 .rb-manage [data-eq-section][hidden], .rb-manage [data-eq-row][hidden], .rb-manage [data-eq-none][hidden] { display: none; }
 .rb-manage .eq-table { table-layout: fixed; }
-.rb-manage .eq-table .c-item { width: 40%; }
+.rb-manage .eq-table .c-item { width: 34%; }
 .rb-manage .eq-table .c-stock { width: 12%; }
 .rb-manage .eq-table .c-max { width: 20%; }
 .rb-manage .eq-table .c-status { width: 12%; }
-.rb-manage .eq-table .c-edit { width: 16%; }
+.rb-manage .eq-table .c-edit { width: 22%; }
 .rb-manage .eq-table :is(th, td):is(:nth-child(2), :nth-child(3)) { text-align: right; padding-right: var(--rb-space-4); font-variant-numeric: tabular-nums; }
 .rb-manage .eq-table :is(th, td):last-child { text-align: right; }
 .rb-manage a.row-edit { display: inline-flex; align-items: center; justify-content: center; min-width: 4rem; min-height: 2.25rem; padding: 0 var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); text-decoration: none; }
 .rb-manage a.row-edit:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
+/* Edit and Delete sit side by side with one size, one radius, one border weight; Delete is the outlined destructive variant. */
+.rb-manage .row-actions { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--rb-space-2); }
+.rb-manage a.row-delete { display: inline-flex; align-items: center; justify-content: center; min-width: 4rem; min-height: 2.25rem; padding: 0 var(--rb-space-4); border: 1px solid var(--rb-danger-text); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); color: var(--rb-danger-text); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); text-decoration: none; }
+.rb-manage a.row-delete:hover { background: var(--rb-danger-bg); color: var(--rb-danger-text); }
+.rb-manage a.row-delete:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
+@media (max-width: 40rem), (pointer: coarse) { .rb-manage a.row-edit, .rb-manage a.row-delete { min-height: var(--rb-control-height); } }
+/* The delete section on an edit page: a quiet panel with a danger-coloured edge, so it is findable but never in the way of Save. */
+.rb-manage .rb-delete { border-color: color-mix(in srgb, var(--rb-danger-text) 35%, var(--rb-border-warm)); scroll-margin-top: var(--rb-space-4); }
+.rb-manage .rb-delete__title { color: var(--rb-danger-text); }
+.rb-manage .rb-delete p { margin: var(--rb-space-2) 0; overflow-wrap: anywhere; }
+.rb-manage .rb-delete__reasons { margin: var(--rb-space-2) 0; padding-left: var(--rb-space-6); }
+.rb-manage .rb-delete__form { display: grid; gap: var(--rb-space-4); justify-items: start; margin-top: var(--rb-space-4); }
+.rb-manage .rb-delete:target { outline: var(--rb-focus-width) solid var(--rb-danger-text); outline-offset: var(--rb-focus-offset); }
 .rb-manage a.row-edit:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 .rb-manage .mcat-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2) var(--rb-space-4); justify-content: flex-start; }
 .rb-manage .mcat-rename { flex: 1 1 100%; align-items: center; flex-wrap: wrap; gap: var(--rb-space-2); margin: 0; }
@@ -247,9 +260,9 @@
 .rb-manage .rooms-table .c-room { width: 17%; }
 .rb-manage .rooms-table .c-building { width: 17%; }
 .rb-manage .rooms-table .c-seats { width: 12%; }
-.rb-manage .rooms-table .c-note { width: 30%; }
+.rb-manage .rooms-table .c-note { width: 26%; }
 .rb-manage .rooms-table .c-status { width: 10%; }
-.rb-manage .rooms-table .c-edit { width: 14%; }
+.rb-manage .rooms-table .c-edit { width: 18%; }
 .rb-manage .rooms-table td:first-child, .rb-manage .rooms-table td.note { min-width: 0; }
 .rb-manage .rooms-table :is(th, td):last-child { text-align: right; }
 .rb-manage .rooms-table td.room-edit { white-space: nowrap; }

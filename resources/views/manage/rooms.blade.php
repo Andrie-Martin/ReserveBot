@@ -64,7 +64,7 @@
   <table class="mtable rooms-table">
     <colgroup><col class="c-room"><col class="c-building"><col class="c-seats"><col class="c-note"><col class="c-status"><col class="c-edit"></colgroup>
     <thead>
-      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Edit</span></th></tr>
+      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr>
     </thead>
     <tbody>
       @foreach ($rooms as $room)
@@ -74,7 +74,7 @@
           <td>{{ $room->capacity }}</td>
           <td class="hide-sm note">{{ $room->fixed_equipment_note }}</td>
           <td><span @class(['status-badge', 'st-confirmed' => $room->is_active, 'st-cancelled' => ! $room->is_active])>{{ $room->is_active ? 'On' : 'Off' }}</span></td>
-          <td class="room-edit"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a></td>
+          <td class="room-edit"><div class="row-actions"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a>@if (\App\Support\ResourceDeletion::roomLooksDeletable($room))<a class="row-delete" href="{{ route('manage.rooms.edit', $room) }}#delete">Delete<span class="sr-only"> {{ $room->name }}: review and confirm on its page</span></a>@endif</div></td>
         </tr>
       @endforeach
     </tbody>
