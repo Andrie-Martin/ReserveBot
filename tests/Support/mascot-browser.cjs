@@ -111,26 +111,51 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     await ctx.close();
   }
   {
-    // The door is held, not pointed at: the gripping hand turns with the right arm through the 180ms change (never detached) and
-    // ends on the door's edge, and the door sits on the body, not beside it.
+    // One holding system for every accessory pose: visible hand-to-object contact and a grip that stays on the arm through the
+    // 180ms change. Two-handed objects (calendar, clipboard, door) have a hand on each side edge; one-handed objects (key, tool,
+    // badge) are carried by the right hand; the other poses show no hands at all.
     const { ctx, page } = await open(browser, 'admin');
     await page.goto(origin + '/'); await settle(page);
-    await link(page, 'Free rooms').hover();
-    const samples = [];
-    for (let i = 0; i < 9; i++) {
-      samples.push(await page.evaluate(() => { const t = (s) => getComputedStyle(document.querySelector(s)).transform; return { arm: t('.rbm-arm--r:not(.rbm-grip)'), grip: t('.rbm-grip') }; }));
-      await wait(25);
+    const state = () => page.evaluate(() => {
+      const ctr = (r) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width });
+      const side = (s) => { const hand = document.querySelector(`.rbm-hands.rbm-arm--${s} .rbm-hand`); const limb = document.querySelector(`.rbm-arm--${s}:not(.rbm-hands) .rbm-limb`); const pt = new DOMPoint(Number(limb.getAttribute('x2')), Number(limb.getAttribute('y2'))).matrixTransform(limb.getScreenCTM()); const shoulder = new DOMPoint(Number(limb.getAttribute('x1')), Number(limb.getAttribute('y1'))).matrixTransform(limb.getScreenCTM()); const h = ctr(hand.getBoundingClientRect()); const m = hand.getScreenCTM(); return { opacity: Number(getComputedStyle(hand).opacity), w: 2 * Number(hand.getAttribute('r')) * Math.hypot(m.a, m.b), tipGap: Math.hypot(h.x - pt.x, h.y - pt.y), reach: Math.hypot(h.x - shoulder.x, h.y - shoulder.y), x: h.x, y: h.y }; };
+      const prop = [...document.querySelectorAll('.rbm-prop')].find((e) => getComputedStyle(e).opacity === '1');
+      const face = document.querySelector('.rbm-cream[rx="17"]').getBoundingClientRect();
+      const o = prop && prop.getBoundingClientRect();
+      const frame = prop && (prop.querySelector('.rbm-frame, .rbm-gold-edge, .rbm-keyring') || prop).getBoundingClientRect();
+      return { l: side('l'), r: side('r'), obj: o && { x: o.x, y: o.y, right: o.right, bottom: o.bottom, w: o.width }, frame: frame && { x: frame.x, right: frame.right }, faceBottom: face.bottom, pose: document.querySelector('[data-rb-mascot]').dataset.pose };
+    });
+    const unit = (await page.evaluate(() => document.querySelector('.rb-mascot__art').getBoundingClientRect().height)) / 140; // px per SVG unit
+    const holding = { 'Today': 'two', 'Requests': 'two', 'Free rooms': 'two', 'Manage rooms': 'one', 'Equipment': 'one', 'Accounts': 'one' };
+    for (const label of ['Home', ...Object.keys(holding), 'Home']) {
+      if (label !== 'Home') { await page.mouse.move(800, 500); await link(page, 'Home').hover(); await wait(260); }
+      await link(page, label).hover();
+      const samples = [];
+      for (let i = 0; i < 8; i++) { samples.push(await state()); await wait(24); }
+      for (const sm of samples) for (const side of ['l', 'r']) assert.ok(sm[side].tipGap < 0.6, `${label}: the ${side} hand stays on its arm's tip through the change (gap ${sm[side].tipGap.toFixed(2)}px)`);
+      await wait(300);
+      const f = await state();
+      const kind = holding[label];
+      if (!kind) { assert.ok(f.l.opacity === 0 && f.r.opacity === 0, `${label}: no hands when nothing is held`); continue; }
+      assert.equal(f.r.opacity, 1, `${label}: the right hand is shown`);
+      assert.equal(f.l.opacity, kind === 'two' ? 1 : 0, `${label}: left hand only for two-handed objects`);
+      assert.ok(Math.abs(f.r.w - 13.6 * unit) < 0.6 * unit, 'hands are one size');
+      const o = f.obj, inside = (hnd, pad) => hnd.x >= o.x - pad && hnd.x <= o.right + pad && hnd.y >= o.y - pad && hnd.y <= o.bottom + pad;
+      assert.ok(inside(f.r, 1.5 * unit), `${label}: the right hand touches the object (hand ${f.r.x.toFixed(1)},${f.r.y.toFixed(1)} object ${o.x.toFixed(1)}-${o.right.toFixed(1)})`);
+      if (kind === 'two') {
+        assert.ok(inside(f.l, 1.5 * unit), `${label}: the left hand touches the object too`);
+        const edge = (hnd, e) => Math.abs(hnd.x - e) <= 3.5 * unit;
+        assert.ok(edge(f.l, f.frame.x + 1.5 * unit) && edge(f.r, f.frame.right - 1.5 * unit), `${label}: the hands sit on the left and right edges`);
+        assert.ok(Math.abs(f.l.y - f.r.y) < 0.5 * unit, `${label}: both hands at the same height`);
+      }
+      assert.ok(o.y >= f.faceBottom - 2.5 * unit, `${label}: the object does not cover the face`);
     }
-    assert.ok(samples.every((s) => s.arm === s.grip), 'the gripping hand always has exactly the right arm\'s transform');
-    assert.ok(new Set(samples.map((s) => s.arm)).size > 1, 'and the arm really moved during the change');
-    await wait(300);
-    const geo = await page.evaluate(() => { const hand = document.querySelector('.rbm-grip circle').getBoundingClientRect(); const door = document.querySelector('.rbm-prop--door rect').getBoundingClientRect(); const body = document.querySelector('.rbm-maroon[rx="25"]').getBoundingClientRect(); const op = getComputedStyle(document.querySelector('.rbm-grip')).opacity; return { hx: hand.x + hand.width / 2, hy: hand.y + hand.height / 2, door: [door.x, door.y, door.right, door.bottom], body: [body.x, body.y, body.right, body.bottom], op }; });
-    assert.equal(geo.op, '1');
-    assert.ok(geo.hx >= geo.door[2] - 6 && geo.hx <= geo.door[2] + 3 && geo.hy > geo.door[1] && geo.hy < geo.door[3], 'the hand sits on the door\'s right edge: ' + JSON.stringify(geo));
-    assert.ok(geo.door[0] > geo.body[0] && geo.door[2] <= geo.body[2] + 1 && geo.door[3] <= geo.body[3] + 14, 'the door is in front of the body, not beside it');
-    await page.mouse.move(800, 500); await link(page, 'Home').hover(); await wait(300);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.rbm-grip')).opacity), '0', 'the gripping hand is gone in other poses');
-    ok('door pose: the hand turns with the arm through the transition, grips the door edge, and the door is held in front of the body');
+    ok('every accessory pose is held: hands touch the object (both side edges for calendar/clipboard/door, the carrier hand for key/tool/badge), stay on the arm tips through the transition, one hand size, face uncovered; no hands in idle/wave/attend');
+    for (const p of ['idle', 'wave', 'attend']) {
+      await page.evaluate((p) => { document.querySelector('[data-rb-mascot]').dataset.pose = p; }, p); await wait(260);
+      const f = await state();
+      assert.ok(f.l.opacity === 0 && f.r.opacity === 0, `${p}: hands hidden`);
+    }
     await ctx.close();
   }
   for (const site of ['rep', 'staff', 'admin', 'college']) {

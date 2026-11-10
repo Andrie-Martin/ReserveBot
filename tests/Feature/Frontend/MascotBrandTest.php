@@ -88,7 +88,11 @@ final class MascotBrandTest extends TestCase
         foreach (['attend', 'wave', 'door'] as $pose) {
             $this->assertStringContainsString("data-pose=\"$pose\"", $css, "$pose pose parameters");
         }
-        $this->assertStringContainsString('[data-pose="calendar"], [data-pose="clipboard"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]', $css);
+        // One holding system: two-handed poses angle both arms inward onto the object's side edges, one-handed poses share one carrier hand.
+        $this->assertStringContainsString('.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }', $css);
+        $this->assertStringContainsString('.rb-mascot[data-pose="door"] { --rbm-l: -46.3deg; --rbm-r: 46.3deg; }', $css);
+        $this->assertStringContainsString('.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-r: 28.4deg; }', $css);
+        $this->assertStringContainsString('.rbm-arm--r :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge)', $css, 'hands are shown only in holding poses');
         // One body, built once: head-and-body silhouette, faceplate, legs, antenna, chest pill and two eyes, however many poses.
         $this->assertSame(1, substr_count($svg, 'class="rbm-maroon" x="26" y="40" width="88" height="83" rx="25"'), 'one rounded head/body silhouette');
         $this->assertSame(1, substr_count($svg, 'class="rbm-cream" x="37" y="54" width="66" height="39" rx="17"'), 'one cream faceplate');
@@ -96,9 +100,11 @@ final class MascotBrandTest extends TestCase
         $this->assertSame(2, substr_count($svg, 'cy="69" r="5"'), 'two simple round eyes');
         $this->assertSame(1, substr_count($svg, 'class="rbm-gold rbm-pill"'), 'one gold chest accent');
         $this->assertSame(1, substr_count($svg, 'class="rbm-aerial"'), 'one short antenna');
-        $this->assertSame(3, substr_count($svg, 'class="rbm-arm '), 'two arms, posed by angle only, plus the door-gripping hand that turns with the right arm');
-        $this->assertStringContainsString('rbm-arm rbm-arm--r rbm-grip', $svg);
-        $this->assertMatchesRegularExpression('/\\.rb-mascot\\[data-pose="door"\\] \\.rbm-grip/', $css, 'the gripping hand only appears in the door pose');
+        $this->assertSame(4, substr_count($svg, 'class="rbm-arm '), 'two limbs and two hands, all posed by the same two angle variables');
+        $this->assertSame(2, substr_count($svg, 'rbm-arm rbm-arm--l rbm-hands') + substr_count($svg, 'rbm-arm rbm-arm--r rbm-hands'), 'each hand turns with its own arm');
+        $this->assertSame(2, substr_count($svg, 'class="rbm-hand" '), 'one hand per arm, the same size');
+        $this->assertGreaterThan(strpos($svg, 'rbm-prop--tool'), strpos($svg, 'rbm-hands'), 'hands are drawn after every prop, so they sit on the object');
+        $this->assertLessThan(strpos($svg, 'class="rbm-cream" x="37"'), strpos($svg, 'rbm-limb"'), 'limbs are drawn under the faceplate, so an arm never cuts into the face');
         $this->assertSame(6, substr_count($svg, 'class="rbm-prop rbm-prop--'), 'six props and nothing else is duplicated per pose');
         // The character is centred on x=100 of a 200-wide artwork (translate 30 + centre 70), so centring the figure centres the robot.
         $this->assertStringContainsString('viewBox="0 6 200 140"', $svg);

@@ -28,6 +28,9 @@
 .rbm-shadow { fill: var(--rb-color-maroon); opacity: .12; }
 .rbm-aerial { stroke: var(--rb-color-maroon); stroke-width: 4.5; stroke-linecap: round; }
 .rbm-limb { stroke: var(--rb-color-maroon); stroke-width: 12; stroke-linecap: round; }
+.rbm-hand { fill: var(--rb-color-maroon); opacity: 0; }
+.rbm-hand-edge { fill: var(--rb-color-accent); opacity: 0; }
+.rbm-limb-edge { stroke: var(--rb-color-accent); stroke-width: 13.6; stroke-linecap: round; opacity: 0; }
 .rbm-hand-ball { fill: var(--rb-color-gold); opacity: 0; }
 .rbm-mouth { fill: none; stroke: var(--rb-color-maroon); stroke-width: 3.4; stroke-linecap: round; }
 .rbm-frame { fill: none; stroke: var(--rb-color-gold); stroke-width: 3; }
@@ -37,36 +40,42 @@
 .rbm-keyshaft { fill: none; stroke: var(--rb-color-gold); stroke-width: 4; stroke-linecap: round; }
 
 /* Pose parameters: clockwise degrees for each arm about its shoulder, and a tiny glance. Everything not listed stays at rest.
-   idle = arms out at the sides (the reference). Holding poses bring the hands in a little; wave raises the left arm (with the
-   gold hand), door hangs the right arm down so its hand grips the held door, attend is a neutral half-raised arm. */
+   idle = arms out at the sides (the reference); wave raises the left arm (with the gold hand); attend is a neutral half-raised arm.
+   Holding poses use ONE system (arm length 32, tip = shoulder + 32 * (-sin a, cos a)):
+   - two-handed (calendar, clipboard: card x 44..96; door: x 54..86): both arms angle inward so the hands land on the object's side
+     edges: -23.4 / 23.4deg puts the hands at (43.7, 109.4) and (96.3, 109.4); -46.3 / 46.3deg puts them at (54.1, 102.1) and (85.9, 102.1);
+   - one-handed (key, tool, badge): the right hand is the carrier at (93.8, 108.1) (28.4deg) and the left arm rests at its idle angle. */
 .rb-mascot { --rbm-duration: 180ms; --rbm-ease: cubic-bezier(.4, 0, .2, 1); --rbm-l: 35deg; --rbm-r: -35deg; --rbm-ex: 0px; --rbm-smile: 1; }
 .rb-mascot[data-pose="attend"] { --rbm-r: -62deg; }
 .rb-mascot[data-pose="wave"] { --rbm-l: 156deg; --rbm-smile: 1.18; }
-.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-l: 24deg; --rbm-r: -24deg; }
-.rb-mascot[data-pose="door"] { --rbm-l: 24deg; --rbm-r: 15deg; }
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }
+.rb-mascot[data-pose="door"] { --rbm-l: -46.3deg; --rbm-r: 46.3deg; }
+.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-r: 28.4deg; }
 
 .rbm-arm--l { transform: rotate(var(--rbm-l)); transform-origin: 31px 80px; }
 .rbm-arm--r { transform: rotate(var(--rbm-r)); transform-origin: 109px 80px; }
 .rbm-eyes { transform: translateX(var(--rbm-ex)); }
 .rbm-mouth { transform: scaleX(var(--rbm-smile)); transform-origin: 70px 77px; }
-.rbm-prop, .rbm-grip { opacity: 0; }
+.rbm-prop { opacity: 0; }
 .rbm-pill { opacity: 1; }
 
 .rb-mascot[data-pose="wave"] .rbm-hand-ball,
 .rb-mascot[data-pose="door"] .rbm-prop--door,
-.rb-mascot[data-pose="door"] .rbm-grip,
 .rb-mascot[data-pose="calendar"] .rbm-prop--calendar,
 .rb-mascot[data-pose="clipboard"] .rbm-prop--clipboard,
 .rb-mascot[data-pose="key"] .rbm-prop--key,
 .rb-mascot[data-pose="tool"] .rbm-prop--tool,
 .rb-mascot[data-pose="badge"] .rbm-prop--badge { opacity: 1; }
-.rb-mascot:is([data-pose="door"], [data-pose="key"], [data-pose="tool"]) .rbm-pill { opacity: 0; }
+/* Hands: the right hand grips in every holding pose, the left only when the object is held with two hands. The accent edge (on the
+   hand and along the limb) lets an arm that lies over the same-coloured body stay readable. */
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-arm--r :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) .rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge) { opacity: 1; }
+.rb-mascot:is([data-pose="door"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-pill { opacity: 0; }
 
 /* Only transform and opacity move, and only for a short moment when the pose changes. The feet, body, head and footer never
    move, so the figure stays planted, and there is no idle movement at all. */
 .rbm-arm, .rbm-eyes, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
-.rbm-prop, .rbm-hand-ball, .rbm-pill { transition: opacity var(--rbm-duration) var(--rbm-ease); }
-.rbm-grip { transition: transform var(--rbm-duration) var(--rbm-ease), opacity var(--rbm-duration) var(--rbm-ease); }
+.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-hand-ball, .rbm-pill { transition: opacity var(--rbm-duration) var(--rbm-ease); }
 @media (prefers-reduced-motion: no-preference) {
   /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only after the first
      frame, so arriving on the Home page does not wave on its own. */
@@ -79,5 +88,5 @@
 }
 /* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. */
 @media (prefers-reduced-motion: reduce) {
-  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-grip, .rbm-hand-ball, .rbm-pill { transition: none; animation: none; }
+  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-hand-ball, .rbm-pill { transition: none; animation: none; }
 }
