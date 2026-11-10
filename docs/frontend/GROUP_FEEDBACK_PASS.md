@@ -121,6 +121,19 @@ and it needs a delete of an unused room during an import by the same department.
 * Not covered by older scripts: `tests/Support/timeline-browser.cjs` and `visual-refinement-browser.cjs` assert that a narrow board
   scrolls sideways; item 9 replaces that with cards, so those expectations are superseded for narrow widths.
 
+## Sidebar role card ("Signed in as") removed
+
+* Symptom: the Admin sidebar showed a "SIGNED IN AS - Admin" card at 90% browser zoom but not at 100%, moving the Workspace navigation.
+* Cause: `.rb-role-card` was hidden only by a height-only media query (`min-width: 80rem` and `max-height: 48rem`). Zooming out makes the CSS
+  viewport taller than 48rem, so the card reappeared. The same query also shrank the sidebar's top padding, a second height-dependent shift.
+* Fix: the card markup (`navigation.blade.php`), its three CSS rules, its two `display: none` overrides and the short-height sidebar block
+  are deleted, for every role. Nothing replaces it. The sidebar is now brand + Workspace navigation at one fixed offset (32px below the sidebar top).
+  The role is still shown in the header account chip, the page kicker and, on phones, the opened menu. Roles, routes, authorisation and data are untouched.
+* Audit: no other shared layout rule changes the sidebar with viewport height; `.rb-role-card`/"Signed in as" no longer exists in views, CSS or JS.
+* Tests: `UiPolishPresentationTest::test_the_signed_in_as_role_card_is_gone_and_the_sidebar_does_not_depend_on_viewport_height` (source),
+  `FrontendConsistencyTest` (HTTP, all roles), and `tests/Support/sidebar-zoom-browser.cjs` (Chromium at 90/100/110/125/150/200% zoom on four
+  window sizes plus 390x844 and 320x640 at 100%/200%, all three roles).
+
 ## Known limitations
 
 * Next-month arrow enabled state is covered by PHPUnit (time-travelled), not by the browser run, because the seeded window never crosses

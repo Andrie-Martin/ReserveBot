@@ -35,9 +35,6 @@
 .rb-nav-item__count { margin-left: auto; padding: 0 .375rem; border-radius: .375rem; background: color-mix(in srgb, var(--rb-color-maroon) 16%, var(--rb-color-white)); color: var(--rb-color-maroon); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-bold); }
 .rb-account__link:hover { color: var(--rb-color-maroon); background: var(--rb-surface-active); }
 .rb-header__crumb { display: none; }
-.rb-role-card { display: grid; gap: .125rem; padding: .625rem .75rem; border: 1px solid var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); }
-.rb-role-card__label { font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .08em; text-transform: uppercase; color: var(--rb-color-maroon); }
-.rb-role-card__role { font-size: var(--rb-text-small); }
 .rb-shell__content { min-width: 0; }
 .rb-shell--workspace .rb-shell__main { max-width: none; margin: 0; padding: var(--rb-space-8) var(--rb-shell-gutter) var(--rb-space-12); }
 /* Keep page-owned .narrow/.book-card/.account-card/.tt-card constraints intact.
@@ -85,7 +82,6 @@
   .rb-brand__monogram { width: 2.25rem; height: 2.25rem; flex-shrink: 0; font-size: var(--rb-text-small); }
   .rb-brand__name { font-size: var(--rb-text-body); }
   .rb-brand__college { max-width: 12rem; line-height: 1.25; }
-  .rb-role-card { display: none; }
   .rb-menu-toggle { margin-left: auto; padding: var(--rb-space-2); flex-shrink: 0; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
   .rb-account { flex-basis: 100%; flex-wrap: wrap; margin: var(--rb-space-2) 0 0; gap: var(--rb-space-4); }
   .rb-account form { order: 0; }
@@ -110,12 +106,5 @@
   .rb-shell--rep .rb-shell__content :focus { scroll-margin-bottom: var(--rb-bottom-space, calc(7rem + env(safe-area-inset-bottom))); }
 }
 
-/* Measured at 200% text: a 473px wrapped header plus the tallest 150px
-   action and 8px focus clearance require the 632px boundary. Sidebar padding
-   is compact here so its 92px navigation rows also remain reachable. */
-@media (min-width: 80rem) and (min-height: 39.5rem) and (max-height: 48rem) {
-  .rb-sidebar { padding-block: var(--rb-space-2); gap: var(--rb-space-4); }
-  .rb-role-card { display: none; }
-}
 /* Touch devices: 44px navigation rows (the desktop sidebar keeps its compact 40px rows for pointers). */
 @media (pointer: coarse) { .rb-nav-item { min-height: var(--rb-control-height); } }
