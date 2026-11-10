@@ -30,7 +30,7 @@
 .rbm-limb { stroke: var(--rb-color-maroon); stroke-width: 12; stroke-linecap: round; }
 .rbm-hand { fill: var(--rb-color-maroon); opacity: 0; }
 .rbm-hand-edge { fill: var(--rb-color-accent); opacity: 0; }
-.rbm-limb-edge { stroke: var(--rb-color-accent); stroke-width: 13.6; stroke-linecap: round; opacity: 0; }
+.rbm-limb-edge { stroke: var(--rb-color-accent); stroke-width: 13.6; stroke-linecap: butt; opacity: 0; }
 .rbm-mouth { fill: none; stroke: var(--rb-color-maroon); stroke-width: 3.4; stroke-linecap: round; }
 .rbm-frame { fill: none; stroke: var(--rb-color-gold); stroke-width: 3; }
 .rbm-gold-edge { stroke: var(--rb-color-gold); stroke-width: 3; }
@@ -41,6 +41,7 @@
 .rbm-panel { fill: none; stroke: var(--rb-color-accent); stroke-width: 1.6; stroke-linejoin: round; }
 .rbm-cells { fill: var(--rb-color-maroon); opacity: .16; }
 .rbm-tick { fill: none; stroke: var(--rb-color-maroon); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rbm-wrench { fill: var(--rb-color-cream); stroke: var(--rb-color-cream); stroke-width: 1.2; stroke-linejoin: round; }
 .rbm-keyring { fill: none; stroke: var(--rb-color-gold); stroke-width: 4.5; }
 .rbm-keyshaft { fill: none; stroke: var(--rb-color-gold); stroke-width: 4.5; stroke-linecap: round; }
 
@@ -62,7 +63,7 @@
 .rbm-eyes--happy, .rbm-sparks { opacity: 0; }
 .rbm-mouth { transform: scaleX(var(--rbm-smile)); transform-origin: 70px 77px; }
 .rbm-prop { opacity: 0; }
-.rbm-pill { opacity: 1; }
+/* The chest pill is part of the body: always drawn, behind the limbs, props and hands, so only a held object itself can cover it. */
 
 .rb-mascot[data-pose="door"] .rbm-prop--door,
 .rb-mascot[data-pose="calendar"] .rbm-prop--calendar,
@@ -81,12 +82,11 @@
 .rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
 .rb-mascot[data-pose="wave"] .rbm-arm--r .rbm-hand,
 .rb-mascot[data-pose="attend"] .rbm-hand { opacity: 1; }
-.rb-mascot:is([data-pose="door"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-pill { opacity: 0; }
 
 /* Only transform and opacity move, and only for a short moment when the pose changes. The feet, body, head and footer never
    move, so the figure stays planted, and there is no idle movement at all. */
 .rbm-arm, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
-.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-pill, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: opacity var(--rbm-duration) var(--rbm-ease); }
+.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: opacity var(--rbm-duration) var(--rbm-ease); }
 @media (prefers-reduced-motion: no-preference) {
   /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only after the first
      frame, so arriving on the Home page does not wave on its own. */
@@ -99,5 +99,5 @@
 }
 /* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. */
 @media (prefers-reduced-motion: reduce) {
-  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-pill, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: none; animation: none; }
+  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: none; animation: none; }
 }

@@ -95,6 +95,14 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
       await page.evaluate((p) => { document.querySelector('[data-rb-mascot]').dataset.pose = p; }, p);
       assert.deepEqual(await measure(), base, `pose ${p}: body, face, antenna, shadow, art box and footer are exactly where they were`);
     }
+    // The gold chest pill is body: shown in every pose and, wherever no held object lies on it, the topmost thing at its centre.
+    for (const p of ['idle', 'wave', 'attend', 'key', 'tool', 'calendar', 'clipboard', 'door', 'badge']) {
+      await page.evaluate((p) => { document.querySelector('[data-rb-mascot]').dataset.pose = p; }, p);
+      const r = await page.evaluate(() => { const root = document.querySelector('.rb-mascot'); root.style.pointerEvents = 'auto'; const pill = document.querySelector('.rbm-pill'); const b = pill.getBoundingClientRect(); const shown = (e) => { for (let n = e; n && n.tagName !== 'svg'; n = n.parentElement) if (getComputedStyle(n).opacity === '0') return false; return true; }; const top = (x, y) => document.elementsFromPoint(x, y).find((e) => e.closest('svg') && e.tagName !== 'g' && shown(e)); const t = top(b.x + b.width / 2, b.y + b.height / 2); const l = top(b.x + b.width * 0.2, b.y + b.height / 2); root.style.pointerEvents = ''; return { opacity: getComputedStyle(pill).opacity, centreOnTop: t === pill, leftOnTop: l === pill }; });
+      assert.equal(r.opacity, '1', `${p}: the chest pill is never hidden`);
+      if (['idle', 'wave', 'attend', 'key', 'tool'].includes(p)) assert.ok(r.centreOnTop && r.leftOnTop, `${p}: the gold chest pill is visible (nothing lies on it)`);
+    }
+    ok('the gold chest pill is the same in all 9 poses and fully visible in idle, wave, attend, key and tool (only held cards and the door may cover it)');
     ok('all 9 poses keep the same body, faceplate, antenna, shadow, artwork box and footer position');
     const size = await page.evaluate(() => document.querySelector('.rb-mascot__art').getBoundingClientRect().height);
     assert.ok(size >= 88 && size <= 92, 'about 90px tall: ' + size);

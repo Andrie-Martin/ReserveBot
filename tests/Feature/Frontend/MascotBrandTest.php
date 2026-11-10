@@ -99,6 +99,14 @@ final class MascotBrandTest extends TestCase
         // One body, built once: head-and-body silhouette, faceplate, legs, antenna, chest pill and two eyes, however many poses.
         $this->assertSame(1, substr_count($svg, 'class="rbm-maroon" x="26" y="40" width="88" height="83" rx="25"'), 'one rounded head/body silhouette');
         $this->assertSame(1, substr_count($svg, 'class="rbm-cream" x="37" y="54" width="66" height="39" rx="17"'), 'one cream faceplate');
+        $this->assertDoesNotMatchRegularExpression('/\\.rbm-pill[^{]*\\{[^}]*opacity:\\s*0/', $css, 'the chest pill is never hidden by a pose; only a held object may cover it');
+        $this->assertDoesNotMatchRegularExpression('/\\.rbm-pill[^{]*\\{[^}]*transition/', $css, 'and it never fades');
+        $this->assertLessThan(strpos($svg, 'class="rbm-arm rbm-arm--l"'), strpos($svg, 'rbm-pill'), 'the pill is body: drawn before the limbs, props and hands');
+        preg_match('/rbm-prop--tool\">(.*?)<\\/g>\\s*<\\/g>/s', $svg, $tool);
+        $this->assertNotEmpty($tool);
+        $this->assertStringNotContainsString('rbm-maroon', $tool[1], 'the wrench is one light colour: no maroon patch painted over its head');
+        $this->assertStringContainsString('class="rbm-wrench" d="M-3.2 -17.875A8.5 8.5 0 1 0 3.2 -17.875V-12H-3.2Z"', $tool[1], 'the open jaw is a real gap in the head path');
+        $this->assertStringContainsString('.rbm-wrench { fill: var(--rb-color-cream); stroke: var(--rb-color-cream)', $css);
         $this->assertSame(2, substr_count($svg, 'width="16" height="26" rx="8"'), 'one pair of stubby legs');
         $this->assertSame(2, substr_count($svg, 'cy="69" r="5"'), 'two simple round eyes');
         $this->assertSame(1, substr_count($svg, 'class="rbm-gold rbm-pill"'), 'one gold chest accent');

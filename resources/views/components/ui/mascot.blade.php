@@ -30,11 +30,11 @@
         {{-- Limbs: over the body but under the faceplate, so an arm angled across the chest never cuts into the face. The accent edge
              only shows in holding poses, where an arm lies over the (same-coloured) body and would otherwise vanish. --}}
         <g class="rbm-arm rbm-arm--l">
-          <line class="rbm-limb-edge" x1="31" y1="80" x2="31" y2="112"/>
+          <line class="rbm-limb-edge" x1="31" y1="82" x2="31" y2="112"/>
           <line class="rbm-limb" x1="31" y1="80" x2="31" y2="112"/>
         </g>
         <g class="rbm-arm rbm-arm--r">
-          <line class="rbm-limb-edge" x1="109" y1="80" x2="109" y2="112"/>
+          <line class="rbm-limb-edge" x1="109" y1="82" x2="109" y2="112"/>
           <line class="rbm-limb" x1="109" y1="80" x2="109" y2="112"/>
         </g>
 
@@ -90,9 +90,9 @@
         </g>
         <g class="rbm-prop rbm-prop--tool">
           <g transform="translate(38.15 98.13) rotate(-38.8) scale(1.3)">
-            <rect class="rbm-cream" x="-3" y="-6" width="6" height="27" rx="3"/>
-            <circle class="rbm-cream" cx="0" cy="-10" r="8.5"/>
-            <rect class="rbm-maroon" x="-3.2" y="-21" width="6.4" height="11"/>
+            {{-- An open-ended wrench: the jaw is a real gap in the head path (not a maroon patch painted over it) --}}
+            <rect class="rbm-wrench" x="-3" y="-6" width="6" height="27" rx="3"/>
+            <path class="rbm-wrench" d="M-3.2 -17.875A8.5 8.5 0 1 0 3.2 -17.875V-12H-3.2Z"/>
           </g>
         </g>
 
