@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title') · ReserveBot</title>
   {{-- Start the above-the-fold Inter weights with the document, not after the CSS is parsed, so text does not swap late. --}}
-  @foreach (['Regular', 'SemiBold', 'Bold'] as $weight)
+  @foreach (['Regular', 'Medium', 'SemiBold', 'Bold'] as $weight)
     <link rel="preload" href="{{ asset('fonts/inter/Inter-'.$weight.'.woff2') }}" as="font" type="font/woff2" crossorigin>
   @endforeach
   {{-- ?v= changes whenever style.css changes, so browsers never keep an old copy --}}
