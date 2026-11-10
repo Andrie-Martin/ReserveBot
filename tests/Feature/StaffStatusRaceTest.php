@@ -24,8 +24,9 @@ use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /**
- * QA F-B: a hand-out or no-show re-checks the booking's status and calendar day on the latest, locked row, so a
- * concurrent move to another day can never slip a future-day booking through. The interleaving is controlled: a
+ * QA F-B: a hand-out or no-show re-checks the booking's status on the latest, locked row, and a move takes the same
+ * row lock, so the two always run one after the other and neither change is lost. (Hand-out and no-show are allowed
+ * on any day again, so a booking moved to another day meanwhile is simply handed out at its new time.) The interleaving is controlled: a
  * listener on the transaction that StaffDesk::setStatus opens runs the competing request at the exact moment
  * between the controller's first check and the locked re-read (what two real requests produce, deterministically).
  * Real concurrent HTTP runs: docs/frontend/BOOKING_FB_STATUS_MOVE_RACE.md.
@@ -168,38 +169,38 @@ class StaffStatusRaceTest extends TestCase
 
     // ---- hand-out and no-show versus a concurrent move ----
 
-    public function test_hand_out_loses_to_a_move_to_a_future_day_committed_between_check_and_update(): void
+    public function test_hand_out_and_a_move_to_another_day_at_the_same_moment_both_take_effect_in_order(): void
     {
         $r = $this->booking('2026-11-04 14:00');
         $item = $this->withEquipment($r);
         $stock = $this->stock($r, $item);
         $this->interleave(fn () => $this->moveTo($r, '2026-11-05', 14 * 60, 15 * 60));
 
-        $this->act('bookings.hand-out', $r)->assertSessionHas('problem');
+        $this->act('bookings.hand-out', $r)->assertSessionHas('status');
 
         $fresh = $r->fresh();
-        $this->assertSame('Confirmed', $fresh->status, 'a future-day booking must not become InUse');
-        $this->assertSame('2026-11-05', $fresh->start_time->toDateString());
-        $this->assertSame(0, $this->logs($r), 'a refused hand-out writes no status log');
+        $this->assertSame('InUse', $fresh->status, 'the hand-out runs after the move, on the latest row');
+        $this->assertSame('2026-11-05', $fresh->start_time->toDateString(), 'the move that came first is kept');
+        $this->assertSame(1, $this->logs($r), 'one status log');
         $this->assertSame(1, $this->logs($r, 'Rescheduled'));
         $this->assertSame($stock, $this->stock($r, $item));
-        $this->assertStringContainsString('can’t be handed out yet', session('problem'));
-        $this->assertStringContainsString('November 5', session('problem'), 'the message names the new day, from the latest row');
     }
 
-    public function test_no_show_loses_to_a_move_to_a_future_day_committed_between_check_and_update(): void
+    public function test_no_show_and_a_move_to_another_day_at_the_same_moment_both_take_effect_in_order(): void
     {
         $r = $this->booking('2026-11-04 14:00');
         $item = $this->withEquipment($r);
         $stock = $this->stock($r, $item);
         $this->interleave(fn () => $this->moveTo($r, '2026-11-05', 14 * 60, 15 * 60));
 
-        $this->act('bookings.no-show', $r)->assertSessionHas('problem');
+        $this->act('bookings.no-show', $r)->assertSessionHas('status');
 
-        $this->assertSame('Confirmed', $this->statusOf($r), 'a future-day booking must not become NoShow');
-        $this->assertSame(0, $this->logs($r));
+        $fresh = $r->fresh();
+        $this->assertSame('NoShow', $fresh->status);
+        $this->assertSame('2026-11-05', $fresh->start_time->toDateString());
+        $this->assertSame(1, $this->logs($r));
+        $this->assertSame(1, $this->logs($r, 'Rescheduled'));
         $this->assertSame($stock, $this->stock($r, $item));
-        $this->assertStringContainsString('can’t be a no-show yet', session('problem'));
     }
 
     public function test_hand_out_and_no_show_win_when_a_concurrent_move_stays_on_the_same_day(): void
@@ -252,9 +253,10 @@ class StaffStatusRaceTest extends TestCase
 
     // ---- unchanged behaviour ----
 
-    public function test_same_day_and_past_day_bookings_are_still_eligible(): void
+    public function test_bookings_on_any_day_are_eligible(): void
     {
-        foreach (['2026-11-04 08:00', '2026-11-04 20:00', '2026-11-03 10:00', '2026-10-01 10:00'] as $when) {
+        // today, earlier days, and future days (lab staff and admins can step in by hand at any time)
+        foreach (['2026-11-04 08:00', '2026-11-04 20:00', '2026-11-03 10:00', '2026-10-01 10:00', '2026-11-05 00:00', '2026-11-05 14:00', '2026-11-18 09:00'] as $when) {
             $h = $this->booking($when);
             $this->act('bookings.hand-out', $h)->assertSessionHas('status');
             $this->assertSame('InUse', $this->statusOf($h), "hand-out $when");
@@ -263,23 +265,6 @@ class StaffStatusRaceTest extends TestCase
             $this->assertSame('NoShow', $this->statusOf($n), "no-show $when");
             $this->assertSame(1, $this->logs($h));
             $this->assertSame(1, $this->logs($n));
-        }
-    }
-
-    public function test_future_day_bookings_are_refused_without_any_change(): void
-    {
-        foreach (['2026-11-05 00:00', '2026-11-05 14:00', '2026-11-18 09:00'] as $when) {
-            $r = $this->booking($when);
-            $item = $this->withEquipment($r);
-            $stock = $this->stock($r, $item);
-            $before = $r->fresh()->updated_at;
-            $this->act('bookings.hand-out', $r)->assertSessionHas('problem');
-            $this->act('bookings.no-show', $r)->assertSessionHas('problem');
-            $fresh = $r->fresh();
-            $this->assertSame('Confirmed', $fresh->status, $when);
-            $this->assertEquals($before, $fresh->updated_at, $when);
-            $this->assertSame(0, OverrideLog::where('reservation_id', $r->id)->count(), $when);
-            $this->assertSame($stock, $this->stock($r, $item), $when);
         }
     }
 

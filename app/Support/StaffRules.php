@@ -12,10 +12,9 @@ use Carbon\CarbonInterface;
  *   Approved --no-show--> No-show
  *   Approved --cancel or move (with a reason)--> Cancelled, or still Approved at a new room/time
  *
- * Hand out and no-show open on the booking's own day (app timezone) and stay open afterwards, so staff can
- * handle early, late and missed pick-ups; they are refused for a booking on a future calendar day (QA F-07).
- * Returned works whenever a booking is in use. The time otherwise only decides the warnings: Late (not
- * picked up after the grace period) and Overdue.
+ * Hand out, no-show and returned work at any time, on any day, so lab staff and admins can step in by hand
+ * whenever something goes wrong (an early pick-up, a booking made for the wrong day, a missed one).
+ * The time only decides the warnings: Late (not picked up after the grace period) and Overdue.
  */
 class StaffRules
 {
@@ -24,22 +23,16 @@ class StaffRules
         public readonly CarbonImmutable $now,
     ) {}
 
-    /** True when the booking starts on a calendar day after today, in the app's timezone */
-    public function isFutureDay(CarbonInterface $start): bool
+    /** Any approved booking, at any time */
+    public function canHandOut(string $status): bool
     {
-        return CarbonImmutable::instance($start)->setTimezone($this->now->getTimezone())->startOfDay()->gt($this->now->startOfDay());
+        return $status === 'Confirmed';
     }
 
-    /** An approved booking on today's date or earlier (also early the same day, or late) */
-    public function canHandOut(string $status, CarbonInterface $start): bool
+    /** Any approved booking, at any time */
+    public function canMarkNoShow(string $status): bool
     {
-        return $status === 'Confirmed' && ! $this->isFutureDay($start);
-    }
-
-    /** Same rule as hand-out: a booking that hasn't reached its day can't be a no-show yet */
-    public function canMarkNoShow(string $status, CarbonInterface $start): bool
-    {
-        return $status === 'Confirmed' && ! $this->isFutureDay($start);
+        return $status === 'Confirmed';
     }
 
     /** Approved but not picked up yet, and the grace period after the start is over */

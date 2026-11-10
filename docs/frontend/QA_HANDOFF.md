@@ -54,7 +54,7 @@ The Docker app on a developer's machine serves the code baked into its image; re
 | F-04 | Roadmap copy shown to users | **Fixed** (PR #23). The unused `comingNext` arrays remain in three controllers (needs backend approval to remove). |
 | F-05 | Developer wording shown to admins (mail log, zip extension) | **Not addressed.** No commit on `dev` touches it. |
 | F-06 | Manage sidebar highlights the wrong item; generic `<h1>` | **Not addressed.** No commit on `dev` touches it. |
-| F-07 | Hand-out / return not guarded by date | **Fixed for hand-out and no-show** (PR #25, hardened by #26). "Returned" was not changed. |
+| F-07 | Hand-out / return not guarded by date | Fixed for hand-out and no-show in PR #25 (hardened by #26), then **taken out again on `sandbox`** on the project owner's decision: the buttons work on any day so staff can step in by hand. See [SANDBOX_CHANGES.md](../SANDBOX_CHANGES.md). |
 | F-08 | Failing / order-dependent tests, database suites skipping silently | **Fixed** (PR #23): `tests/Support/run-db-tests.sh`. See the caveat in section 4. |
 | F-B | Hand-out vs concurrent move race (found in a later audit) | **Fixed** (PR #26). |
 
@@ -101,7 +101,7 @@ The Docker app on a developer's machine serves the code baked into its image; re
 Start the app as described in the README (`docker compose up --build`, or the XAMPP route); the README lists the test accounts. **Do not use a database you care about for the timetable "Replace" action.**
 
 1. Representative: `/rep` (fold decision above), Free rooms, Book (both steps), My bookings, booking detail, cancel.
-2. Lab staff and admin: dashboard, Today (hand out, no-show confirm, returned note, class answers; future-day bookings show a note instead of the buttons), Requests (approve, reject with reason), booking detail staff actions.
+2. Lab staff and admin: dashboard, Today (hand out, no-show confirm, returned note, class answers; on `sandbox` the buttons show on every day, future days included), Requests (approve, reject with reason), booking detail staff actions.
 3. Admin: Accounts list and edit (add, update, new password, delete/turn off with its confirmation).
 4. Lab staff and admin: Manage rooms, equipment (categories, items), booking rules and semester dates.
 5. Timetable: overview, upload (use a copy of a file, never the live one), start/continue/discard a draft, edit rows, check, semester save (the second submit button), backups.

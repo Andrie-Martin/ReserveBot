@@ -1,5 +1,7 @@
 # F-07: hand-out and no-show guard for future-day bookings
 
+> **Superseded on the `sandbox` branch (2026-11-10).** The project owner decided that Hand out and No-show must always show for an approved booking, on any day, so lab staff and admins can step in by hand when something goes wrong. `StaffRules::canHandOut` / `canMarkNoShow` check the status only again, the note "Hand out and no-show open on …" is gone, and the tests in `StaffRulesTest`, `StaffBookingGuardTest` and `StaffStatusRaceTest` now expect future-day hand-outs to work. The row lock from PR #26 stays. See [SANDBOX_CHANGES.md](../SANDBOX_CHANGES.md). The text below is the record of the original change.
+
 **Status update (2026-11-08): merged into `dev` as PR #25 (merge commit `b1c104d`); the follow-up race fix is in `BOOKING_FB_STATUS_MOVE_RACE.md` (PR #26). The status line that follows is the original text, written before the merge.**
 
 **Original status: awaiting its pull request into `dev` as branch `feat/frontend-design-13-booking-guard-integration` (see "Integration with dev" at the end). Phase 12 (login throttling) is already merged into `dev` (PR #24). The original branch `feat/frontend-design-13-booking-guard` is based on Phase 12's *original* commit and must not be merged directly.**

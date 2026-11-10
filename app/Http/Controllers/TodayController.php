@@ -65,20 +65,16 @@ class TodayController extends Controller
         ]);
     }
 
-    /** The rep came: the key and items are handed out (Approved → In use) */
+    /** The rep came: the key and items are handed out (Approved → In use). Works on any day. */
     public function handOut(Request $request, Reservation $reservation): RedirectResponse
     {
         [$user, $staff] = $this->context($request, $reservation);
-        if (! $staff->canHandOut($reservation->status, $reservation->start_time)) {
-            return back()->with('problem', $this->notYetOrWrongStatus($staff, $reservation, 'handed out'));
+        if (! $staff->canHandOut($reservation->status)) {
+            return back()->with('problem', 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be handed out.');
         }
 
-        // Checked again on the latest row, inside the lock: the booking may have been moved to another day meanwhile
-        $changed = $this->desk->setStatus($reservation, 'Confirmed', 'InUse', $user, 'Key and items handed out', null,
-            fn (Reservation $fresh) => $staff->canHandOut($fresh->status, $fresh->start_time));
-
-        return $this->result($changed, $reservation, 'Handed out booking #'.$reservation->id.' to '.$reservation->user->name.'.',
-            fn (Reservation $fresh) => $this->notYetOrWrongStatus($staff, $fresh, 'handed out'));
+        return $this->result($this->desk->setStatus($reservation, 'Confirmed', 'InUse', $user, 'Key and items handed out'),
+            $reservation, 'Handed out booking #'.$reservation->id.' to '.$reservation->user->name.'.');
     }
 
     /** Everything came back (In use → Completed), with an optional note about missing or damaged items */
@@ -98,19 +94,16 @@ class TodayController extends Controller
             $reservation, 'Booking #'.$reservation->id.' is completed. The room and items are free again.');
     }
 
-    /** Nobody came (Approved → No-show); frees the room and items */
+    /** Nobody came (Approved → No-show); frees the room and items. Works on any day. */
     public function noShow(Request $request, Reservation $reservation): RedirectResponse
     {
         [$user, $staff] = $this->context($request, $reservation);
-        if (! $staff->canMarkNoShow($reservation->status, $reservation->start_time)) {
-            return back()->with('problem', $this->notYetOrWrongStatus($staff, $reservation, 'a no-show'));
+        if (! $staff->canMarkNoShow($reservation->status)) {
+            return back()->with('problem', 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be a no-show.');
         }
 
-        $changed = $this->desk->setStatus($reservation, 'Confirmed', 'NoShow', $user, 'Nobody came for the key and items', null,
-            fn (Reservation $fresh) => $staff->canMarkNoShow($fresh->status, $fresh->start_time));
-
-        return $this->result($changed, $reservation, 'Booking #'.$reservation->id.' is marked a no-show. The room and items are free again.',
-            fn (Reservation $fresh) => $this->notYetOrWrongStatus($staff, $fresh, 'a no-show'));
+        return $this->result($this->desk->setStatus($reservation, 'Confirmed', 'NoShow', $user, 'Nobody came for the key and items'),
+            $reservation, 'Booking #'.$reservation->id.' is marked a no-show. The room and items are free again.');
     }
 
     /** Lab staff cancel an approved booking, with a reason the rep sees */
@@ -193,26 +186,14 @@ class TodayController extends Controller
         return [$user, new StaffRules($config->no_show_grace_minutes, CarbonImmutable::now())];
     }
 
-    /** Why hand-out / no-show was refused: the booking's day hasn't come yet, or its status doesn't allow it */
-    private function notYetOrWrongStatus(StaffRules $staff, Reservation $reservation, string $what): string
-    {
-        if ($reservation->status === 'Confirmed' && $staff->isFutureDay($reservation->start_time)) {
-            return 'Booking #'.$reservation->id.' is on '.$reservation->start_time->format('l, F j').', so it can’t be '.$what.' yet.';
-        }
-
-        return 'Booking #'.$reservation->id.' is '.strtolower($reservation->statusLabel()).', so it can’t be '.$what.'.';
-    }
-
-    /** $refusal builds the message from the latest row when the change did not happen (default: its new status) */
-    private function result(bool $changed, Reservation $reservation, string $message, ?callable $refusal = null): RedirectResponse
+    /** When the change didn't happen, someone else changed the booking first: say what it is now, from the latest row */
+    private function result(bool $changed, Reservation $reservation, string $message): RedirectResponse
     {
         if ($changed) {
             return back()->with('status', $message);
         }
 
-        $fresh = $reservation->fresh();
-
-        return back()->with('problem', $refusal && $fresh ? $refusal($fresh)
-            : 'Booking #'.$reservation->id.' just changed: it’s now '.strtolower($fresh?->statusLabel() ?? 'gone').'.');
+        return back()->with('problem', 'Booking #'.$reservation->id.' just changed: it’s now '
+            .strtolower($reservation->fresh()?->statusLabel() ?? 'gone').'.');
     }
 }
