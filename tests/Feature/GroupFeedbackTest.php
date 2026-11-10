@@ -653,4 +653,45 @@ final class GroupFeedbackTest extends TestCase
         $this->assertNotNull(Equipment::find($item->id));
         $this->assertSame(1, DB::table('reservation_equipment')->where('reservation_id', $booking->id)->count());
     }
+
+    public function test_direct_delete_requests_from_the_wrong_people_change_nothing(): void
+    {
+        $otherStaff = $this->person($this->otherDepartment, 'lab_staff', 'Otto Other');
+        $room = $this->unusedRoom();
+        $item = $this->item($this->category());
+        $sharedRoom = $this->unusedRoom();
+        $this->otherDepartment->rooms()->attach($sharedRoom);
+        $roomUrl = route('manage.rooms.destroy', $room);
+        $itemUrl = route('manage.equipment.destroy', $item);
+
+        // Who may not delete (confirm box ticked, CSRF is not what stops them): rep of the same department, and both roles of another one.
+        foreach ([[$this->rep, 403], [$this->otherAdmin, 404], [$otherStaff, 404]] as [$user, $status]) {
+            $this->as($user)->delete($roomUrl, ['confirm' => '1'])->assertStatus($status);
+            $this->as($user)->delete($itemUrl, ['confirm' => '1'])->assertStatus($status);
+            // The same request spelled the way a browser form sends it (POST with _method) is no different.
+            $this->as($user)->post($roomUrl, ['_method' => 'DELETE', 'confirm' => '1'])->assertStatus($status);
+            $this->as($user)->post($itemUrl, ['_method' => 'DELETE', 'confirm' => '1'])->assertStatus($status);
+        }
+        // A missing id and another department's id answer alike, so ids can't be probed.
+        $this->as($this->otherAdmin)->delete('/manage/rooms/999999999', ['confirm' => '1'])->assertNotFound();
+        $this->as($this->otherAdmin)->delete('/manage/equipment/999999999', ['confirm' => '1'])->assertNotFound();
+
+        // No other verb or path deletes: plain POST/GET/PUT to the record, a GET to a "delete" path.
+        $this->as($this->admin)->post('/manage/rooms/'.$room->id, ['confirm' => '1'])->assertStatus(405);
+        $this->as($this->admin)->get('/manage/rooms/'.$room->id.'/delete?confirm=1')->assertNotFound();
+        $this->as($this->admin)->get('/manage/equipment/'.$item->id.'/delete?confirm=1')->assertNotFound();
+
+        // Another department's staff may reach a room both departments use, but it still isn't theirs to delete alone.
+        $this->as($otherStaff)->delete(route('manage.rooms.destroy', $sharedRoom), ['confirm' => '1'])->assertSessionHasErrors(null, 'delete');
+
+        $this->flushSession();
+        auth()->logout();
+        $this->delete($roomUrl, ['confirm' => '1'])->assertRedirect(route('login'));
+        $this->delete($itemUrl, ['confirm' => '1'])->assertRedirect(route('login'));
+
+        $this->assertNotNull(Room::find($room->id));
+        $this->assertNotNull(Equipment::find($item->id));
+        $this->assertNotNull(Room::find($sharedRoom->id));
+        $this->assertTrue($this->department->rooms()->whereKey($room->id)->exists());
+    }
 }

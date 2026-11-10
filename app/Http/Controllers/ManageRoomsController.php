@@ -149,10 +149,8 @@ class ManageRoomsController extends Controller
                 return $blockers;
             });
         } catch (QueryException $e) {
-            // The database's own foreign keys said no (something started using the room a moment ago). Nothing was changed.
-            Log::warning('Room delete refused by the database', ['room_id' => $room->id, 'user_id' => $user->id, 'code' => $e->getCode()]);
-
-            return $this->refuse($room, ['Something started using '.$name.' while you were deleting it, so it was kept. '.ResourceDeletion::TURN_OFF_ADVICE]);
+            // The database refused (a foreign key, a busy server, or something unexpected). Nothing was changed.
+            return $this->refuse($room, [ResourceDeletion::messageForFailure($e, $name, ['room_id' => $room->id, 'user_id' => $user->id])]);
         }
 
         if ($blockers === null) {

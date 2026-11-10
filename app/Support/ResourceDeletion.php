@@ -6,7 +6,9 @@ use App\Models\ClassSchedule;
 use App\Models\Equipment;
 use App\Models\Reservation;
 use App\Models\Room;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * When a room or an equipment item may be deleted for real.
@@ -21,6 +23,41 @@ use Illuminate\Support\Facades\DB;
 final class ResourceDeletion
 {
     public const TURN_OFF_ADVICE = 'Turn it off instead: untick “Can be booked” and save. It stays in the lists and old bookings keep it.';
+
+    /** MariaDB/MySQL error numbers: a foreign key refused the change (1451 parent row is referenced, 1452 child row has no parent, 1216/1217 older wording). */
+    private const FOREIGN_KEY_ERRORS = [1451, 1452, 1216, 1217];
+
+    /** MariaDB/MySQL error numbers: the database was too busy to finish (1205 lock wait timeout, 1213 deadlock). */
+    private const BUSY_ERRORS = [1205, 1213];
+
+    /**
+     * What to tell the person when the database refuses a delete, and a log line for whoever runs the system.
+     *
+     * Only a foreign-key refusal means "something started using it"; a busy database and anything else are different problems
+     * and are worded so. Nothing was changed in any case (the delete runs in one transaction). The technical message goes to the
+     * log only, never to the page.
+     *
+     * @param  array<string, mixed>  $context  ids for the log line
+     */
+    public static function messageForFailure(QueryException $e, string $name, array $context = []): string
+    {
+        $code = (int) ($e->errorInfo[1] ?? 0);
+        $context += ['mysql_error' => $code, 'sqlstate' => $e->errorInfo[0] ?? null];
+
+        if (in_array($code, self::FOREIGN_KEY_ERRORS, true)) {
+            Log::warning('Delete refused by a foreign key', $context);
+
+            return 'Something started using '.$name.' while you were deleting it, so it was kept. '.self::TURN_OFF_ADVICE;
+        }
+        if (in_array($code, self::BUSY_ERRORS, true)) {
+            Log::warning('Delete skipped because the database was busy', $context);
+
+            return 'ReserveBot was busy and '.$name.' was not deleted. Nothing was changed. Wait a moment and try again.';
+        }
+        Log::error('Delete failed with an unexpected database error', $context + ['exception' => $e]);
+
+        return $name.' could not be deleted because of a problem on our side. Nothing was changed. Try again, and tell whoever runs ReserveBot if it keeps happening.';
+    }
 
     /** For a list row that was loaded withCount(['departments', 'reservations', 'classSchedules']): is Delete worth offering? The real check is roomBlockers(). */
     public static function roomLooksDeletable(Room $room): bool

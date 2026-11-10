@@ -65,13 +65,57 @@ handling are unchanged. `from`/`to` search filters are kept (`dayUrl()` already 
 * UI: the list shows a compact **Delete** beside Edit only where possible; it is a GET link to a named confirmation section on the edit
   page. That section holds the real `DELETE` form (CSRF, method spoofing) with a required "Yes, delete NAME" box, which the server also
   enforces. No JavaScript needed.
+* Who may delete: **Lab Staff and Admins of the owning department both can, today.** That follows the existing `role:lab_staff,admin` group
+  that already lets them add and edit rooms and equipment; it was not a new decision and no role was changed. Whether Lab Staff should
+  keep it is open and **needs group approval**; until then the permission is deliberately unchanged. (To restrict it later, move the two
+  `destroy` routes into an admin-only group; `tests/Feature/GroupFeedbackTest.php` currently asserts both roles can delete and will need updating with that decision.)
 * An unreferenced room's timetable drafts cannot be stranded: the timetable replace step creates missing rooms by name.
+
+## Deletion safety review (follow-up)
+
+Checked against the real migrated schema, not just the migration files.
+
+**Foreign keys that point at a room or an item (all `RESTRICT`; no cascade, no `SET NULL`):**
+
+| Column | References | Why it matters |
+|---|---|---|
+| `reservations.room_id` (nullable) | `rooms` | booking history; `NULL` only for equipment-only bookings |
+| `class_schedules.room_id` | `rooms` | timetable, every semester |
+| `department_room.room_id` | `rooms` | which department lists a room; detached by the delete itself, in its transaction |
+| `reservation_equipment.equipment_id` | `equipment` | equipment on bookings |
+
+* Nothing else refers to a room or item: no other table has a `room_id`/`equipment_id`; `timetable_view` is a read-only view; timetable drafts
+  and backups hold room **names** in JSON, and restoring one re-creates a missing room by name (`Timetables::ids()`).
+* The only cascades near this are `reservation_equipment.reservation_id` (a booking's own item lines) and a department's list entries and
+  timetable drafts. They fire only if a *booking* or *department* is deleted, and no code deletes either (a test scans for it).
+* `tests/Feature/ResourceDeletionIntegrityTest.php` reads `information_schema` and fails if a key to rooms/equipment becomes `CASCADE`/`SET NULL`, a
+  new reference appears, a `room_id`/`equipment_id` column has no key, or the tables aren't InnoDB.
+
+**Concurrency** (real two-connection tests, `tests/Feature/ResourceDeletionConcurrencyTest.php`). `Bookings::place()` and the delete both take
+`SELECT ... FOR UPDATE` on the room/item row, and an `INSERT` into `reservations`/`reservation_equipment` takes a shared lock on it, so they serialise:
+
+* booking first: the delete waits; if it can't get the lock it gives up and changes nothing; once the booking commits the delete is refused;
+* delete first: the booking waits; after the delete commits the foreign key refuses the booking row. No orphan is possible either way.
+
+**Two corrections made in this review:**
+
+1. `Bookings::place()` and `move()` ignored a room/item that no longer existed after locking it (it was impossible before Delete existed). A form
+   checked just before a delete and saved just after hit a database error or a PHP warning (500). They now answer with the form's own
+   "Pick a free room from the list." / "Pick equipment from the list.". Booking rules are untouched.
+2. The delete's catch-all `QueryException` handler said "Something started using it" for **any** database error, including a lock timeout or a
+   dropped connection. `ResourceDeletion::messageForFailure()` now tells them apart: foreign-key refusal (in use), busy (lock wait/deadlock,
+   "try again"), anything else (generic "problem on our side", logged at error level). Nothing technical reaches the page, and nothing is changed in any case.
+
+**Residual, not fixed (no data risk):** the timetable import resolves rooms by name before saving; if a *never-used* room is deleted in
+that same instant the foreign key rejects the import transaction and the user sees the generic error page. Nothing is lost or orphaned,
+and it needs a delete of an unused room during an import by the same department.
 
 ## Verification
 
 * Baseline (unchanged `origin/dev`, gated suite): 258 tests, 253 passed, 5 skipped.
-* After: 292 tests, 287 passed, 5 skipped (the same five), 0 failures. 34 new tests in `tests/Feature/GroupFeedbackTest.php` (gated, disposable MariaDB)
-  and `tests/Feature/Frontend/GroupFeedbackPresentationTest.php` (source-level).
+* After: 307 tests, 302 passed, 5 skipped (the same five), 0 failures. New tests in `tests/Feature/GroupFeedbackTest.php` (gated, disposable MariaDB),
+  `tests/Feature/Frontend/GroupFeedbackPresentationTest.php` (source-level) and the deletion-safety suites
+  `ResourceDeletionIntegrityTest.php` / `ResourceDeletionConcurrencyTest.php` (see the review above).
 * `tests/Support/group-feedback-browser.cjs`: real Chromium at 1438×900, 390×844, 320×640, 200% text and 200% zoom (719 CSS px), as rep,
   lab staff and admin, against a disposable app and database. It also checks overlap, alignment, focus, keyboard and the drawer.
 * Not covered by older scripts: `tests/Support/timeline-browser.cjs` and `visual-refinement-browser.cjs` assert that a narrow board

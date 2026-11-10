@@ -150,12 +150,16 @@ class Bookings
             if ($b['session']) {
                 ClassSchedule::whereKey($b['session']['class']->id)->lockForUpdate()->first();
             }
-            if ($b['room']) {
-                Room::whereKey($b['room']->id)->lockForUpdate()->first();
+            // A room or item that lab staff deleted after this form was checked is gone by now: say so, don't fail on the foreign key.
+            if ($b['room'] && ! Room::whereKey($b['room']->id)->lockForUpdate()->first()) {
+                throw ValidationException::withMessages(['room' => 'Pick a free room from the list.']);
             }
             $equipment = $b['items']
                 ? Equipment::whereKey(array_keys($b['items']))->orderBy('id')->lockForUpdate()->get()->keyBy('id')
                 : collect();
+            if ($equipment->count() !== count($b['items'])) {
+                throw ValidationException::withMessages(['qty' => 'Pick equipment from the list.']);
+            }
 
             // 2. Check again, now that nobody else can book them until we're done
             if ($b['session'] && $this->sessionBooked($b['session']['class']->id, $b['day'])) {
@@ -207,8 +211,8 @@ class Bookings
                 throw ValidationException::withMessages(['move' => 'This booking just changed: it’s now '
                     .strtolower($fresh->statusLabel()).'.'])->errorBag('move');
             }
-            if ($room) {
-                Room::whereKey($room->id)->lockForUpdate()->first();
+            if ($room && ! Room::whereKey($room->id)->lockForUpdate()->first()) {
+                throw ValidationException::withMessages(['room' => 'Pick a free room from the list.'])->errorBag('move');
             }
             $items = $booking->equipment()->get();
             Equipment::whereKey($items->pluck('id'))->orderBy('id')->lockForUpdate()->get();
