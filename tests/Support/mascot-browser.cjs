@@ -57,11 +57,18 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     await link(page, 'Equipment').hover(); await wait(60);
     assert.equal(await pose(page), 'tool');
     await page.mouse.move(800, 500); await wait(400);
-    assert.equal(await pose(page), 'tool', 'pointer leaving the sidebar keeps the hovered pose');
+    assert.equal(await pose(page), 'door', 'pointer leaving the navigation returns the mascot to the page pose');
     await page.locator('main h1').first().click(); await page.keyboard.press('Escape'); await wait(300);
-    assert.equal(await pose(page), 'tool', 'clicking inside the page keeps it');
+    assert.equal(await pose(page), 'door', 'clicking inside the page leaves the page pose alone');
+    await link(page, 'Requests').hover(); await wait(60); assert.equal(await pose(page), 'clipboard');
+    // Crossing the gap between two links must not dip to the page pose (no flicker): sample every frame while moving link to link.
+    await page.evaluate(() => { window.__seq = []; const m = document.querySelector('[data-rb-mascot]'); new MutationObserver(() => window.__seq.push(m.dataset.pose)).observe(m, { attributes: true, attributeFilter: ['data-pose'] }); });
+    await link(page, 'Equipment').hover(); await page.mouse.move(800, 500, { steps: 1 }); await wait(300);
+    const seq = await page.evaluate(() => window.__seq);
+    assert.ok(!seq.slice(0, seq.indexOf('tool') + 1).includes('door'), 'moving between links never dips to the page pose: ' + seq.join('>'));
+    assert.equal(await pose(page), 'door', 'and leaving the links ends on the page pose: ' + seq.join('>'));
     await link(page, 'Requests').hover(); await page.mouse.move(900, 400); await wait(300);
-    assert.equal(await pose(page), 'clipboard');
+    assert.equal(await pose(page), 'door', 'hover, leave, hover, leave: always back to the page pose');
     await Promise.all([page.waitForURL('**/requests'), link(page, 'Requests').click()]); await settle(page);
     assert.equal(await pose(page), 'clipboard', 'the destination page starts from its own pose');
     await link(page, 'Accounts').hover(); await page.goto(origin + '/today'); await settle(page);
@@ -83,7 +90,9 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     await page.mouse.move(60, 466); await page.mouse.move(64, 468); await wait(60);
     assert.equal(await pose(page), 'badge', 'real pointer movement over a link previews it again');
     ok('after a page load a parked pointer does not flash another link\'s pose; a real movement still previews');
-    ok('hover persists after the pointer leaves and after clicks in the page; the next page load resets to its own pose');
+    await link(page, 'Accounts').hover(); await Promise.all([page.waitForURL('**/accounts'), page.locator('#rb-navigation a[href$="/accounts"]').click()]); await settle(page);
+    assert.equal(await pose(page), 'badge', 'clicking a link: the destination page starts in its own pose');
+    ok('hover previews a link, leaving the navigation returns to the page pose (no dip between neighbouring links), a click arrives in the destination pose');
     await page.goto(origin + '/rooms'); await settle(page);
     const seen = [];
     for (let i = 0; i < 40 && seen.length < 7; i++) {
@@ -93,8 +102,11 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     }
     assert.deepEqual(seen, links.admin, 'Tab reaches every sidebar link in order');
     for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
-    assert.equal(await pose(page), 'badge', 'moving focus on into the page keeps the last pose');
-    ok('keyboard focus changes the pose and it persists when focus moves on');
+    assert.equal(await pose(page), 'door', 'moving focus out of the navigation returns to the page pose');
+    await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Shift+Tab');
+    await link(page, 'Equipment').focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+    assert.ok(['tool', 'badge'].includes(await pose(page)), 'focus back inside previews again');
+    ok('keyboard focus previews each link and returns to the page pose when focus leaves the navigation');
     const inert = await page.evaluate(() => { const m = document.querySelector('[data-rb-mascot]'); return { hidden: m.getAttribute('aria-hidden'), pe: getComputedStyle(m).pointerEvents, focusables: m.querySelectorAll('a,button,[tabindex]').length }; });
     assert.deepEqual(inert, { hidden: 'true', pe: 'none', focusables: 0 });
     ok('the mascot stays aria-hidden, non-interactive and outside the tab order');

@@ -224,17 +224,19 @@ final class MascotBrandTest extends TestCase
     }
 
 
-    public function test_mascot_script_keeps_the_pose_until_the_next_page_and_has_no_side_effects(): void
+    public function test_mascot_script_previews_links_and_returns_to_the_page_pose_with_no_side_effects(): void
     {
         $js = $this->read('public/js/mascot.js');
         $this->assertStringContainsString("document.getElementById('rb-navigation')", $js);
-        $this->assertSame(4, preg_match_all('/addEventListener\(/', $js), 'delegated pointerover, pointermove and focusin on the sidebar, plus pageshow');
-        foreach (["'pointerover'", "'pointermove'", "'focusin'", "'pageshow'"] as $event) {
+        $this->assertSame(6, preg_match_all('/addEventListener\(/', $js), 'delegated pointerout, pointerover, pointermove, focusin and focusout on the sidebar, plus pageshow');
+        foreach (["'pointerout'", "'pointerover'", "'pointermove'", "'focusin'", "'focusout'", "'pageshow'"] as $event) {
             $this->assertStringContainsString($event, $js);
         }
-        foreach (["'pointerout'", "'focusout'", "'mouseleave'", "'blur'", "'click'", 'setTimeout', 'GRACE_MS'] as $absent) {
-            $this->assertStringNotContainsString($absent, $js, "the pose never resets on $absent: it stays until the next page load");
+        foreach (["'mouseleave'", "'blur'", "'click'"] as $absent) {
+            $this->assertStringNotContainsString($absent, $js, "$absent plays no part: leaving is pointerout / focusout on the navigation links only");
         }
+        $this->assertStringContainsString('const rest = () => show(focused ? focused.dataset.rbPose : pagePose);', $js, 'leaving returns to the page pose (or the focused link)');
+        $this->assertStringContainsString('setTimeout(rest, 60)', $js, 'a short grace so crossing the gap between links never dips to the page pose');
         $this->assertStringContainsString(':focus-visible', $js, 'only keyboard focus counts, not a mouse click');
         $this->assertStringContainsString("pointerType === 'touch'", $js);
         $this->assertStringContainsString('event.movementX || event.movementY', $js, 'a parked pointer after a page load must not preview another link');

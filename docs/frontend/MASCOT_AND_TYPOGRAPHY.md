@@ -22,8 +22,8 @@ Two small, independent changes. Neither needs the global motion layer, view tran
   calendar, My bookings / Requests clipboard, Manage rooms key, Equipment tool, Accounts badge, anything unmapped `attend` (neutral).
   **College Admin** has one link ("Departments", icon `accounts`), so it gets the badge pose with no special case. Pages with no active
   link (My account, password) show the idle figure.
-- **Page-aware and persistent**: the server renders the active link's pose; `public/js/mascot.js` previews another link's pose on
-  hover (mouse/pen) or keyboard focus and never resets on mouseout, blur or clicks. Nothing is stored, so each page load starts from
+- **Page-aware**: the server renders the active link's pose; `public/js/mascot.js` previews another link's pose on
+  hover (mouse/pen) or keyboard focus and returns to the page pose when the pointer or focus leaves the links (60ms grace between neighbours). Nothing is stored, so each page load starts from
   its own pose. bfcache restores start from the page pose.
 - **Footer**: hairline, centred 90px figure, faint grounding ellipse. It lives in leftover sidebar height and a container query hides it
   when it will not fit; it is hidden below 80rem wide and on phones, so it can never push or cover a link.
@@ -41,7 +41,7 @@ without the preload under simulated CSS/font latency, 0/8 with it. **Limit**: on
 ## Verifying
 ```
 php vendor/bin/phpunit tests/Feature/Frontend/MascotBrandTest.php
-node tests/Support/mascot-browser.cjs     <playwright-core>   # poses, persistence, silhouette, footer, zoom, reduced motion, all roles incl. College Admin
+node tests/Support/mascot-browser.cjs     <playwright-core>   # poses, hover reset, silhouette, footer, zoom, reduced motion, all roles incl. College Admin
 node tests/Support/typography-browser.cjs <playwright-core>   # rendered fonts, cold/warm/slow loads
 ```
 The DB-free checks serve the real shell via `tests/Support/render-mascot.php`; `FrontendConsistencyTest` covers every role over HTTP on the disposable DB.
