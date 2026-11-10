@@ -131,9 +131,9 @@ final class MascotBrandTest extends TestCase
         $this->assertLessThan(strpos($svg, 'class="rbm-arm rbm-arm--l"'), strpos($svg, 'rbm-pill'), 'the pill is body: drawn before the limbs, props and hands');
         preg_match('/rbm-prop--tool\">(.*?)<\\/g>\\s*<\\/g>/s', $svg, $tool);
         $this->assertNotEmpty($tool);
-        $this->assertStringNotContainsString('rbm-maroon', $tool[1], 'the wrench is one light colour: no maroon patch painted over its head');
+        $this->assertStringNotContainsString('rbm-maroon', $tool[1], 'the wrench is one gold colour: no maroon patch painted over its head');
         $this->assertStringContainsString('class="rbm-wrench" d="M-3.2 -17.875A8.5 8.5 0 1 0 3.2 -17.875V-12H-3.2Z"', $tool[1], 'the open jaw is a real gap in the head path');
-        $this->assertStringContainsString('.rbm-wrench { fill: var(--rb-color-cream); stroke: var(--rb-color-cream)', $css);
+        $this->assertStringContainsString('.rbm-wrench { fill: var(--rb-color-gold); stroke: var(--rb-color-gold)', $css);
         $this->assertSame(2, substr_count($svg, 'width="16" height="26" rx="8"'), 'one pair of stubby legs');
         $this->assertSame(2, substr_count($svg, 'cy="69" r="5"'), 'two simple round eyes');
         $this->assertSame(1, substr_count($svg, 'class="rbm-gold rbm-pill"'), 'one gold chest accent');
