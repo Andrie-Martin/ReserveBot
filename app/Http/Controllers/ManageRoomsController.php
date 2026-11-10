@@ -31,13 +31,20 @@ class ManageRoomsController extends Controller
         'note.max' => 'Keep the note under 200 characters.',
     ];
 
+    /** Rooms shown per page */
+    private const PER_PAGE = 12;
+
     public function index(Request $request): View
     {
         $department = $request->user()->department;
+        $query = $department->rooms()->withCount(['departments', 'reservations', 'classSchedules'])->orderBy('name')->orderBy('rooms.id');
+
+        $lastPage = max(1, (int) ceil($department->rooms()->count() / self::PER_PAGE));
+        $page = min(max(1, (int) $request->query('page', 1)), $lastPage);
 
         return view('manage.rooms', [
             'department' => $department,
-            'rooms' => $department->rooms()->withCount(['departments', 'reservations', 'classSchedules'])->orderBy('name')->get(),
+            'rooms' => $query->paginate(self::PER_PAGE, ['*'], 'page', $page)->withQueryString(),
         ]);
     }
 

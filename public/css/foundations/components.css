@@ -210,6 +210,11 @@ html .rb-ui select:not([multiple]):not([size]):disabled { background-image: none
 .rb-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rb-space-2) var(--rb-space-4); margin-top: var(--rb-space-4); padding-top: var(--rb-space-4); border-top: var(--rb-border-width) solid var(--rb-border-warm); font-size: var(--rb-text-small); color: var(--rb-text-muted); }
 .rb-pager__info { margin: 0; }
 .rb-pager__nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-pager__pages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-1); margin: 0; padding: 0; list-style: none; }
+.rb-pager__num { display: inline-flex; align-items: center; justify-content: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); padding-inline: var(--rb-space-2); border: 1px solid var(--rb-border-control); border-radius: var(--rb-radius-control); color: var(--rb-text-primary); font-weight: var(--rb-weight-semibold); text-decoration: none; font-variant-numeric: tabular-nums; box-sizing: border-box; }
+a.rb-pager__num:hover { background: var(--rb-surface-active); }
+.rb-pager__num--current { background: var(--rb-color-maroon); border-color: var(--rb-color-maroon); color: var(--rb-color-white); }
+.rb-pager__gap { color: var(--rb-text-muted); padding-inline: var(--rb-space-1); }
 .rb-pager__page { padding-inline: var(--rb-space-2); font-weight: var(--rb-weight-semibold); color: var(--rb-text-primary); white-space: nowrap; }
 .rb-pager .rb-button[aria-disabled="true"] { border-style: dashed; border-color: var(--rb-border-control); background: var(--rb-neutral-bg); color: var(--rb-text-muted); cursor: not-allowed; }
 @media (max-width: 30rem) { .rb-pager { flex-direction: column; align-items: stretch; } .rb-pager__nav { justify-content: space-between; } }

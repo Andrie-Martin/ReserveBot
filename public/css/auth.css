@@ -134,3 +134,23 @@
   .rb-account-password-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .rb-account-password .rb-control { max-width: none; }
+
+/* Login mascot (css/login-mascot.css draws and animates it; this is only where it sits). Desktop: a headroom strip above the maroon
+   banner for the figure that peeks over its edge, kept clear of the introduction. Below 64rem the banner is not shown, so the figure
+   peeks over the login card instead, in front of a compact maroon band behind the card's top. */
+.rb-auth-login__banner { position: relative; max-width: 30rem; margin-top: 4.5rem; }
+.rb-auth-login__content { position: relative; }
+@media (min-width: 64rem) and (max-height: 49.999rem) { .rb-auth-login__banner { margin-top: 4rem; } }
+@media (max-width: 63.999rem) {
+  .rb-auth-login__banner { display: none; }
+  .rb-auth-login__content { margin-top: 5.4rem; }
+  .rb-auth-login__content::before { content: ''; position: absolute; z-index: 0; inset: -5.4rem 0 auto; height: 9rem; border-radius: 1.5rem; pointer-events: none;
+    -webkit-mask-image: linear-gradient(#000 calc(100% - 3rem), transparent); mask-image: linear-gradient(#000 calc(100% - 3rem), transparent);
+    background: radial-gradient(circle at 0 0, transparent 0 3.9rem, color-mix(in srgb, var(--rb-color-gold) 70%, transparent) 3.95rem 4.1rem, transparent 4.15rem), linear-gradient(135deg, var(--rb-color-maroon), var(--rb-color-deep)); }
+  .rb-auth-login__content > .rb-auth-login__card { position: relative; z-index: 1; margin-inline: .5rem; }
+}
+@media (max-width: 63.999rem) and (max-height: 36rem) {
+  .rb-auth-login__content { margin-top: 3.9rem; }
+  .rb-auth-login__content::before { inset: -3.9rem 0 auto; height: 7rem; }
+}
+@media (max-width: 23.999rem) { .rb-auth-login__content > .rb-auth-login__card { margin-inline: .25rem; } }

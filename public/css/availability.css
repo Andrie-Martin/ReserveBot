@@ -32,12 +32,12 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 .rb-availability__cell { display: flex; flex-direction: column; gap: var(--rb-space-2); padding: var(--rb-space-2); min-height: var(--rb-control-height); height: 100%; color: var(--rb-text-primary); text-decoration: none; overflow-wrap: anywhere; }
 .rb-availability__daynum { font-weight: var(--rb-weight-semibold); }
 /* Two different meanings, two different shapes (never colour alone): TODAY = a filled maroon disc behind the date number;
-   SELECTED = a ring around the whole cell plus the gold base bar. When today is selected both are drawn. */
-.rb-availability__selected { background: var(--rb-surface-active); box-shadow: inset 0 0 0 2px var(--rb-color-maroon), inset 0 -4px var(--rb-color-gold); }
+   SELECTED = a ring and tint over the whole cell. When today is selected both are drawn. */
+.rb-availability__selected { background: var(--rb-surface-active); box-shadow: inset 0 0 0 2px var(--rb-color-maroon); }
 .rb-availability__selected .rb-availability__daynum { color: var(--rb-color-maroon); }
 .rb-availability__today .rb-availability__daynum { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; min-width: 1.75rem; height: 1.75rem; padding-inline: var(--rb-space-1); border-radius: var(--rb-radius-pill); background: var(--rb-color-maroon); color: var(--rb-color-white); font-variant-numeric: tabular-nums; }
 .rb-availability__sw-today { width: 1rem; height: 1rem; border-radius: var(--rb-radius-pill); background: var(--rb-color-maroon); border-color: var(--rb-color-maroon); }
-.rb-availability__sw-selected { background: var(--rb-surface-active); box-shadow: inset 0 0 0 2px var(--rb-color-maroon), inset 0 -4px var(--rb-color-gold); }
+.rb-availability__sw-selected { background: var(--rb-surface-active); box-shadow: inset 0 0 0 2px var(--rb-color-maroon); }
 .rb-availability .st-past, .rb-availability .st-later, .rb-availability .st-closed, .rb-availability__out { background: var(--rb-neutral-bg); color: var(--rb-text-muted); }
 .rb-availability__daynote, .rb-availability__more { font-size: var(--rb-text-caption); }
 .rb-availability__evts { display: grid; gap: var(--rb-space-1); }
@@ -136,7 +136,7 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 .rb-availability__secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rb-space-4); align-items: start; min-width: 0; scroll-margin-top: var(--rb-space-4); }
 .rb-availability__calendar-details { min-width: 0; }
 .rb-availability__agenda-card { grid-column: 1 / -1; }
-.rb-availability__event-count { color: var(--rb-color-maroon); display: flex; align-items: center; min-height: var(--rb-control-height); padding: var(--rb-space-1); font-size: var(--rb-text-caption); }
+.rb-availability__event-count { color: var(--rb-color-maroon); display: block; margin-top: auto; font-size: var(--rb-text-caption); }
 @media (min-width: 64.001rem) {
  .rb-availability__finder-label { flex-basis: auto; }
 }
@@ -146,7 +146,6 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 
 /* Progressive contextual panel: fallback event lists remain open and linked. */
 .rb-availability__calendar-details [hidden] { display: none; }
-.rb-availability__event-count[aria-current="true"] { background: var(--rb-surface-active); color: var(--rb-color-deep); font-weight: var(--rb-weight-semibold); }
 
 /* One shared horizontal coordinate system; exact interval text remains visible. */
 /* Paint-only surface: no border/padding alters the shared axis or row geometry. The outer border is a
@@ -266,7 +265,7 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 .rb-availability__calendar th { font-size: .6875rem; font-weight: var(--rb-weight-bold); letter-spacing: .04em; color: var(--rb-text-secondary); border-radius: var(--rb-radius-control); }
 .rb-availability__cell { min-height: var(--rb-control-height); gap: .125rem; padding: .375rem var(--rb-space-2); }
 .rb-availability__daynum { font-size: .8125rem; font-weight: var(--rb-weight-bold); }
-.rb-availability__event-count { align-items: flex-start; padding: .125rem var(--rb-space-2); font-size: .6875rem; }
+.rb-availability__event-count { font-size: .6875rem; }
 /* Event details: centred empty state. */
 .rb-availability__event-prompt { border: 1px dashed var(--rb-border-warm); border-radius: var(--rb-radius-control); background: var(--rb-surface-canvas); padding: var(--rb-space-6) var(--rb-space-4); font-size: var(--rb-text-small); }
 /* Agenda: one line per entry on wide screens (time, title, status, action), wrapping below. */
@@ -294,7 +293,6 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
   .rb-availability__daynum { white-space: nowrap; }
   .rb-availability__daynote { font-size: .6875rem; overflow-wrap: normal; }
   .rb-availability__mon { display: block; font-size: .6875rem; }
-  .rb-availability__event-count { padding-inline: var(--rb-space-1); justify-content: center; }
 }
 
 /* QA follow-up: the seven day columns share about 256px at 320px, so a 44px-wide target per column is impossible. Give the
@@ -304,7 +302,6 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
   .rb-availability .rb-availability__cal-card { padding-inline: var(--rb-space-2); }
   .rb-availability__calendar { border-spacing: 1px; }
   .rb-availability__cell { padding-inline: 2px; }
-  .rb-availability__event-count { padding-inline: 0; }
 }
 
 /* Room schedule drawer (replaces the in-row "What's on" disclosure): the row stays one line; the day's entries open in a
@@ -369,3 +366,9 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 .rb-availability__event-tags { display: flex; flex-wrap: wrap; gap: var(--rb-space-1) var(--rb-space-2); margin-top: var(--rb-space-1) !important; }
 .rb-availability__event-tag { padding: 0 var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-neutral-bg); color: var(--rb-neutral-text); font-size: var(--rb-text-caption); font-weight: var(--rb-weight-semibold); line-height: 1.5rem; }
 @media (max-width: 40rem) { .rb-availability__event-card, .rb-availability__event-list li.rb-availability__event-card { grid-template-columns: minmax(0, 1fr); } }
+
+/* One link fills each pickable day, so hover, focus and selection paint the whole cell: no separate top and bottom regions. */
+.rb-availability__calendar td.rb-availability__pick { height: 1px; }
+.rb-availability__pick > .rb-availability__cell { height: 100%; box-sizing: border-box; border-radius: inherit; }
+.rb-availability__calendar td.rb-availability__pick:hover:not(.rb-availability__selected) { background: var(--rb-surface-active); }
+.rb-availability__pick > .rb-availability__cell:focus-visible { outline: 2px solid var(--rb-color-maroon); outline-offset: -2px; }

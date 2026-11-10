@@ -24,7 +24,7 @@
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
   @unless ($emailSends)
-    <p class="notice">Emails aren’t sent yet: the site writes them to <code>storage/logs/laravel.log</code> instead (MAIL_MAILER=log). Set up Gmail to really send them: see the README, “Email”.</p>
+    <p class="notice" role="note">{{ \App\Support\EmailSetup::logOnlyNotice() }}</p>
   @endunless
 
   <div class="rb-booking__panel">
@@ -60,11 +60,15 @@
       <p class="empty">None yet.</p>
     @else
       <table class="mtable acct-table">
+        <colgroup><col class="c-name"><col class="c-context"><col class="c-status"><col class="c-edit"></colgroup>
         <thead>
           <tr>
             <th>{{ $title === 'Block accounts' ? 'Block' : 'Name' }}</th>
+            {{-- Admins have no block or section: the column stays (empty) so name, status and action line up with the other groups. --}}
             @if ($title !== 'Admins')
               <th>{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}</th>
+            @else
+              <th><span class="sr-only">No extra details for admins</span></th>
             @endif
             <th>Status</th>
             <th><span class="sr-only">Edit</span></th>
@@ -84,6 +88,8 @@
               </td>
               @if ($title !== 'Admins')
                 <td class="acct-block" data-label="{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}">{{ $title === 'Block accounts' ? $person->name : ($person->section?->name ?? '—') }}</td>
+              @else
+                <td class="acct-block" aria-hidden="true"></td>
               @endif
               <td class="acct-status">
                 @if (! $person->is_active)

@@ -1,0 +1,76 @@
+/* Login page mascot (resources/views/components/ui/login-mascot.blade.php). Login only; the sidebar mascot's css/mascot.css and its
+   nine-pose state machine are untouched. Everything here is presentation: no pointer events, no focus, no semantics.
+
+   Placement. Desktop (>= 64rem): the figure peeks over the top edge of the maroon promotional banner, its bottom edge on that edge,
+   its hands half over the banner. Below 64rem the banner is not shown; the figure peeks over the top edge of the login card instead,
+   in front of a compact maroon band that is drawn behind the card (.rb-auth-login__content::before). Only one placement is visible.
+
+   Motion. One 36s deterministic loop of opacity-only expression changes (normal, happy, squint, curious, surprised, with a gentle blink)
+   plus a very slight head tilt and a 7s bob. The head turns about its base, which a nested <svg> clips at the edge, and the hands never
+   move. transform and opacity only, so no layout is ever animated. Reduced motion: no animation at all, the normal smile. The tab being
+   hidden pauses the loop (js/login-mascot.js sets data-rb-hidden). */
+.rb-login-mascot { position: absolute; z-index: 2; display: block; pointer-events: none; user-select: none; }
+.rb-login-mascot__art { display: block; width: 100%; height: auto; overflow: visible; }
+
+.rbl-head { fill: var(--rb-color-maroon); }
+.rbl-head-edge { fill: none; stroke: var(--rb-color-accent); stroke-width: 2.4; stroke-linecap: round; }
+.rbl-glint { fill: var(--rb-color-cream); }
+.rbl-mouth-o { fill: var(--rb-color-maroon); }
+.rbl-hand { opacity: 1; }
+.rbl-sparks { opacity: 0; }
+.rbl-sparks path { fill: none; stroke: var(--rb-color-gold); stroke-width: 3.2; stroke-linecap: round; }
+.rbl-x:not(.rbl-x--normal) { opacity: 0; }
+.rbl-blink { transform-origin: 70px 69px; }
+.rbl-bob, .rbl-tilt { transform-origin: 70px 104px; }
+
+/* Desktop: over the banner */
+.rb-login-mascot--banner { right: 2.75rem; bottom: calc(100% - .0625rem); width: 5.75rem; }
+/* Phones and tablets: over the card */
+.rb-login-mascot--card { display: none; }
+
+@media (max-width: 63.999rem) {
+  .rb-login-mascot--banner { display: none; }
+  .rb-login-mascot--card { display: block; left: 50%; bottom: calc(100% - .0625rem); width: 5rem; margin-left: -2.5rem; }
+}
+@media (max-width: 63.999rem) and (max-height: 36rem) { .rb-login-mascot--card { width: 3.5rem; margin-left: -1.75rem; } }
+@media (min-width: 64rem) and (max-height: 49.999rem) { .rb-login-mascot--banner { width: 4.75rem; right: 2.25rem; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rbl-x, .rbl-blink, .rbl-tilt, .rbl-bob, .rbl-sparks { animation-duration: 36s; animation-timing-function: linear; animation-iteration-count: infinite; }
+  .rbl-bob { animation-name: rbl-bob; animation-duration: 7s; animation-timing-function: ease-in-out; }
+  .rbl-tilt { animation-name: rbl-tilt; }
+  .rbl-blink { animation-name: rbl-blink; }
+  .rbl-x--normal { animation-name: rbl-normal; }
+  .rbl-x--happy { animation-name: rbl-happy; }
+  .rbl-x--curious { animation-name: rbl-curious; }
+  .rbl-x--surprised { animation-name: rbl-surprised; }
+  .rbl-x--squint { animation-name: rbl-squint; }
+  .rbl-sparks { animation-name: rbl-sparks; }
+  :root[data-rb-hidden] :is(.rbl-x, .rbl-blink, .rbl-tilt, .rbl-bob, .rbl-sparks) { animation-play-state: paused; }
+
+  /* Timeline (36s): blink 3.0 | happy 6.0-9.5 | blink 12.0 | curious 14.0-17.0 | blink 19.5 | surprised 22.0-23.6 | squint 26.0-28.5 | blink 32.0.
+     Percent = seconds / 36. Every expression change is a hard step, so layers never overlap. */
+  /* Expression layers use step-end per keyframe: a value holds until the next keyframe, then switches at once (no interpolation). */
+  @keyframes rbl-normal {
+    0% { opacity: 1; animation-timing-function: step-end; } 16.67% { opacity: 0; animation-timing-function: step-end; } 26.39% { opacity: 1; animation-timing-function: step-end; }
+    38.89% { opacity: 0; animation-timing-function: step-end; } 47.23% { opacity: 1; animation-timing-function: step-end; } 61.11% { opacity: 0; animation-timing-function: step-end; }
+    65.56% { opacity: 1; animation-timing-function: step-end; } 72.22% { opacity: 0; animation-timing-function: step-end; } 79.17% { opacity: 1; animation-timing-function: step-end; } 100% { opacity: 1; }
+  }
+  @keyframes rbl-happy { 0% { opacity: 0; animation-timing-function: step-end; } 16.67% { opacity: 1; animation-timing-function: step-end; } 26.39% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes rbl-curious { 0% { opacity: 0; animation-timing-function: step-end; } 38.89% { opacity: 1; animation-timing-function: step-end; } 47.23% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes rbl-surprised { 0% { opacity: 0; animation-timing-function: step-end; } 61.11% { opacity: 1; animation-timing-function: step-end; } 65.56% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes rbl-squint { 0% { opacity: 0; animation-timing-function: step-end; } 72.22% { opacity: 1; animation-timing-function: step-end; } 79.17% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes rbl-sparks {
+    0% { opacity: 0; animation-timing-function: step-end; } 16.67% { opacity: 1; animation-timing-function: step-end; } 22% { opacity: 0; animation-timing-function: step-end; }
+    61.11% { opacity: 1; animation-timing-function: step-end; } 65.56% { opacity: 0; } 100% { opacity: 0; }
+  }
+  @keyframes rbl-blink {
+    0%, 8.2% { transform: scaleY(1); } 8.5% { transform: scaleY(.08); } 8.9%, 33.2% { transform: scaleY(1); } 33.5% { transform: scaleY(.08); } 33.9%, 54% { transform: scaleY(1); }
+    54.3% { transform: scaleY(.08); } 54.7%, 88.6% { transform: scaleY(1); } 88.9% { transform: scaleY(.08); } 89.3%, 100% { transform: scaleY(1); }
+  }
+  @keyframes rbl-tilt {
+    0%, 16% { transform: rotate(0); } 18.5%, 25% { transform: rotate(2.2deg); } 28%, 38.5% { transform: rotate(0); } 41%, 46% { transform: rotate(-4deg) translateX(1px); }
+    49%, 70% { transform: rotate(0); } 73%, 78% { transform: rotate(3deg); } 81%, 100% { transform: rotate(0); }
+  }
+  @keyframes rbl-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.9px); } }
+}

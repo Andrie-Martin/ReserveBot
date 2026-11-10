@@ -29,7 +29,7 @@
     <p class="notice">This department isn’t set up yet. Still to add: {{ DepartmentSetup::leftInWords($setupLeft) }}. Its Admin is shown these steps on their home page; blocks can’t book until they’re done.</p>
   @endif
   @unless ($emailSends)
-    <p class="notice">Emails aren’t sent yet: the site writes them to <code>storage/logs/laravel.log</code> instead (MAIL_MAILER=log). Set up Gmail to really send them: see the README, “Email”.</p>
+    <p class="notice" role="note">{{ \App\Support\EmailSetup::logOnlyNotice() }}</p>
   @endunless
 
   <div class="rb-booking__panel">

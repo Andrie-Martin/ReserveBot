@@ -372,3 +372,6 @@
   .rb-booking .brow-what { grid-row: 3; }
   .rb-booking .brow-side .brow-cancel { grid-row: 4; }
 }
+
+.rb-booking .class-list__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--rb-space-2); }
+.rb-booking .class-list__badge { padding: .125rem var(--rb-space-2); border-radius: var(--rb-radius-pill); background: var(--rb-neutral-bg); color: var(--rb-text-muted); font-size: .75rem; font-weight: var(--rb-weight-bold); white-space: nowrap; }

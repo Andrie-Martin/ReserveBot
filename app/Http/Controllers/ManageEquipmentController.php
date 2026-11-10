@@ -33,9 +33,51 @@ class ManageEquipmentController extends Controller
         'max_per_request.*' => 'The most per booking must be a whole number from 1 to 99.',
     ];
 
+    /** Items shown per page */
+    private const PER_PAGE = 12;
+
+    /**
+     * GET /manage/equipment?q=&page=
+     * Items are paged on the server (12 a page, in category order, then item order), then grouped under their category.
+     * ?q= matches an item or category name. Categories with no items yet are listed after the last page of items.
+     */
     public function index(Request $request): View
     {
-        return view('manage.equipment', ['categories' => $this->categories($request->user())]);
+        $user = $request->user();
+        $q = mb_substr(trim((string) $request->query('q', '')), 0, 60);
+        $like = '%'.addcslashes($q, '\\%_').'%';
+
+        $items = Equipment::query()
+            ->join('equipment_categories as c', 'c.id', '=', 'equipment.category_id')
+            ->where('c.department_id', $user->department_id)
+            ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w->where('equipment.name', 'like', $like)->orWhere('c.name', 'like', $like)))
+            ->select('equipment.*')
+            ->orderBy('c.sort_order')->orderBy('c.name')->orderBy('c.id')
+            ->orderBy('equipment.sort_order')->orderBy('equipment.name')->orderBy('equipment.id');
+
+        $lastPage = max(1, (int) ceil((clone $items)->count() / self::PER_PAGE));
+        $page = min(max(1, (int) $request->query('page', 1)), $lastPage);
+        $pager = $items->withCount('reservations')->with('category')
+            ->paginate(self::PER_PAGE, ['*'], 'page', $page)->withQueryString();
+
+        $categoryCounts = EquipmentCategory::where('department_id', $user->department_id)->withCount('equipment')->get()->keyBy('id');
+        $groups = $pager->getCollection()->groupBy('category_id')->map(fn ($rows, $id) => ['category' => $categoryCounts[$id] ?? $rows->first()->category, 'items' => $rows])->values();
+        // A category whose items started on the previous page is labelled "(continued)".
+        $continuedId = $page > 1
+            ? (clone $items)->offset(($page - 1) * self::PER_PAGE - 1)->limit(1)->value('equipment.category_id')
+            : null;
+        $empty = $page === $lastPage
+            ? $categoryCounts->filter(fn ($c) => $c->equipment_count === 0 && ($q === '' || mb_stripos($c->name, $q) !== false))->sortBy([['sort_order', 'asc'], ['name', 'asc']])->values()
+            : collect();
+
+        return view('manage.equipment', [
+            'groups' => $groups,
+            'emptyCategories' => $empty,
+            'pager' => $pager,
+            'continuedId' => $continuedId,
+            'q' => $q,
+            'categories' => $categoryCounts->sortBy([['sort_order', 'asc'], ['name', 'asc']])->values(),
+        ]);
     }
 
     public function storeCategory(Request $request): RedirectResponse

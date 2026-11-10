@@ -82,22 +82,22 @@
     </div>
   @endif
 
-  @if ($classes)
+  @if ($classes->isNotEmpty())
     {{-- Phase 10: the department's classes this day. Online, or not confirmed by the 5-hour email, frees the room. --}}
     @php
       $freedCount = collect($classes)->filter(fn ($m) => in_array($m['state'], ['online', 'freed'], true))->count();
       $waitingCount = collect($classes)->where('state', 'waiting')->count();
     @endphp
-    <div class="rb-booking__panel">
-    <details class="done-list class-list" @if ($date->isToday()) open @endif>
-      <summary>Classes <span class="count">{{ count($classes) }}</span>
-        <span class="muted">{{ $freedCount }} {{ $freedCount === 1 ? 'room' : 'rooms' }} freed · {{ $waitingCount }} not confirmed yet</span></summary>
+    <div class="rb-booking__panel class-list" id="classes">
+      <h2 class="class-list__head">Classes <span class="count">{{ $classes->count() }}</span>
+        <span class="class-list__badge">{{ $freedCount }} {{ $freedCount === 1 ? 'Room' : 'Rooms' }} Freed</span>
+        <span class="class-list__badge">{{ $waitingCount }} Not Confirmed Yet</span></h2>
       <table class="mtable class-table">
         <thead>
           <tr><th>Time</th><th>Room</th><th>Class</th><th>Face-to-face?</th><th><span class="sr-only">Mark</span></th></tr>
         </thead>
         <tbody>
-          @foreach ($classes as $m)
+          @foreach ($classPager as $m)
             @php $freed = in_array($m['state'], ['online', 'freed'], true); @endphp
             <tr @class(['off' => $freed])>
               <td class="nowrap">{{ TimeSlots::span($m['start']->hour * 60 + $m['start']->minute, $m['end']->hour * 60 + $m['end']->minute) }}</td>
@@ -114,8 +114,8 @@
           @endforeach
         </tbody>
       </table>
+      <x-ui.pager :paginator="$classPager" noun="classes" />
       <p class="hint">Reps get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
-    </details>
     </div>
   @endif
 

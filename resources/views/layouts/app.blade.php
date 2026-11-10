@@ -43,11 +43,18 @@
           $navigation[] = ['label' => 'Book', 'mobile' => 'Book', 'icon' => 'book', 'href' => route('book'), 'active' => request()->routeIs('book')];
           $navigation[] = ['label' => 'My bookings', 'mobile' => 'Bookings', 'icon' => 'bookings', 'href' => route('bookings.mine'), 'active' => request()->routeIs('bookings.mine', 'bookings.show')];
       } else {
+          // A booking's page (/bookings/{id}) has no menu entry of its own; staff keep the entry they came through. Only the two
+          // known origins are honoured from ?from=; otherwise a waiting request belongs to Requests and anything else to Today.
+          $onBooking = request()->routeIs('bookings.show');
+          $bookingFrom = request()->query('from');
+          $bookingSection = $onBooking
+              ? (in_array($bookingFrom, ['requests', 'today'], true) ? $bookingFrom : (request()->route('reservation')?->status === 'Pending' ? 'requests' : 'today'))
+              : null;
           // One department-scoped query; the same links serve desktop and mobile.
           $waitingCount = Reservation::waitingCountFor($me);
           $equipmentActive = request()->routeIs('manage.equipment*', 'manage.categories*');
-          $navigation[] = ['label' => 'Today', 'icon' => 'today', 'href' => route('today'), 'active' => request()->routeIs('today')];
-          $navigation[] = ['label' => 'Requests', 'icon' => 'requests', 'href' => route('requests'), 'active' => request()->routeIs('requests'), 'count' => $waitingCount];
+          $navigation[] = ['label' => 'Today', 'icon' => 'today', 'href' => route('today'), 'active' => request()->routeIs('today') || $bookingSection === 'today'];
+          $navigation[] = ['label' => 'Requests', 'icon' => 'requests', 'href' => route('requests'), 'active' => request()->routeIs('requests') || $bookingSection === 'requests', 'count' => $waitingCount];
           $navigation[] = ['label' => 'Manage rooms', 'icon' => 'manage', 'href' => route('manage.rooms'), 'active' => request()->routeIs('manage.*') && ! $equipmentActive];
           $navigation[] = ['label' => 'Equipment', 'icon' => 'equipment', 'href' => route('manage.equipment'), 'active' => $equipmentActive];
           if ($me->role === 'admin') {

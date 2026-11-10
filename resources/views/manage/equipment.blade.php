@@ -80,15 +80,18 @@
       </form>
     </details>
   </div>
-  @if ($categories->isNotEmpty())
-    <div class="rb-booking__panel eq-search" data-eq-search hidden>
+  @if ($categories->isNotEmpty() || $q !== '')
+    <form class="rb-booking__panel eq-search" data-eq-search method="get" action="{{ route('manage.equipment') }}" role="search">
       <label for="eq-filter" class="field-label">Find equipment</label>
-      <div class="rb-search">
-        <input id="eq-filter" type="search" class="rb-search__input" placeholder="Search by item or category" autocomplete="off" aria-controls="eq-categories" aria-describedby="eq-filter-status">
-        <button type="button" class="rb-search__clear" aria-label="Clear search" aria-controls="eq-filter" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+      <div class="eq-search__row">
+        <div class="rb-search">
+          <input id="eq-filter" name="q" type="search" class="rb-search__input" maxlength="60" value="{{ $q }}" placeholder="Search by item or category" autocomplete="off">
+          <button type="button" class="rb-search__clear" aria-label="Clear search" aria-controls="eq-filter" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+        </div>
+        <button type="submit" class="btn-small">Search</button>
       </div>
-      <p class="hint" id="eq-filter-status" role="status" aria-live="polite"></p>
-    </div>
+      @if ($q !== '')<p class="hint" role="status">{{ $pager->total() }} {{ $pager->total() === 1 ? 'item matches' : 'items match' }} “{{ $q }}”.</p>@endif
+    </form>
   @endif
 
   <div id="eq-categories">
@@ -98,13 +101,15 @@
     </div>
   @endif
 
-  @foreach ($categories as $category)
+  @foreach ($groups->pluck('category')->merge($emptyCategories) as $category)
     @php $renameBag = $errors->getBag('category'.$category->id); @endphp
     <section class="mcat rb-booking__panel" data-eq-section>
+      @php $pageItems = $groups->firstWhere(fn ($g) => $g['category']->id === $category->id)['items'] ?? collect(); @endphp
       <div class="mcat-head">
         <h2 class="mcat-title" id="cat-title-{{ $category->id }}">
           <a class="mcat-name-link" href="#cat-rename-{{ $category->id }}" data-rb-rename="cat-rename-{{ $category->id }}" aria-describedby="cat-hint-{{ $category->id }}" title="Double-click to rename"><span class="mcat-name" data-eq-category>{{ $category->name }}</span><svg class="mcat-pencil" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.5 2.5l2 2-8 8-3 1 1-3 8-8z"/></svg></a>
-          <span class="count">{{ $category->equipment->count() }}</span>
+          @if ($continuedId === $category->id && $pageItems->isNotEmpty())<span class="mcat-continued muted">(continued)</span>@endif
+          <span class="count">{{ $category->equipment_count }}</span>
         </h2>
         <span class="mcat-hint" aria-hidden="true"><span class="mcat-hint__fine">Double-click the name to rename</span><span class="mcat-hint__coarse">Tap the name to rename</span></span>
         <span class="sr-only" id="cat-hint-{{ $category->id }}">Rename this category: double-click it, tap it, or press Enter or F2.</span>
@@ -118,20 +123,21 @@
           <p class="field-error" id="cat-{{ $category->id }}-error" role="alert" @if (! $renameBag->any()) hidden @endif>{{ $renameBag->first('name') }}</p>
         </form>
       </div>
-      @if ($category->equipment->isEmpty())
+      @if ($category->equipment_count === 0)
         <p class="empty">No items yet.</p>
       @else
         <table class="mtable eq-table">
-          <colgroup><col class="c-item"><col class="c-stock"><col class="c-max"><col class="c-status"><col class="c-edit"></colgroup>
-          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <colgroup><col class="c-item"><col class="c-stock"><col class="c-max"><col class="c-status"><col class="c-edit"><col class="c-delete"></colgroup>
+          <thead><tr><th>Item</th><th>Stock</th><th>Most per booking</th><th>Status</th><th class="col-action">Edit</th><th class="col-action">Delete</th></tr></thead>
           <tbody>
-            @foreach ($category->equipment as $item)
+            @foreach ($pageItems as $item)
               <tr @class(['off' => ! $item->is_active]) data-eq-row>
                 <td class="eq-name" data-eq-name>{{ $item->name }}</td>
                 <td>{{ $item->total_qty }}</td>
                 <td>{{ $item->max_per_request }}</td>
                 <td><span @class(['status-badge', 'st-confirmed' => $item->is_active, 'st-cancelled' => ! $item->is_active])>{{ $item->is_active ? 'On' : 'Off' }}</span></td>
-                <td class="eq-edit"><div class="row-actions"><a class="row-edit" href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a>@if (\App\Support\ResourceDeletion::equipmentLooksDeletable($item))<a class="row-delete" href="{{ route('manage.equipment.edit', $item) }}#delete">Delete<span class="sr-only"> {{ $item->name }}: review and confirm on its page</span></a>@endif</div></td>
+                <td class="col-action eq-edit"><a class="row-edit" href="{{ route('manage.equipment.edit', $item) }}">Edit<span class="sr-only"> {{ $item->name }}</span></a></td>
+                <td class="col-action eq-delete">@if (\App\Support\ResourceDeletion::equipmentLooksDeletable($item))<a class="row-delete" href="{{ route('manage.equipment.edit', $item) }}#delete">Delete<span class="sr-only"> {{ $item->name }}: review and confirm on its page</span></a>@endif</td>
               </tr>
             @endforeach
           </tbody>
@@ -139,7 +145,12 @@
       @endif
     </section>
   @endforeach
-  <p class="empty rb-booking__panel" data-eq-none hidden>No equipment or category matches that search.</p>
+  @if ($q !== '' && $groups->isEmpty() && $emptyCategories->isEmpty())
+    <p class="empty rb-booking__panel">No equipment or category matches that search.</p>
+  @endif
   </div>
+  @if ($pager->total() > 0)
+    <div class="rb-booking__panel"><x-ui.pager :paginator="$pager" noun="items" /></div>
+  @endif
 </section>
 @endsection

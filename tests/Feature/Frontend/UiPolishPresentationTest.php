@@ -150,7 +150,7 @@ final class UiPolishPresentationTest extends TestCase
 
     public function test_dead_room_busy_css_is_gone_and_nothing_references_it_qa_f6(): void
     {
-        foreach (['public/css/availability.css', 'public/css/style.css', 'public/css/foundations/components.css', 'resources/views/rooms/_room.blade.php', 'public/js/ui.js', 'public/js/availability.js'] as $file) {
+        foreach (['public/css/availability.css', 'public/css/style.css', 'public/css/foundations/components.css', 'resources/views/rooms/_room.blade.php', 'public/js/ui.js'] as $file) {
             $this->assertStringNotContainsString('room-busy', $this->read($file), $file);
         }
     }
@@ -334,14 +334,12 @@ final class UiPolishPresentationTest extends TestCase
         $this->assertStringNotContainsString('<details', $details);
         $this->assertStringNotContainsString('<summary', $details);
         $this->assertStringContainsString('rb-availability__events-count', $details);
-        $this->assertStringContainsString('rb-availability__event-prompt', $details);
+        $this->assertStringContainsString("\$selectedDay['date']", $details, 'the panel follows the one server-selected date');
         $cards = $this->read('resources/views/rooms/_calendar-events.blade.php');
         foreach (["\$event['text']", "\$event['room']", "\$event['tip']", "\$event['tag']", "\$event['check']"] as $field) {
             $this->assertStringContainsString($field, $cards, 'every existing event field is still shown');
         }
-        $js = $this->read('public/js/availability.js');
-        $this->assertStringNotContainsString('summary', $js);
-        $this->assertStringContainsString('hidden', $js);
+        $this->assertFileDoesNotExist(dirname(__DIR__, 3).'/public/js/availability.js', 'selection is server-driven; no script keeps a second selection');
         $this->assertMatchesRegularExpression('/\.rb-availability__events-scroll\s*\{[^}]*overflow-y:\s*auto/', $this->read('public/css/availability.css'));
     }
 
