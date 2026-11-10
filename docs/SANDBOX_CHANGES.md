@@ -155,7 +155,7 @@ set of powers: the College admin looks after Admin accounts and nothing else.
 | # | Question | On `sandbox` |
 |---|---|---|
 | 01 | Admin coverage: at least one Admin per department? several? | Several are allowed. The Departments page warns when a department has none who can log in. Nothing forces at least one. |
-| 02 | Provisioning: who creates the first and later Admins? | The College admin, for every department. The College admin itself is made by a command on the server. |
+| 02 | Provisioning: who creates the first and later Admins? | The College admin, for every department, and it adds the departments too (see the follow-up below). The College admin itself is made by a command on the server. |
 | 03 | Account transfers between departments | **Not built.** An account stays in its department; its bookings stay with it. Still open for the team. |
 | 04 | A college-wide role, or a manual process? | A college-wide role (this issue), limited to Admin accounts and a read-only overview. |
 | 05 | Shared rooms and competing requests | **Unchanged.** Shared rooms are still checked against every department's timetable and bookings, and each department approves its own requests. The College admin has no say. Still open if the team wants a referee. |
@@ -172,6 +172,26 @@ set of powers: the College admin looks after Admin accounts and nothing else.
      they can open Accounts and the rest of their department.
   3. Back as the College admin, open `/today` or `/accounts`: "403".
   4. Edit an Admin → "Set a new password", or untick "Can log in": that Admin is logged out at their next click.
+
+## Follow-up to issue 8: the College admin sets departments up
+
+Asked for after the first round: the College admin should be able to create departments and assign Admins to
+them, and a new department's Admin should be asked to add its data. Done in three commits.
+
+### The College admin adds and renames departments
+
+- **Departments → "+ Add a department":** a name (no two departments may share one) and an optional contact email.
+- The new department starts with the usual booking rules (open Monday to Saturday, 7:30 AM to 9:00 PM, approval
+  needed) and nothing else: no rooms, timetable, equipment or accounts. The page then asks for its first Admin.
+- Each department's page has **"Department details"** to rename it or change its contact email. The new name shows
+  on every page of that department's accounts straight away.
+- A department cannot be deleted from the site.
+- Before this, a department could only be added by the developer with a seeder file. That way still works.
+- **Files:** `app/Http/Controllers/CollegeController.php` (`storeDepartment`, `updateDepartment`),
+  `app/Models/Department.php` (`uniqueSlug`: the internal short code is made from the name),
+  `resources/views/college/home.blade.php` and `department.blade.php`. Tests: `tests/Feature/CollegeDepartmentsTest.php`.
+- **Check it:** as `college@reservebot.test`, add "Electronics Engineering Department". It appears on Departments
+  with "This department has no Admin yet." Add an Admin for it and log in as that Admin: every page opens, empty.
 
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 

@@ -100,9 +100,9 @@ The College admin test account is new. A database that was built before it exist
 
 ## Accounts and email
 
-- There are four kinds of account. The **College admin** is college-wide: it sees every department
-  and makes, edits, turns off and resets the password of each department's **Admin** accounts, and
-  nothing else (no bookings, rooms or equipment). A department's Admins run that department: they
+- There are four kinds of account. The **College admin** is college-wide: it sees every department,
+  adds departments, and makes, edits, turns off and resets the password of each department's
+  **Admin** accounts. It does nothing inside a department (no bookings, rooms or equipment). A department's Admins run that department: they
   make its **lab staff** and **block** accounts. Make a real College admin on the server with
   `php artisan college-admin:make "CEA Dean's Office" someone@gmail.com`; it asks for a starting
   password, which the person replaces at the first login.
@@ -245,10 +245,14 @@ Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is log
 
 ### Adding a department
 
-Copy `database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of
-that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder`.
-The new department then shows on the College admin's **Departments** page, where its first Admin
-account is made (the `accounts()` list in the seeder can stay empty).
+**On the site:** the College admin opens **Departments → + Add a department**, types its name, and then
+gives it an Admin. The department starts empty, with the usual booking rules; its Admin adds the rooms,
+timetable, equipment and accounts.
+
+**With a file** (when you already have the whole timetable as data): copy
+`database/seeders/ExampleDepartmentSeeder.php` and follow the steps at the top of that file. It ends
+with one command, e.g. `php artisan db:seed --class=EceSeeder`. The department then shows on the
+College admin's Departments page too (the `accounts()` list in the seeder can stay empty).
 
 ## Folders
 

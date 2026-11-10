@@ -13,7 +13,7 @@
   <header class="rb-booking__intro">
     <p class="rb-booking__kicker">{{ $user->roleLabel() }}</p>
     <h1>Departments</h1>
-    <p class="muted">Every department that uses ReserveBot. You make and look after each department’s Admin accounts. The Admins run their own department: its lab staff and block accounts, rooms, equipment, timetable and bookings.</p>
+    <p class="muted">Every department that uses ReserveBot. You add departments and look after each one’s Admin accounts. The Admins run their own department: its lab staff and block accounts, rooms, equipment, timetable and bookings.</p>
   </header>
 
   @include('home._login-notice')
@@ -23,6 +23,34 @@
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
+
+  {{-- A new department starts empty. Its first Admin (made on the next page) adds the rooms, timetable, equipment and accounts. --}}
+  <div class="rb-booking__panel">
+  <details class="add-box" @if ($errors->getBag('department')->any()) open @endif>
+    <summary>+ Add a department</summary>
+    <form method="post" action="{{ route('college.departments.store') }}" class="mform acct-form">
+      @csrf
+      @php
+        $departmentBag = $errors->getBag('department');
+        $departmentFocus = collect(['name', 'contact_email'])->first(fn ($field) => $departmentBag->has($field));
+        $invalid = fn (string $field) => ($departmentBag->has($field) ? 'aria-invalid="true" aria-describedby="department-errors"' : '').($departmentFocus === $field ? ' autofocus' : '');
+      @endphp
+      @if ($departmentBag->any())<div id="department-errors">@include('manage._errors', ['bag' => $departmentBag])</div>@endif
+      <div class="mgrid">
+        <div>
+          <label for="department-name" class="field-label">Department name</label>
+          <input id="department-name" name="name" maxlength="100" required {!! $invalid('name') !!} value="{{ old('name') }}" placeholder="e.g. Electronics Engineering Department">
+        </div>
+        <div>
+          <label for="department-email" class="field-label">Contact email <span class="optional">(optional)</span></label>
+          <input id="department-email" name="contact_email" type="email" maxlength="150" {!! $invalid('contact_email') !!} value="{{ old('contact_email') }}">
+        </div>
+      </div>
+      <button type="submit" class="btn-small">Add department</button>
+      <p class="hint">It starts with the usual booking rules and nothing else. Next you give it an Admin, who adds its rooms, timetable, equipment and accounts.</p>
+    </form>
+  </details>
+  </div>
 
   @forelse ($departments as $department)
     <div class="rb-booking__panel college-dept" id="department-{{ $department->id }}">
@@ -43,7 +71,7 @@
     </div>
   @empty
     <div class="rb-booking__panel">
-      <p class="empty">No department has been set up yet. Departments are added by whoever runs ReserveBot (README, “Adding a department”).</p>
+      <p class="empty">No department yet. Use “+ Add a department” above to add the first one.</p>
     </div>
   @endforelse
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\DepartmentConfig;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\Photos;
@@ -13,24 +14,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
  * The College admin (sandbox issue 8, Option B of the multi-department discussion).
  *
- * A college-wide account with one job: each department's Admin accounts. It sees every department at a glance,
- * and makes, edits, turns off, deletes and resets the password of the departments' Admins. That is how a
- * department gets its first Admin, and how an Admin who is locked out gets back in.
+ * A college-wide account that sets departments up and looks after their Admin accounts. It sees every department
+ * at a glance, adds a department (and can rename it), and makes, edits, turns off, deletes and resets the password
+ * of the departments' Admins. That is how a department gets its first Admin, and how an Admin who is locked out
+ * gets back in. A new department starts empty: its own Admin then adds the rooms, timetable, equipment and accounts.
  *
  * It deliberately can do nothing inside a department: no bookings to approve, no rooms, equipment or timetable,
  * and no block or lab staff accounts (those stay with the department's own Admins). It manages 'admin' accounts
- * only, never another College admin: College admins are made with `php artisan reservebot:college-admin`.
+ * only, never another College admin: College admins are made with `php artisan college-admin:make`.
  * Every change is written to the log (who did what to which account; never a password).
  */
 class CollegeController extends Controller
 {
     private const MESSAGES = [
         'name.required' => 'Type the admin’s name.',
+    ];
+
+    private const DEPARTMENT_MESSAGES = [
+        'name.required' => 'Type the department’s name.',
+        'name.max' => 'Keep the department’s name under 100 characters.',
+        'name.unique' => 'There is already a department with that name.',
+        'contact_email.*' => 'That doesn’t look like an email address. Leave it empty if the department has none.',
     ];
 
     /** Every department, with how many accounts and rooms it has and how many requests are waiting */
@@ -59,6 +69,40 @@ class CollegeController extends Controller
             'departments' => $departments,
             'waiting' => $waiting,
         ]);
+    }
+
+    /**
+     * Adds a department. It starts with the usual booking rules and nothing else: no rooms, timetable, equipment
+     * or accounts yet. The next step is its first Admin (the page this goes to), who then adds the rest.
+     */
+    public function storeDepartment(Request $request): RedirectResponse
+    {
+        $data = $this->departmentData($request, 'department');
+
+        $department = DB::transaction(function () use ($data) {
+            $department = Department::create([
+                'name' => $data['name'],
+                'slug' => Department::uniqueSlug($data['name']),
+                'contact_email' => $data['contact_email'] ?? null,
+            ]);
+            $department->config()->create(DepartmentConfig::DEFAULTS);     // open Mon to Sat, 7:30 AM to 9:00 PM, approval needed, ...
+
+            return $department;
+        });
+        Log::info('College admin added a department', ['by' => $request->user()->id, 'department_id' => $department->id]);
+
+        return redirect()->route('college.departments.show', $department)->with('status', 'Added '.$department->name
+            .'. Next, give it an Admin below. The Admin then adds its rooms, timetable, equipment and accounts.');
+    }
+
+    /** Renames a department, or changes its contact email */
+    public function updateDepartment(Request $request, Department $department): RedirectResponse
+    {
+        $data = $this->departmentData($request, 'department', $department);
+        $department->update(['name' => $data['name'], 'contact_email' => $data['contact_email'] ?? null]);
+        Log::info('College admin changed a department', ['by' => $request->user()->id, 'department_id' => $department->id]);
+
+        return redirect()->route('college.departments.show', $department)->with('status', 'Saved '.$department->name.'.');
     }
 
     /** One department's Admin accounts, and the form that adds one */
@@ -190,6 +234,20 @@ class CollegeController extends Controller
         $account->delete();
 
         return redirect()->route('college.departments.show', $department)->with('status', 'Deleted '.$name.'’s account.');
+    }
+
+    /** A department's name (single spaces, not used by another department) and its optional contact email */
+    private function departmentData(Request $request, string $bag, ?Department $department = null): array
+    {
+        $request->merge([
+            'name' => preg_replace('/\s+/u', ' ', trim((string) $request->input('name'))),
+            'contact_email' => filled($request->input('contact_email')) ? Str::lower(trim((string) $request->input('contact_email'))) : null,
+        ]);
+
+        return $request->validateWithBag($bag, [
+            'name' => ['required', 'string', 'max:100', Rule::unique('departments', 'name')->ignore($department?->id)],
+            'contact_email' => ['nullable', 'string', 'max:150', 'email:rfc'],
+        ], self::DEPARTMENT_MESSAGES);
     }
 
     /** The College admin manages department Admin accounts only: never block or lab staff accounts, never another College admin */

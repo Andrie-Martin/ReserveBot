@@ -42,11 +42,11 @@
       <div class="mgrid">
         <div>
           <label for="add-name" class="field-label">Name</label>
-          <input id="add-name" name="name" maxlength="100" required {!! $invalid('name') !!} value="{{ old('name') }}" placeholder="e.g. Juan Dela Cruz">
+          <input id="add-name" name="name" maxlength="100" required {!! $invalid('name') !!} value="{{ $addBag->any() ? old('name') : '' }}" placeholder="e.g. Juan Dela Cruz">
         </div>
         <div>
           <label for="add-email" class="field-label">Email</label>
-          <input id="add-email" name="email" type="email" maxlength="150" required {!! $invalid('email') !!} value="{{ old('email') }}">
+          <input id="add-email" name="email" type="email" maxlength="150" required {!! $invalid('email') !!} value="{{ $addBag->any() ? old('email') : '' }}">
         </div>
         <div>
           <label for="add-password" class="field-label">Starting password</label>
@@ -104,6 +104,32 @@
         </tbody>
       </table>
     @endif
+  </div>
+
+  <div class="rb-booking__panel" id="details">
+  <h2>Department details</h2>
+  <form method="post" action="{{ route('college.departments.update', $department) }}" class="mform acct-form">
+    @csrf
+    @method('PUT')
+    @php
+      $departmentBag = $errors->getBag('department');
+      $departmentFocus = collect(['name', 'contact_email'])->first(fn ($field) => $departmentBag->has($field));
+      $invalidDetail = fn (string $field) => ($departmentBag->has($field) ? 'aria-invalid="true" aria-describedby="department-errors"' : '').($departmentFocus === $field ? ' autofocus' : '');
+    @endphp
+    @if ($departmentBag->any())<div id="department-errors">@include('manage._errors', ['bag' => $departmentBag])</div>@endif
+    <div class="mgrid">
+      <div>
+        <label for="department-name" class="field-label">Department name</label>
+        <input id="department-name" name="name" maxlength="100" required {!! $invalidDetail('name') !!} value="{{ $departmentBag->any() ? old('name') : $department->name }}">
+      </div>
+      <div>
+        <label for="department-email" class="field-label">Contact email <span class="optional">(optional)</span></label>
+        <input id="department-email" name="contact_email" type="email" maxlength="150" {!! $invalidDetail('contact_email') !!} value="{{ $departmentBag->any() ? old('contact_email') : $department->contact_email }}">
+      </div>
+    </div>
+    <button type="submit" class="btn-small">Save</button>
+    <p class="hint">The name shows on every page of this department’s accounts.</p>
+  </form>
   </div>
 </section>
 @endsection

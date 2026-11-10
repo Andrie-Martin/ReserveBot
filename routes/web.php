@@ -168,11 +168,13 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         Route::get('/', [AdminController::class, 'home'])->name('home');
     });
 
-    // The College admin (sandbox issue 8): every department at a glance, and each department's Admin accounts.
-    // Nothing else: it can't approve bookings, manage rooms or make block and lab staff accounts.
+    // The College admin (sandbox issue 8): every department at a glance, adding a department, and each department's
+    // Admin accounts. Nothing inside a department: it can't approve bookings, manage rooms or make block and lab staff accounts.
     Route::prefix('college')->name('college.')->middleware('role:college_admin')->group(function () {
         Route::get('/', [CollegeController::class, 'home'])->name('home');
+        Route::post('/departments', [CollegeController::class, 'storeDepartment'])->name('departments.store');
         Route::get('/departments/{department}', [CollegeController::class, 'department'])->name('departments.show');
+        Route::put('/departments/{department}', [CollegeController::class, 'updateDepartment'])->name('departments.update');
         Route::post('/departments/{department}/admins', [CollegeController::class, 'store'])->name('admins.store');
         Route::get('/admins/{account}', [CollegeController::class, 'edit'])->name('admins.edit');
         Route::put('/admins/{account}', [CollegeController::class, 'update'])->name('admins.update');
