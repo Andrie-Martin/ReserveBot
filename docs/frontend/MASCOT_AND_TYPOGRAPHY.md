@@ -1,0 +1,36 @@
+# Sidebar mascot and brand typography
+
+Two small, independent changes. Neither needs the global motion layer, view transitions or any scrolling change.
+
+## Mascot
+- One flat SVG (`resources/views/components/ui/mascot.blade.php`) rebuilt from `docs/frontend/ReserveBot-Mascot.jpg`: rounded maroon
+  head/body, cream faceplate, two round eyes, a small smile, antenna with a gold tip, capsule arms, stubby legs, gold chest pill.
+  Nine poses share that figure; a pose only changes arm angles, one prop and a 1.6px glance. Side-by-side proof:
+  `docs/frontend/mascot-evidence/`.
+- **Pose mapping** (single source, `layouts/partials/navigation.blade.php`, keyed by nav icon): Home wave, Free rooms door, Book / Today
+  calendar, My bookings / Requests clipboard, Manage rooms key, Equipment tool, Accounts badge, anything unmapped `attend` (neutral).
+  **College Admin** has one link ("Departments", icon `accounts`), so it gets the badge pose with no special case. Pages with no active
+  link (My account, password) show the idle figure.
+- **Page-aware and persistent**: the server renders the active link's pose; `public/js/mascot.js` previews another link's pose on
+  hover (mouse/pen) or keyboard focus and never resets on mouseout, blur or clicks. Nothing is stored, so each page load starts from
+  its own pose. bfcache restores start from the page pose.
+- **Footer**: hairline, centred 90px figure, faint grounding ellipse. It lives in leftover sidebar height and a container query hides it
+  when it will not fit; it is hidden below 80rem wide and on phones, so it can never push or cover a link.
+- **Self-contained motion**: its own 180ms transform/opacity transition (`--rbm-duration` in `public/css/mascot.css`), instant under
+  `prefers-reduced-motion`. Decorative: `aria-hidden`, `pointer-events: none`, no focusable content.
+
+## Typography
+`ReserveBot` is Inter Bold and `PUP College of Engineering` is Inter Medium, but Medium was the only above-the-fold weight not preloaded.
+With `font-display: optional` a late face is dropped for the whole page view, so the subtitle could fall back while the heading was Inter.
+`layouts/app.blade.php` now preloads all four weights once (woff2, `crossorigin`); `font-display: optional` is unchanged (a swap would
+shift layout). `tests/Support/typography-browser.cjs` reproduces the split through Chromium's rendered-font API: 8/8 cold loads split
+without the preload under simulated CSS/font latency, 0/8 with it. **Limit**: on a cold first visit where fonts take longer than about
+100ms, both lines fall back together (consistent, not split); cached visits are fine.
+
+## Verifying
+```
+php vendor/bin/phpunit tests/Feature/Frontend/MascotBrandTest.php
+node tests/Support/mascot-browser.cjs     <playwright-core>   # poses, persistence, silhouette, footer, zoom, reduced motion, all roles incl. College Admin
+node tests/Support/typography-browser.cjs <playwright-core>   # rendered fonts, cold/warm/slow loads
+```
+The DB-free checks serve the real shell via `tests/Support/render-mascot.php`; `FrontendConsistencyTest` covers every role over HTTP on the disposable DB.

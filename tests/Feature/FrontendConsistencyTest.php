@@ -241,4 +241,33 @@ final class FrontendConsistencyTest extends TestCase
         $this->as($this->staff)->get('/accounts')->assertForbidden();
         $this->as($this->admin)->get('/accounts')->assertOk();
     }
+
+    public function test_the_decorative_mascot_starts_in_the_pose_of_the_active_navigation_item_for_every_role(): void
+    {
+        $college = User::create(['department_id' => null, 'role' => 'college_admin', 'name' => 'Cleo College',
+            'email' => Str::lower(Str::random(14)).'@gmail.com', 'password' => 'Starting123', 'is_active' => true, 'must_change_password' => false]);
+        $college->forceFill(['email_verified_at' => now()])->save();
+        // [user, url, poses of the links in navigation order (exactly what that role has), pose the page starts in]
+        $cases = [
+            [$this->rep, '/my-bookings', ['wave', 'door', 'calendar', 'clipboard'], 'clipboard'],
+            [$this->rep, '/rooms', ['wave', 'door', 'calendar', 'clipboard'], 'door'],
+            [$this->staff, '/requests', ['wave', 'door', 'calendar', 'clipboard', 'key', 'tool'], 'clipboard'],
+            [$this->admin, '/manage/equipment', ['wave', 'door', 'calendar', 'clipboard', 'key', 'tool', 'badge'], 'tool'],
+            [$this->admin, '/accounts', ['wave', 'door', 'calendar', 'clipboard', 'key', 'tool', 'badge'], 'badge'],
+            [$college, '/college', ['badge'], 'badge'],
+        ];
+        foreach ($cases as [$user, $url, $poses, $pagePose]) {
+            $html = $this->as($user)->get($url)->assertOk()->getContent();
+            $this->assertSame(1, substr_count($html, 'data-rb-mascot'), $user->role.' '.$url.': exactly one mascot');
+            $this->assertMatchesRegularExpression('/<div class="rb-mascot" data-rb-mascot data-pose="'.$pagePose.'" aria-hidden="true">/', $html, $user->role.' '.$url.': starts in the '.$pagePose.' pose');
+            $this->assertGreaterThan(strpos($html, '</nav>'), strpos($html, 'data-rb-mascot'), $user->role.': after the navigation, never inside it');
+            preg_match_all('/data-rb-pose="(\w+)" class="rb-nav-item/', $html, $found);
+            $this->assertSame($poses, $found[1], $user->role.': one designed pose per real navigation link');
+            $this->assertStringContainsString('src="'.asset('js/mascot.js').'?v=', $html);
+            $this->assertStringContainsString('href="'.asset('fonts/inter/Inter-Medium.woff2').'" as="font" type="font/woff2" crossorigin', $html, 'Inter Medium is preloaded');
+        }
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+        $this->get('/login')->assertOk()->assertDontSee('data-rb-mascot', false);
+    }
 }
