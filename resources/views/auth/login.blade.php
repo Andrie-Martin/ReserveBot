@@ -4,11 +4,14 @@
 @section('main-class', 'rb-auth-main--login')
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v={{ filemtime(public_path('css/auth.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/login-mascot.css') }}?v={{ filemtime(public_path('css/login-mascot.css')) }}">
+  <script src="{{ asset('js/login-mascot.js') }}?v={{ filemtime(public_path('js/login-mascot.js')) }}" defer></script>
 @endpush
 
 @section('content')
 <div class="rb-auth-login rb-ui">
   <section class="rb-auth-login__content" aria-labelledby="login-heading">
+    <x-ui.login-mascot class="rb-login-mascot--card" />
     <x-ui.auth-card class="rb-auth-login__card">
       <x-slot:heading>
         <p class="rb-auth-eyebrow">Authorized access</p>
