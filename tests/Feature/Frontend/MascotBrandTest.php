@@ -212,7 +212,9 @@ final class MascotBrandTest extends TestCase
         $this->assertStringContainsString("pointerType === 'touch'", $js);
         $this->assertStringContainsString('event.movementX || event.movementY', $js, 'a parked pointer after a page load must not preview another link');
         $this->assertStringContainsString("pagePose = mascot.dataset.pose", $js, 'starts from the server-rendered page pose');
-        $this->assertStringContainsString('mascot.dataset.pose !== pose', $js, 'no DOM write when nothing changes');
+        $this->assertStringContainsString('mascot.dataset.pose === pose', $js, 'no DOM write when nothing changes');
+        $this->assertStringContainsString("mascot.dataset.ready = ''", $js);
+        $this->assertStringNotContainsString('requestAnimationFrame', $js, 'nothing is armed on arrival: the wave only plays on a preview');
         foreach (['fetch(', 'XMLHttpRequest', 'sendBeacon', 'localStorage', 'sessionStorage', 'document.cookie', 'indexedDB', "'mousemove'", 'setInterval', 'preventDefault', 'location', '.focus(', 'aria-live', 'innerHTML'] as $forbidden) {
             $this->assertStringNotContainsString($forbidden, $js, "mascot.js must not use $forbidden");
         }

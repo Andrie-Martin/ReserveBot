@@ -65,6 +65,12 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     assert.equal(await pose(page), 'clipboard', 'the destination page starts from its own pose');
     await link(page, 'Accounts').hover(); await page.goto(origin + '/today'); await settle(page);
     assert.equal(await pose(page), 'calendar', 'a hovered pose never survives into an unrelated page load');
+    // Arriving on a page must be perfectly still: the Home page (wave pose) used to swing its arm on every load because the one-off
+    // wave was armed two frames after load, which showed as a flicker when clicking quickly through the sidebar.
+    await page.goto(origin + '/'); await page.waitForLoadState('domcontentloaded');
+    const still = await page.evaluate(async () => { const out = new Set(); const t0 = performance.now(); while (performance.now() - t0 < 900) { const a = document.querySelector('.rbm-arm--r:not(.rbm-hands)'); if (a) out.add(getComputedStyle(a).transform + '|' + getComputedStyle(document.querySelector('.rbm-eyes--happy')).opacity); await new Promise(requestAnimationFrame); } return [...out]; });
+    assert.equal(still.length, 1, 'arriving on a page never animates the mascot: ' + still.length + ' distinct states');
+    ok('a freshly loaded page (even Home, the wave pose) shows its pose at once and stays perfectly still');
     // Quick clicking through the sidebar: the cursor is parked over some other link while the next page loads. The browser reports that
     // link as hovered on the new page; it must not flash that link's pose (it used to), only a real pointer movement may.
     await link(page, 'Accounts').hover(); await wait(100);

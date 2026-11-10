@@ -15,7 +15,9 @@
   const pagePose = mascot.dataset.pose;
   const linkOf = node => (node instanceof Element ? node.closest('.rb-nav-item[data-rb-pose]') : null);
   const show = pose => {
-    if (pose && mascot.dataset.pose !== pose) mascot.dataset.pose = pose; // no write (and no style work) when nothing changed
+    if (!pose || mascot.dataset.pose === pose) return; // no write (and no style work) when nothing changed
+    mascot.dataset.ready = ''; // from the first real preview on, reactions (the one-off wave) may play; arriving never plays them
+    mascot.dataset.pose = pose;
   };
   let moved = false; // set by the first real pointer movement in this page, never by the synthetic hover after a load
   const hover = event => {
@@ -32,6 +34,4 @@
   });
   // Back/forward cache can restore the page with whatever pose it left in; a restored page starts from its own again.
   addEventListener('pageshow', event => { if (event.persisted) show(pagePose); });
-  // Animations that only make sense as a reaction (the one-off wave) are armed after the first frame, never on arrival.
-  requestAnimationFrame(() => requestAnimationFrame(() => { mascot.dataset.ready = ''; }));
 })();

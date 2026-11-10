@@ -88,8 +88,8 @@
 .rbm-arm, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
 .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: opacity var(--rbm-duration) var(--rbm-ease); }
 @media (prefers-reduced-motion: no-preference) {
-  /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only after the first
-     frame, so arriving on the Home page does not wave on its own. */
+  /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only when a link
+     is previewed, so arriving on the Home page (already waving) never swings the arm. */
   .rb-mascot[data-ready][data-pose="wave"] .rbm-arm--r { animation: rbm-wave 520ms var(--rbm-ease) var(--rbm-duration) 1; }
 }
 @keyframes rbm-wave {
