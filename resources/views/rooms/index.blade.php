@@ -7,7 +7,6 @@
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('css/availability.css') }}?v={{ filemtime(public_path('css/availability.css')) }}">
-<script src="{{ asset('js/availability.js') }}?v={{ filemtime(public_path('js/availability.js')) }}" defer></script>
 @endpush
 
 @section('content')

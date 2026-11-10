@@ -5,21 +5,15 @@
       <h2 id="cal-title" class="rb-availability__cal-title">{{ $calendar['title'] }}</h2>
       <p class="rb-availability__cal-hint">You can look from today up to {{ $lastDay->format('F j') }}.</p>
     </div>
-    {{-- Month arrows go to the first day you can pick in the neighbouring month. A month with no pickable day (already past, or
-         beyond the booking window) is shown as unavailable and says why, instead of being a dead, silent control. --}}
+    {{-- Month arrows appear only when the neighbouring month has a day you can pick (inside the booking window and on an
+         open day). Where there is nothing to go to, the arrow is left out instead of shown as a dead control. --}}
     <div class="rb-availability__cal-nav" role="group" aria-label="Change month">
-      <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$todayUrl" aria-label="Go to today">Today</x-ui.link-button>
       @if ($calendar['prevUrl'])
         <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['prevUrl']" :aria-label="'Previous month, '.($calendar['prevTitle'] ?? 'earlier')" :title="'Previous month, '.($calendar['prevTitle'] ?? 'earlier')"><span aria-hidden="true">‹</span></x-ui.link-button>
-      @else
-        <button type="button" class="rb-button rb-button--secondary rb-button--regular rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-prev-why" title="Earlier months can’t be booked. The calendar starts today."><span aria-hidden="true">‹</span><span class="sr-only">Previous month, unavailable</span></button>
-        <span class="sr-only" id="cal-prev-why">Earlier months can’t be booked. The calendar starts today.</span>
       @endif
+      <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$todayUrl" aria-label="Go to today">Today</x-ui.link-button>
       @if ($calendar['nextUrl'])
         <x-ui.link-button variant="secondary" class="rb-availability__cal-arrow" :href="$calendar['nextUrl']" :aria-label="'Next month, '.($calendar['nextTitle'] ?? 'later')" :title="'Next month, '.($calendar['nextTitle'] ?? 'later')"><span aria-hidden="true">›</span></x-ui.link-button>
-      @else
-        <button type="button" class="rb-button rb-button--secondary rb-button--regular rb-availability__cal-arrow rb-availability__off" aria-disabled="true" aria-describedby="cal-next-why" title="Nothing to pick in {{ $calendar['nextTitle'] ?? 'the next month' }} yet. You can look ahead up to {{ $lastDay->format('F j') }}."><span aria-hidden="true">›</span><span class="sr-only">Next month, unavailable</span></button>
-        <span class="sr-only" id="cal-next-why">Nothing to pick in {{ $calendar['nextTitle'] ?? 'the next month' }} yet. You can look ahead up to {{ $lastDay->format('F j') }}.</span>
       @endif
     </div>
   </div>

@@ -33,13 +33,11 @@
                       <span class="rb-availability__dots" aria-hidden="true">
                         @foreach (array_slice($items, 0, 4) as $it)<i @class(['k-'.$it['kind'], 'rb-availability__pending' => $it['status'] === 'Pending'])></i>@endforeach
                       </span>
+                      <span class="rb-availability__event-count"><span aria-hidden="true">{{ count($items) }}<span class="rb-availability__event-word"> {{ count($items) === 1 ? 'event' : 'events' }}</span></span><span class="sr-only">, {{ count($items) }} {{ count($items) === 1 ? 'event' : 'events' }}</span></span>
                     @endif
                 @if ($day['url'])
                   </a>
                 @else
                   </div>
-                @endif
-                @if ($items)
-                  <a class="rb-availability__event-count" href="#events-{{ $day['date']->toDateString() }}"><span>{{ count($items) }}<span class="rb-availability__event-word"> {{ count($items) === 1 ? 'event' : 'events' }}</span></span><span class="sr-only"> on {{ $day['date']->format('F j') }}</span></a>
                 @endif
               </td>
