@@ -29,3 +29,12 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   (`AccountsController.php`, `Auth/LoginController.php`) and 34 under `tests/`. Formatting only: no behaviour changed,
   and all 308 tests pass before and after.
 - **Check it:** `vendor/bin/pint --test` reports `passed`.
+
+### Login counter
+
+- The login lockout keeps a short-lived count of login attempts "in flight" for each network address. Giving up a
+  place used to be two steps (read the count, then lower it), so two attempts finishing at the same moment could act
+  on the same reading. It is now one atomic step down; if that step ever takes the count below zero it is given
+  straight back, so the count never stays negative.
+- **Files:** `app/Http/Controllers/Auth/LoginController.php` (`leaveIp`), new `tests/Feature/LoginInFlightCounterTest.php`.
+- **Check it:** `vendor/bin/phpunit --filter LoginInFlightCounterTest` passes. Logging in behaves the same as before.

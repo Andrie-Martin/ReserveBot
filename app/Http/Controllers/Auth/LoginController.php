@@ -192,13 +192,19 @@ class LoginController extends Controller
         return false;
     }
 
-    /** Gives up this attempt's in-flight place (never below zero; nothing if the short-lived counter has expired). */
+    /**
+     * Gives up this attempt's in-flight place. The step down is one atomic decrement, so two attempts leaving at the
+     * same moment can never both act on the same stale reading. If that step took the counter below zero (it expired
+     * and started again while this attempt was in flight), the step is given straight back: the counter never stays negative.
+     */
     private function leaveIp(string $ipKey): void
     {
         $cache = Cache::store(config('cache.limiter'));
         $inFlightKey = $ipKey.':inflight';
-        if ((int) $cache->get($inFlightKey, 0) > 0) {
-            $cache->decrement($inFlightKey);
+        $cache->add($inFlightKey, 0, self::LOCK_SECONDS * 2);   // an expired counter starts again from zero, with its short life
+        $left = $cache->decrement($inFlightKey);
+        if ($left !== false && (int) $left < 0) {
+            $cache->increment($inFlightKey);
         }
     }
 
