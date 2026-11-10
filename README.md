@@ -253,6 +253,30 @@ that file. It ends with one command, e.g. `php artisan db:seed --class=EceSeeder
 | `storage/app/private/photos/` | Profile photos (never committed) |
 | `.env` | Your own settings and secrets. Never committed. |
 
+## Going online (not yet)
+
+The site still runs on one PC. Before it is opened to other people through a tunnel or a proxy (ngrok, a campus
+reverse proxy), set **`TRUSTED_PROXIES`** in `.env`.
+
+Why: the login page locks out a network address after too many wrong passwords (5 for one account, 20 in all, per
+minute). Behind a tunnel every visitor reaches the site from the tunnel's own address, so they would all share one
+count and could lock each other out. `TRUSTED_PROXIES` tells Laravel which address is the tunnel, so it reads each
+visitor's real address from it instead.
+
+1. Find the address the tunnel connects from:
+   - **XAMPP / `php artisan serve`, ngrok on the same PC:** `127.0.0.1` (add `::1` too: `TRUSTED_PROXIES=127.0.0.1,::1`).
+   - **Docker:** open the site once through the tunnel and look at the newest request line in the `docker compose up`
+     window. It starts with the address that connected (usually the Docker network's gateway, like `172.18.0.1`).
+2. Put it in `.env`, e.g. `TRUSTED_PROXIES=172.18.0.1`, and restart the site (`docker compose up`, or stop and start
+   `php artisan serve`).
+3. Check it: log in from a phone through the tunnel, then open the `sessions` table in phpMyAdmin. The newest row's
+   `ip_address` should be the phone's address, not `127.0.0.1` or `172.…`.
+
+Only exact addresses or ranges work (commas between several). `*` ("trust everyone") is refused on purpose: with it
+anyone could fake their address and get around the lockout. Leave the setting empty while the site is only on your PC.
+
+Also before going online: set `APP_DEBUG=false` and `APP_URL` to the real address, and remove or protect `/test-db`.
+
 ## Messenger bot (paused)
 
 The webhook from the first version is still at `/webhook`. It reads `VERIFY_TOKEN` and

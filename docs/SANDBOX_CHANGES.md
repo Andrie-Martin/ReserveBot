@@ -7,6 +7,21 @@ so the commit history is the record. This file says, in plain words, what change
 The issue numbers are the ones from the project owner's list of 2026-11-10. Issues 3 (keep Delete for rooms and
 equipment) and 4 (do not merge into `main` yet) needed no code change.
 
+## Issue 1: Login lockout and the visitor's real address (ready, switched off)
+
+- **The risk:** once the site is opened through a tunnel such as ngrok, every visitor reaches Laravel from the
+  tunnel's own address. The login lockout counts wrong passwords per address, so 20 wrong passwords from anyone would
+  lock everyone out for a minute, and 5 wrong guesses at one person's email would lock that person out.
+- **What was added:** a `TRUSTED_PROXIES` setting in `.env`. When it holds the tunnel's address, Laravel reads each
+  visitor's real address from the tunnel, so every visitor is counted on their own again.
+- **It is off by default.** With the setting empty (as on your PC today) nothing changes at all. The right address
+  can only be found on the PC that runs the tunnel, so it is filled in when the site goes online: README, "Going online".
+- **`*` is refused.** Only exact addresses and ranges are accepted, so nobody can switch on "trust everyone" by habit.
+- **Files:** new `config/trustedproxy.php` and `app/Support/TrustedProxies.php`; `.env.example`, `docker-compose.yml`
+  (passes the setting to the container), `README.md`; tests in `tests/Unit/TrustedProxiesTest.php` and
+  `tests/Feature/TrustedProxySettingTest.php`.
+- **Check it:** `vendor/bin/phpunit --filter TrustedProx` passes. Nothing to see on the site until it is online.
+
 ## Issue 2: Hand out and No-show work on any day again
 
 - **Before (on `dev`):** for a booking on a future day the two buttons were hidden, the page said

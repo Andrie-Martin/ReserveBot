@@ -44,6 +44,9 @@ services:
       DB_USERNAME: reservebot
       DB_PASSWORD: reservebot
       SESSION_LIFETIME: 480
+      # Going online only (README, "Going online"): the address of the tunnel or proxy in front of the site,
+      # taken from your .env if set. Empty = trust no proxy, which is right on your own PC.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       LOG_CHANNEL: stderr                      # Laravel's log shows up in this window
       # Messenger bot (paused): taken from your .env if set
       VERIFY_TOKEN: ${VERIFY_TOKEN:-}
