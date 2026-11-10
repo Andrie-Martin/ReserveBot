@@ -13,6 +13,7 @@ use App\Support\StaffRules;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
 /**
@@ -24,6 +25,9 @@ class TodayController extends Controller
 {
     /** How far back the day picker goes (for checking what happened) */
     private const DAYS_BACK = 7;
+
+    /** Classes shown per page in the Classes table */
+    private const CLASSES_PER_PAGE = 15;
 
     public function __construct(private StaffDesk $desk, private Bookings $bookings, private ClassChecks $checks) {}
 
@@ -50,6 +54,15 @@ class TodayController extends Controller
             ->orderBy('start_time')
             ->get();
 
+        // The day's classes, worked out in full (counts cover all of them), then shown a page at a time.
+        $classes = collect($this->checks->forDepartment($user->department_id, $date))->values();
+        $lastClassPage = max(1, (int) ceil($classes->count() / self::CLASSES_PER_PAGE));
+        $classPage = min(max(1, (int) $request->query('classes_page', 1)), $lastClassPage);
+        $classPager = new LengthAwarePaginator(
+            $classes->forPage($classPage, self::CLASSES_PER_PAGE)->values(), $classes->count(), self::CLASSES_PER_PAGE, $classPage,
+            ['path' => $request->url(), 'query' => $request->query(), 'pageName' => 'classes_page', 'fragment' => 'classes'],
+        );
+
         return view('today.index', [
             'department' => $user->department,
             'date' => $date,
@@ -61,7 +74,8 @@ class TodayController extends Controller
             'waiting' => $all->where('status', 'Pending')->values(),
             'done' => $all->whereIn('status', ['Completed', 'NoShow', 'Cancelled', 'Rejected'])->values(),
             // Phase 10: the department's classes this day: face-to-face or online?
-            'classes' => $this->checks->forDepartment($user->department_id, $date),
+            'classes' => $classes,
+            'classPager' => $classPager,
         ]);
     }
 

@@ -33,11 +33,11 @@
     @include('bookings._staff_actions', ['r' => $r, 'staff' => $staff])
     {{-- Navigation only (an anchor styled as the shared outlined secondary button); nothing is approved or rejected from here. --}}
     @if ($staff->canChange($r->status, $end))
-      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r).'#change'">Cancel or move<span class="sr-only"> booking #{{ $r->id }}</span></x-ui.link-button>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', [$r, 'from' => 'today']).'#change'">Cancel or move<span class="sr-only"> booking #{{ $r->id }}</span></x-ui.link-button>
     @elseif ($r->status === 'Pending')
-      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r)">Review request<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', [$r, 'from' => 'today'])">Review request<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
     @else
-      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', $r)">Details<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
+      <x-ui.link-button variant="secondary" size="compact" class="tcard-link" :href="route('bookings.show', [$r, 'from' => 'today'])">Details<span class="sr-only"> for booking #{{ $r->id }}</span></x-ui.link-button>
     @endif
   </div>
 </article>

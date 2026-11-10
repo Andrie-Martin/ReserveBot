@@ -82,8 +82,8 @@
             @csrf
             <button type="submit" class="btn-approve">Approve<span class="sr-only"> booking #{{ $r->id }}</span></button>
           </form>
-          <a class="btn-reject" href="#reject-{{ $r->id }}" data-rb-reveal="reject-{{ $r->id }}">Reject…<span class="sr-only"> booking #{{ $r->id }}</span></a>
-          <a class="btn-ghost req-link" href="{{ route('bookings.show', $r) }}">Details<span class="sr-only"> for booking #{{ $r->id }}</span></a>
+          <a class="btn-reject" href="#reject-{{ $r->id }}" data-rb-reveal="reject-{{ $r->id }}">Reject<span class="sr-only"> booking #{{ $r->id }}</span></a>
+          <a class="btn-ghost req-link" href="{{ route('bookings.show', [$r, 'from' => 'requests']) }}">Details<span class="sr-only"> for booking #{{ $r->id }}</span></a>
         </div>
         {{-- Full width beneath the booking: opens in place (script) or by #fragment (no script); a refused reason keeps it open. --}}
         <form method="post" action="{{ route('bookings.reject', $r) }}" id="reject-{{ $r->id }}" @class(['req-reject', 'rb-reveal', 'is-open' => $bag->any()])>
@@ -113,7 +113,7 @@
         <li class="decided-row">
           <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
           <div class="decided-main">
-            <a class="decided-title" href="{{ route('bookings.show', $r) }}">{{ $r->purpose }}</a>
+            <a class="decided-title" href="{{ route('bookings.show', [$r, 'from' => 'requests']) }}">{{ $r->purpose }}</a>
             <p class="decided-meta"><span>{{ $r->user->displayName() }}</span><span>{{ $r->start_time->format('M j, g:i A') }}</span><span>Decided by {{ $r->reviewer?->name }}</span></p>
             @if ($r->status === 'Rejected' && filled($r->status_reason))
               <p class="decided-why">“{{ $r->status_reason }}”</p>
