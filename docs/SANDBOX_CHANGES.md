@@ -208,6 +208,36 @@ them, and a new department's Admin should be asked to add its data. Done in thre
 - **Check it:** add a department, open it, pick an Admin under "Move an existing Admin here". Log in as that Admin:
   the home page shows the new department's name.
 
+### A new department's Admin is asked to add its data
+
+- A department the College admin just added is empty, so its Admin's home page shows a card,
+  **"Set up <department>"**, with a button for each step:
+
+  | Step | | Where |
+  |---|---|---|
+  | Add your rooms | Needed | Manage → Rooms |
+  | Add the class timetable | Needed | Manage → Timetable (upload an Excel file, or type it on the site) |
+  | List your equipment | Optional | Equipment |
+  | Make lab staff accounts | Optional | Accounts |
+  | Make the block accounts | Needed | Accounts (after the timetable: a block can be picked once it has a class) |
+
+- Each step turns to "Done" as soon as the data exists, and the card says how many needed steps are done. It goes
+  away by itself once the three needed steps are done; a department can run without equipment or lab staff.
+- Booking rules are not a step: every department starts with the usual ones and can change them any time.
+- **Lab staff** see the same card on their home page, with buttons for the steps they can do (rooms, timetable,
+  equipment). For the two account steps it says "Your department's Admin does this".
+- **The College admin** sees, on Departments and on the department's page, what is still missing:
+  "Still to set up: rooms, the timetable and block accounts."
+- A department that already has its data (Computer Engineering) never sees the card.
+- Checked by hand as a new department's Admin: added a room, typed a timetable on the site and replaced it, made the
+  block's account. Each step ticked off and the card went away.
+- Also fixed here: the Admin home's shortcut said "Rep and lab staff accounts"; it now says "Block and lab staff accounts".
+- **Files:** `app/Services/DepartmentSetup.php`, `resources/views/home/_setup.blade.php`, `home.blade.php`,
+  `AdminController`, `StaffController`, `CollegeController`, `public/css/dashboard.css`.
+  Tests: `tests/Feature/DepartmentSetupTest.php`.
+- **Check it:** as the College admin add a department and an Admin for it. Log in as that Admin: the home page shows
+  the card with "0 of 3 so far". Add a room: "1 of 3".
+
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 
 - **What the tester saw:** a wrong password showed "Wrong email or password.", but pressing Log in again let them

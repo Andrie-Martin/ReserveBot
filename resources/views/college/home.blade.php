@@ -1,5 +1,6 @@
 {{-- The College admin's home: every department at a glance, and the way in to each department's Admin accounts --}}
 @extends('layouts.app')
+@use('App\Services\DepartmentSetup')
 
 @section('title', 'Departments')
 
@@ -60,6 +61,9 @@
       </div>
       @if ($department->active_admins_count === 0)
         <p class="error" role="note">{{ $department->admins_count === 0 ? 'This department has no Admin yet.' : 'No Admin of this department can log in.' }} Nobody can approve its accounts or manage it until one is added or turned back on.</p>
+      @endif
+      @if (! empty($setupLeft[$department->id]))
+        <p class="hint college-dept__setup">Still to set up: {{ DepartmentSetup::leftInWords($setupLeft[$department->id]) }}. Blocks can’t book until then; the department’s Admin is shown these steps on their home page.</p>
       @endif
       <dl class="bfacts">
         <div class="bfact"><dt>Admins</dt><dd>{{ $department->admins_count }}@if ($department->admins_count > $department->active_admins_count) <span class="muted">({{ $department->admins_count - $department->active_admins_count }} turned off)</span>@endif</dd></div>

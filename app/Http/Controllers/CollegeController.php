@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\DepartmentConfig;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Services\DepartmentSetup;
 use App\Services\Photos;
 use App\Support\AccountFields;
 use App\Support\EmailSetup;
@@ -64,10 +65,15 @@ class CollegeController extends Controller
             ->selectRaw('users.department_id as department_id, count(*) as waiting')
             ->pluck('waiting', 'department_id');
 
+        // What each department still has to add before its blocks can book (its Admin sees the same steps)
+        $setup = collect(DepartmentSetup::counts($departments->modelKeys()))
+            ->map(fn (array $counts) => DepartmentSetup::fromCounts($counts)['left']);
+
         return view('college.home', [
             'user' => $request->user(),
             'departments' => $departments,
             'waiting' => $waiting,
+            'setupLeft' => $setup,
         ]);
     }
 
@@ -113,6 +119,7 @@ class CollegeController extends Controller
             'admins' => User::where('department_id', $department->id)->where('role', 'admin')
                 ->get()->sortBy(fn (User $admin) => Str::lower($admin->name))->values(),
             // Admins of the other departments, who could be moved here
+            'setupLeft' => DepartmentSetup::for($department)['left'],
             'otherAdmins' => User::with('department')->where('role', 'admin')->whereNotNull('department_id')
                 ->where('department_id', '!=', $department->id)->get()
                 ->sortBy(fn (User $admin) => Str::lower($admin->department->name.' '.$admin->name))->values(),

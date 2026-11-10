@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DepartmentSetup;
 use App\Services\DeskStats;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,8 @@ class StaffController extends Controller
             'user' => $user,
             'intro' => 'Review requests and run the day’s room schedule.',
             'stats' => DeskStats::for($user),
+            // A new department starts empty: what it still has to add before its blocks can book
+            'setup' => DepartmentSetup::for($user->department, $user),
             'classes' => null,
             'ready' => [
                 ['label' => "Today's schedule", 'url' => route('today')],

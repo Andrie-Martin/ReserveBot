@@ -26,6 +26,10 @@
     <p class="rb-dashboard__banner-text">{{ $intro }}</p>
   </div>
 
+  @if (! empty($setup) && ! $setup['complete'])
+    @include('home._setup')
+  @endif
+
   @if (! empty($stats))
     {{-- Three read-only counts for the viewer's own department; each says what it counts. --}}
     <section class="rb-dashboard__stats" aria-label="At a glance">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DepartmentSetup;
 use App\Services\DeskStats;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,6 +18,8 @@ class AdminController extends Controller
             'user' => $user,
             'intro' => 'Approve requests, run the day, and manage the department and its accounts.',
             'stats' => DeskStats::for($user),
+            // A new department starts empty: what it still has to add before its blocks can book
+            'setup' => DepartmentSetup::for($user->department, $user),
             'classes' => null,
             'ready' => [
                 ['label' => 'Review requests', 'url' => route('requests')],
@@ -24,7 +27,7 @@ class AdminController extends Controller
                 ['label' => 'See which rooms are free', 'url' => route('rooms')],
                 ['label' => 'Manage rooms, equipment and rules', 'url' => route('manage.rooms')],
                 ['label' => 'Timetable (new semester)', 'url' => route('manage.timetable')],
-                ['label' => 'Rep and lab staff accounts', 'url' => route('accounts.index')],
+                ['label' => 'Block and lab staff accounts', 'url' => route('accounts.index')],
             ],
             'comingNext' => [
                 'Reminders by Facebook Messenger, once the site is online',

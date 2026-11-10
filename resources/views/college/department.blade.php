@@ -1,6 +1,7 @@
 {{-- The College admin: one department's Admin accounts --}}
 @extends('layouts.app')
 @use('App\Support\AccountFields')
+@use('App\Services\DepartmentSetup')
 
 @section('title', 'Admins of '.$department->name)
 
@@ -23,6 +24,9 @@
   @endif
   @if (session('problem'))
     <p class="error" role="alert">{{ session('problem') }}</p>
+  @endif
+  @if ($setupLeft)
+    <p class="notice">This department isn’t set up yet. Still to add: {{ DepartmentSetup::leftInWords($setupLeft) }}. Its Admin is shown these steps on their home page; blocks can’t book until they’re done.</p>
   @endif
   @unless ($emailSends)
     <p class="notice">Emails aren’t sent yet: the site writes them to <code>storage/logs/laravel.log</code> instead (MAIL_MAILER=log). Set up Gmail to really send them: see the README, “Email”.</p>
