@@ -7,6 +7,7 @@
 const { chromium } = require(process.argv[2]);
 const assert = require('node:assert/strict');
 const { origin, serve } = require('./mascot-harness.cjs');
+const monitor = require('./mascot-monitor.cjs');
 let checks = 0;
 const ok = (name) => { checks++; console.log('  PASS', name); };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -185,6 +186,86 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     ok('idle (relaxed, no hands), wave (right hand raised, happy eyes, sparks) and attend (both arms open, sparks) match the pose sheet and carry no accessory');
     await ctx.close();
   }
+  // ---- Interruption safety: audited on EVERY animation frame (mascot-monitor.cjs), never only after things settle ---------------
+  // A pose change interrupted within 180ms used to leave the old pose's prop, sparks and happy eyes half visible while the new ones
+  // faded in (two props at once, happy eyes over a calendar, hands in mid-air). Now only the latest pose may ever be visible.
+  const rng = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const linkCentres = (page) => page.$$eval('#rb-navigation a.rb-nav-item', (a) => a.map((x) => { const r = x.getBoundingClientRect(); return { label: x.querySelector('.rb-nav-item__label').textContent.trim(), x: r.x + 60, y: r.y + r.height / 2 }; }));
+  const audit = async (page, what) => { await wait(350); const r = await monitor.read(page); assert.deepEqual(r.violations, [], `${what}: mixed or detached mascot frames:\n  ` + r.violations.slice(0, 6).join('\n  ')); return r; };
+  for (const [name, options] of [['normal motion', {}], ['reduced motion', { reducedMotion: 'reduce' }]]) {
+    const { ctx, page } = await open(browser, 'admin', options);
+    await page.goto(origin + '/rooms'); await settle(page);
+    await monitor.install(page);
+    const centres = await linkCentres(page);
+    const rand = rng(11);
+    // A. Rapid hovering without clicking: every link, random order, 0-90ms dwell (well inside the 180ms transition).
+    let last;
+    for (let round = 0; round < 12; round++) for (const c of [...centres].sort(() => rand() - 0.5)) { await page.mouse.move(c.x, c.y, { steps: 2 }); await wait(Math.floor(rand() * 90)); last = c; }
+    await audit(page, `${name}, hover storm`);
+    await wait(300); assert.equal(await pose(page), poseOf[last.label], `${name}: after the storm the pose is the LAST link hovered (${last.label})`);
+    // B. Every ordered pair, interrupted at three different moments inside the transition; the second pose must always win.
+    for (const from of centres) for (const to of centres) {
+      if (from === to) continue;
+      const dwell = [15, 70, 140][Math.floor(rand() * 3)];
+      await page.mouse.move(from.x, from.y); await wait(dwell); await page.mouse.move(to.x, to.y); await wait(dwell < 100 ? 60 : 20);
+    }
+    await audit(page, `${name}, all ordered pairs`);
+    // Wave in progress: leave Home at various moments, and arrive at Home mid-transition.
+    const home = centres.find((c) => c.label === 'Home');
+    for (const other of centres.filter((c) => c !== home)) for (const t of [30, 120, 400]) { await page.mouse.move(home.x, home.y); await wait(t); await page.mouse.move(other.x, other.y); await wait(35); await page.mouse.move(home.x, home.y); await wait(35); }
+    await audit(page, `${name}, leaving and re-entering Home (wave) mid-transition`);
+    // Keyboard previews, tabbing quickly forwards and backwards.
+    await page.locator('#rb-navigation a').first().focus(); await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
+    for (let i = 0; i < 24; i++) { await page.keyboard.press(i < 12 ? 'Tab' : 'Shift+Tab'); await wait(Math.floor(rand() * 70)); }
+    const frames = (await audit(page, `${name}, rapid keyboard focus`)).frames;
+    ok(`${name}: ${frames} frames audited over hover storms, all ${centres.length * (centres.length - 1)} ordered link pairs, Home/wave interruptions and rapid Tab: only the latest pose is ever visible, no mixed expressions, props, sparks or detached hands`);
+    await ctx.close();
+  }
+  {
+    // C. Rapid real navigation. The monitor lives in every document; each one reports on leaving. Arrival must be still and show the
+    // server-selected pose at once, whatever the pointer is doing.
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await serve(ctx, 'admin');
+    await monitor.autoInstall(ctx);
+    const page = await ctx.newPage();
+    const rand = rng(5);
+    const route = { '/': 'wave', '/rooms': 'door', '/today': 'calendar', '/requests': 'clipboard', '/manage/rooms': 'key', '/manage/equipment': 'tool', '/accounts': 'badge' };
+    const hrefOf = (u) => (u === '/' ? '#rb-navigation a:first-child' : `#rb-navigation a[href$="${u}"]`);
+    await page.goto(origin + '/'); await settle(page);
+    for (let round = 0; round < 4; round++) for (const u of Object.keys(route)) {
+      await page.locator(hrefOf(u)).first().click({ noWaitAfter: true });
+      await wait(Math.floor(rand() * 140));
+    }
+    await wait(600);
+    // Clicking during an unfinished hover transition, navigating straight after hovering Home, and clicking while the wave is active.
+    for (const [first, then] of [['/', '/today'], ['/', '/requests'], ['/rooms', '/'], ['/accounts', '/'], ['/today', '/manage/equipment']]) {
+      await page.goto(origin + '/rooms'); await settle(page);
+      await page.locator(hrefOf(first)).first().hover(); await wait(Math.floor(rand() * 60));
+      await page.locator(hrefOf(then)).first().click({ noWaitAfter: true }); await wait(300);
+    }
+    // Rapid Back/Forward.
+    await page.goto(origin + '/today'); await page.goto(origin + '/requests'); await page.goto(origin + '/accounts'); await settle(page);
+    for (let i = 0; i < 6; i++) { await page.goBack({ waitUntil: 'commit' }).catch(() => {}); await wait(Math.floor(rand() * 100)); if (i % 2) await page.goForward({ waitUntil: 'commit' }).catch(() => {}); await wait(Math.floor(rand() * 100)); }
+    await settle(page);
+    // Reload with the pointer over a link, and arrival with a stationary pointer parked over another link.
+    await page.goto(origin + '/today'); await settle(page);
+    const acc = await page.locator(hrefOf('/accounts')).first().boundingBox();
+    await page.mouse.move(acc.x + 40, acc.y + acc.height / 2); await wait(250);
+    await page.reload(); await settle(page); await wait(300);
+    assert.equal(await pose(page), 'calendar', 'reloading with the pointer over another link still shows the page pose');
+    await page.goto(origin + '/requests'); await settle(page); await wait(300);
+    assert.equal(await pose(page), 'clipboard', 'arriving with a stationary pointer over a link shows the page pose');
+    await wait(500);
+    const docs = await monitor.readAll(page);
+    assert.ok(docs.length >= 20, `audited ${docs.length} documents`);
+    for (const d of docs) {
+      assert.deepEqual(d.violations, [], `${d.path}: mixed or detached frames:\n  ` + d.violations.slice(0, 5).join('\n  '));
+      assert.deepEqual(d.arrival, [], `${d.path}: the mascot must not animate on arrival: ${d.arrival.join(', ')}`);
+      if (route[d.path]) assert.equal(d.pose, route[d.path], `${d.path} arrives in its own pose`);
+    }
+    ok(`rapid navigation: ${docs.length} documents audited (${docs.reduce((n, d) => n + d.frames, 0)} frames) through quick clicking, clicks during hover transitions, Home then straight away elsewhere, Back/Forward bursts, reload and arrival under a parked pointer: each arrives in its own pose, nothing animates on arrival, no mixed frames`);
+    await ctx.close();
+  }
   for (const site of ['rep', 'staff', 'admin', 'college']) {
     const shown = {};
     for (const zoom of [0.9, 1, 1.25, 1.5, 2]) {
@@ -207,8 +288,12 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     await ctx.close();
     const m = await open(browser, 'admin');
     await m.page.goto(origin + '/'); await settle(m.page);
+    assert.equal(await m.page.evaluate(() => getComputedStyle(document.querySelector('.rbm-arm--r')).transitionDuration), '0s', 'a freshly loaded page has no transition armed');
+    await link(m.page, 'Equipment').hover();
     const normal = await m.page.evaluate(() => getComputedStyle(document.querySelector('.rbm-arm--r')).transitionDuration);
-    assert.equal(normal, '0.18s', 'normal motion: the mascot\'s own 180ms transition');
+    assert.equal(normal, '0.18s', 'normal motion: the mascot\'s own 180ms arm transition (armed by the first preview)');
+    assert.equal(await m.page.evaluate(() => getComputedStyle(document.querySelector('.rbm-prop--tool')).transitionDelay), '0.18s', 'a prop is revealed only after the arms have arrived');
+    assert.equal(await m.page.evaluate(() => getComputedStyle(document.querySelector('.rbm-prop--door')).transitionDuration), '0s', 'and the prop of the pose being left disappears at once (never cross-faded)');
     const unrelated = await m.page.evaluate(() => ({ vt: getComputedStyle(document.documentElement).getPropertyValue('view-transition-name'), sb: getComputedStyle(document.querySelector('.rb-shell__content')).scrollBehavior, nav: getComputedStyle(document.querySelector('.rb-nav-item')).transitionDuration, btn: getComputedStyle(document.querySelector('.rb-button, button')).transitionDuration }));
     assert.equal(unrelated.sb, 'auto', 'scrolling is untouched');
     assert.ok(/^0s/.test(unrelated.nav) && /^0s/.test(unrelated.btn), 'no global link/button motion was added: ' + JSON.stringify(unrelated));

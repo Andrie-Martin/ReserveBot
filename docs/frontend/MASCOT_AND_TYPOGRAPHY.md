@@ -45,3 +45,16 @@ node tests/Support/mascot-browser.cjs     <playwright-core>   # poses, persisten
 node tests/Support/typography-browser.cjs <playwright-core>   # rendered fonts, cold/warm/slow loads
 ```
 The DB-free checks serve the real shell via `tests/Support/render-mascot.php`; `FrontendConsistencyTest` covers every role over HTTP on the disposable DB.
+
+## Interruption-safe poses (why the mascot used to show mixed frames)
+Props, sparks, hands and happy eyes were cross-faded with 180ms opacity transitions. Change pose again inside those 180ms (rapid hovering,
+or hovering Home and clicking Today) and the old pose's content was still half visible while the new content faded in: two props at once,
+happy eyes and gold sparks over a calendar, hands in mid-air. Arriving on a page was never the cause (nothing animates on arrival).
+- Pose content is either fully shown or fully hidden. Leaving a pose hides its content at once; a prop or spark is revealed by a 0s step
+  delayed by the arm duration, so it appears once the arms have arrived and a newer pose cancels a pending reveal. The two eye styles swap
+  instantly. Hands are part of the arm groups and turn with their arm every frame.
+- Only the arms and the smile glide (180ms). All transitions are armed by the first preview (`data-ready`) and live in the
+  no-preference media query, so a loaded page never animates and reduced motion is instant. The one-off wave swing was removed: an
+  animation that outlives its pose is exactly the kind of leftover this prevents.
+- `tests/Support/mascot-monitor.cjs` audits every animation frame (also in every document of a rapid navigation sequence) and
+  `transition-frames-before-after.png` shows the old and new frames at fixed times.

@@ -60,44 +60,48 @@
 
 .rbm-arm--l { transform: rotate(var(--rbm-l)); transform-origin: 31px 80px; }
 .rbm-arm--r { transform: rotate(var(--rbm-r)); transform-origin: 109px 80px; }
-.rbm-eyes--happy, .rbm-sparks { opacity: 0; }
 .rbm-mouth { transform: scaleX(var(--rbm-smile)); transform-origin: 70px 77px; }
-.rbm-prop { opacity: 0; }
-/* The chest pill is part of the body: always drawn, behind the limbs, props and hands, so only a held object itself can cover it. */
+
+/* INTERRUPTION-SAFE POSES. Everything that belongs to one pose only (its prop, hands, sparks, happy eyes) is either fully shown or
+   fully hidden; it is never cross-faded. Cross-fading was the bug: change pose again within 180ms and the old pose's prop, sparks
+   and happy eyes were still half visible while the new ones faded in, which showed as a mixed character (a calendar with
+   happy eyes and sparks, two props at once, hands in mid-air).
+   - Leaving a pose hides its content at once (no transition on the hidden state).
+   - Entering a pose reveals its prop and sparks only after the arms have arrived (a 0s opacity step delayed by the arm duration), so
+     an object never appears before the hands are on it; a newer pose selected in the meantime cancels the pending reveal, so only
+     the latest pose can ever show. Hands are body parts of the arm groups: they show at once and turn with their arm every frame, so
+     they can never be detached from it.
+   - The two eye styles swap instantly, so there is never a frame with both or with neither.
+   Only the arms and the smile glide (180ms), and only after the first preview (data-ready): a freshly loaded page never animates. */
+.rbm-prop, .rbm-sparks, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--happy { opacity: 0; }
 
 .rb-mascot[data-pose="door"] .rbm-prop--door,
 .rb-mascot[data-pose="calendar"] .rbm-prop--calendar,
 .rb-mascot[data-pose="clipboard"] .rbm-prop--clipboard,
 .rb-mascot[data-pose="key"] .rbm-prop--key,
 .rb-mascot[data-pose="tool"] .rbm-prop--tool,
-.rb-mascot[data-pose="badge"] .rbm-prop--badge { opacity: 1; }
-/* Eyes and sparks: the greeting poses (wave, attend) smile with happy arcs and throw gold sparks. */
-.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--open { opacity: 0; }
-.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--happy { opacity: 1; }
+.rb-mascot[data-pose="badge"] .rbm-prop--badge,
 .rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-sparks--r,
-.rb-mascot[data-pose="attend"] .rbm-sparks--l { opacity: 1; }
-/* Hands: two-handed poses show both, one-handed poses the left (carrier), wave the raised right hand and attend both open hands.
-   The accent edge (on the hand and along the limb) is only for holding poses, where an arm lies over the same-coloured body. */
+.rb-mascot[data-pose="attend"] .rbm-sparks--l,
 .rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
 .rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
 .rb-mascot[data-pose="wave"] .rbm-arm--r .rbm-hand,
 .rb-mascot[data-pose="attend"] .rbm-hand { opacity: 1; }
+/* Eyes and sparks: the greeting poses (wave, attend) smile with happy arcs and throw gold sparks. */
+.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--open { opacity: 0; }
+.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--happy { opacity: 1; }
+/* Hands: two-handed poses show both, one-handed poses the left (carrier), wave the raised right hand and attend both open hands.
+   The accent edge (on the hand and along the limb) is only for holding poses, where an arm lies over the same-coloured body. */
 
-/* Only transform and opacity move, and only for a short moment when the pose changes. The feet, body, head and footer never
-   move, so the figure stays planted, and there is no idle movement at all. */
-.rbm-arm, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
-.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: opacity var(--rbm-duration) var(--rbm-ease); }
 @media (prefers-reduced-motion: no-preference) {
-  /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only when a link
-     is previewed, so arriving on the Home page (already waving) never swings the arm. */
-  .rb-mascot[data-ready][data-pose="wave"] .rbm-arm--r { animation: rbm-wave 520ms var(--rbm-ease) var(--rbm-duration) 1; }
+  .rb-mascot[data-ready] .rbm-arm, .rb-mascot[data-ready] .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
+  .rb-mascot[data-ready][data-pose="door"] .rbm-prop--door,
+  .rb-mascot[data-ready][data-pose="calendar"] .rbm-prop--calendar,
+  .rb-mascot[data-ready][data-pose="clipboard"] .rbm-prop--clipboard,
+  .rb-mascot[data-ready][data-pose="key"] .rbm-prop--key,
+  .rb-mascot[data-ready][data-pose="tool"] .rbm-prop--tool,
+  .rb-mascot[data-ready][data-pose="badge"] .rbm-prop--badge,
+  .rb-mascot[data-ready]:is([data-pose="wave"], [data-pose="attend"]) .rbm-sparks--r,
+  .rb-mascot[data-ready][data-pose="attend"] .rbm-sparks--l { transition: opacity 0s linear var(--rbm-duration); }
 }
-@keyframes rbm-wave {
-  25% { transform: rotate(calc(var(--rbm-r) + 18deg)); }
-  50% { transform: rotate(var(--rbm-r)); }
-  75% { transform: rotate(calc(var(--rbm-r) + 18deg)); }
-}
-/* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. */
-@media (prefers-reduced-motion: reduce) {
-  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: none; animation: none; }
-}
+/* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. No transition rule applies. */

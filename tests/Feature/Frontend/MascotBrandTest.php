@@ -16,6 +16,11 @@ final class MascotBrandTest extends TestCase
         return file_get_contents(dirname(__DIR__, 3).'/'.$path);
     }
 
+    private function withoutComments(string $css): string
+    {
+        return preg_replace('/\/\*.*?\*\//s', '', $css);
+    }
+
     public function test_the_mascot_is_self_contained_and_adds_no_global_motion(): void
     {
         $css = $this->read('public/css/mascot.css');
@@ -23,7 +28,10 @@ final class MascotBrandTest extends TestCase
         $this->assertStringNotContainsString('--rb-duration', $css);
         $this->assertStringNotContainsString('--rb-ease', $css);
         $this->assertStringNotContainsString('view-transition', $css);
-        $this->assertStringContainsString('prefers-reduced-motion: reduce', $css);
+        // Reduced motion: every transition lives inside the no-preference block, so reduced motion gets instant poses by construction.
+        $this->assertSame(0, preg_match('/^(?!\s*\/\*).*\btransition\s*:/m', preg_replace('/@media \(prefers-reduced-motion: no-preference\) \{.*?\n\}\n/s', '', $this->withoutComments($css))), 'no transition outside the no-preference block');
+        $this->assertStringNotContainsString('@keyframes', $css, 'no keyframe animation that could outlive a pose change');
+        $this->assertStringNotContainsString('animation:', $css);
         $layout = $this->read('resources/views/layouts/app.blade.php');
         $this->assertStringNotContainsString('motion.css', $layout, 'the global motion layer is not part of this change');
         $this->assertFileDoesNotExist(dirname(__DIR__, 3).'/public/css/foundations/motion.css');
@@ -33,6 +41,25 @@ final class MascotBrandTest extends TestCase
         $this->assertStringNotContainsString('indicator', $this->read('resources/views/components/ui/nav-item.blade.php'));
         $this->assertStringContainsString('css/mascot.css', $layout);
         $this->assertStringContainsString('js/mascot.js', $layout);
+    }
+
+    public function test_pose_content_is_never_cross_faded_so_an_interrupted_change_cannot_mix_poses(): void
+    {
+        $css = $this->withoutComments($this->read('public/css/mascot.css'));
+        // Pose-specific content (props, sparks, hands, happy eyes) is hidden by default and has no transition of its own on the hidden state.
+        $this->assertStringContainsString('.rbm-prop, .rbm-sparks, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-eyes--happy { opacity: 0; }', $css);
+        $this->assertDoesNotMatchRegularExpression('/transition:[^;}]*opacity\s+var\(/', $css, 'opacity is never faded over the arm duration (that was the mixed-frames bug)');
+        $this->assertStringNotContainsString('.rbm-eyes--open, .rbm-eyes--happy', $css.' ', 'the two eye styles are not given a shared fade');
+        // Reveal of props and sparks is a 0s step delayed by the arm duration, armed only after the first preview.
+        $this->assertSame(1, substr_count($css, '{ transition: opacity 0s linear var(--rbm-duration); }'));
+        $this->assertStringContainsString('.rb-mascot[data-ready] .rbm-arm, .rb-mascot[data-ready] .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }', $css, 'only arms and smile glide');
+        foreach (['.rb-mascot[data-ready][data-pose="door"] .rbm-prop--door', '.rb-mascot[data-ready]:is([data-pose="wave"], [data-pose="attend"]) .rbm-sparks--r'] as $reveal) {
+            $this->assertStringContainsString($reveal, $css);
+        }
+        $this->assertStringNotContainsString('.rbm-hand, .rbm-hand-edge, .rbm-limb-edge) { transition', $css, 'hands are part of the arm and show at once');
+        $js = $this->read('public/js/mascot.js');
+        $this->assertStringContainsString("mascot.dataset.ready = ''", $js);
+        $this->assertLessThan(strpos($js, 'mascot.dataset.pose = pose'), strpos($js, "mascot.dataset.ready = ''"), 'transitions are armed in the same step as the first preview, never on arrival');
     }
 
     public function test_the_college_admin_sidebar_gets_a_pose_for_its_single_link(): void
