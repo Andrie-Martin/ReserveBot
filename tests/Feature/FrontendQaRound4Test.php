@@ -172,7 +172,7 @@ final class FrontendQaRound4Test extends TestCase
         $html = $this->as($this->staff)->get('/today')->assertOk()->getContent();
         $this->assertStringNotContainsString('class="done-list class-list"', $html, 'no accordion');
         $this->assertStringNotContainsString('<summary>Classes', $html);
-        $this->assertMatchesRegularExpression('/<h2>Classes <span class="count">20<\/span>/', $html);
+        $this->assertMatchesRegularExpression('/<h2 class="class-list__head">Classes <span class="count">20<\/span>/', $html);
         $this->assertSame(15, substr_count($html, 'class="mtable class-table"') ? preg_match_all('/<tr[^>]*>\s*<td class="nowrap">/', $html) : 0, '15 rows on page one');
         $this->assertStringContainsString('Showing 1–15 of 20 classes', $html);
         $this->assertStringContainsString('classes_page=2', $html);
