@@ -31,62 +31,73 @@
 .rbm-hand { fill: var(--rb-color-maroon); opacity: 0; }
 .rbm-hand-edge { fill: var(--rb-color-accent); opacity: 0; }
 .rbm-limb-edge { stroke: var(--rb-color-accent); stroke-width: 13.6; stroke-linecap: round; opacity: 0; }
-.rbm-hand-ball { fill: var(--rb-color-gold); opacity: 0; }
 .rbm-mouth { fill: none; stroke: var(--rb-color-maroon); stroke-width: 3.4; stroke-linecap: round; }
 .rbm-frame { fill: none; stroke: var(--rb-color-gold); stroke-width: 3; }
 .rbm-gold-edge { stroke: var(--rb-color-gold); stroke-width: 3; }
 .rbm-line { fill: none; stroke: var(--rb-color-maroon); stroke-width: 2.4; stroke-linecap: round; }
-.rbm-keyring { fill: none; stroke: var(--rb-color-gold); stroke-width: 4; }
-.rbm-keyshaft { fill: none; stroke: var(--rb-color-gold); stroke-width: 4; stroke-linecap: round; }
+.rbm-arc { fill: none; stroke: var(--rb-color-maroon); stroke-width: 3.2; stroke-linecap: round; }
+.rbm-sparks { opacity: 0; }
+.rbm-sparks path { fill: none; stroke: var(--rb-color-gold); stroke-width: 3.2; stroke-linecap: round; }
+.rbm-panel { fill: none; stroke: var(--rb-color-accent); stroke-width: 1.6; stroke-linejoin: round; }
+.rbm-cells { fill: var(--rb-color-maroon); opacity: .16; }
+.rbm-tick { fill: none; stroke: var(--rb-color-maroon); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rbm-keyring { fill: none; stroke: var(--rb-color-gold); stroke-width: 4.5; }
+.rbm-keyshaft { fill: none; stroke: var(--rb-color-gold); stroke-width: 4.5; stroke-linecap: round; }
 
-/* Pose parameters: clockwise degrees for each arm about its shoulder, and a tiny glance. Everything not listed stays at rest.
-   idle = arms out at the sides (the reference); wave raises the left arm (with the gold hand); attend is a neutral half-raised arm.
-   Holding poses use ONE system (arm length 32, tip = shoulder + 32 * (-sin a, cos a)):
-   - two-handed (calendar, clipboard: card x 44..96; door: x 54..86): both arms angle inward so the hands land on the object's side
-     edges: -23.4 / 23.4deg puts the hands at (43.7, 109.4) and (96.3, 109.4); -46.3 / 46.3deg puts them at (54.1, 102.1) and (85.9, 102.1);
-   - one-handed (key, tool, badge): the right hand is the carrier at (93.8, 108.1) (28.4deg) and the left arm rests at its idle angle. */
-.rb-mascot { --rbm-duration: 180ms; --rbm-ease: cubic-bezier(.4, 0, .2, 1); --rbm-l: 35deg; --rbm-r: -35deg; --rbm-ex: 0px; --rbm-smile: 1; }
-.rb-mascot[data-pose="attend"] { --rbm-r: -62deg; }
-.rb-mascot[data-pose="wave"] { --rbm-l: 156deg; --rbm-smile: 1.18; }
-.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }
-.rb-mascot[data-pose="door"] { --rbm-l: -46.3deg; --rbm-r: 46.3deg; }
-.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-r: 28.4deg; }
+/* Pose parameters (the nine compositions of docs/frontend/ReserveBot-Mascot-Poses.png): clockwise degrees for each arm about its
+   shoulder, and the mouth. Everything not listed stays at rest. Arm length 32; tip = shoulder + 32 * (-sin a, cos a).
+   - idle: arms relaxed at the sides, no hands shown.
+   - wave: the right arm raised (hand, gold sparks, happy eyes); attend: both arms opened wide (hands, sparks, happy eyes).
+   - two-handed (calendar, clipboard, door share one footprint, x 44..96): both arms angle inward so the hands land on the side
+     edges: -23.4 / 23.4deg puts them at (43.7, 109.4) and (96.3, 109.4);
+   - one-handed (key, tool, badge): the LEFT hand carries at (46.2, 108.1) (-28.4deg); the right arm rests at its idle angle. */
+.rb-mascot { --rbm-duration: 180ms; --rbm-ease: cubic-bezier(.4, 0, .2, 1); --rbm-l: 20deg; --rbm-r: -20deg; --rbm-smile: 1; }
+.rb-mascot[data-pose="wave"] { --rbm-r: -150deg; --rbm-smile: 1.18; }
+.rb-mascot[data-pose="attend"] { --rbm-l: 100deg; --rbm-r: -100deg; --rbm-smile: 1.18; }
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }
+.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-l: -28.4deg; }
 
 .rbm-arm--l { transform: rotate(var(--rbm-l)); transform-origin: 31px 80px; }
 .rbm-arm--r { transform: rotate(var(--rbm-r)); transform-origin: 109px 80px; }
-.rbm-eyes { transform: translateX(var(--rbm-ex)); }
+.rbm-eyes--happy, .rbm-sparks { opacity: 0; }
 .rbm-mouth { transform: scaleX(var(--rbm-smile)); transform-origin: 70px 77px; }
 .rbm-prop { opacity: 0; }
 .rbm-pill { opacity: 1; }
 
-.rb-mascot[data-pose="wave"] .rbm-hand-ball,
 .rb-mascot[data-pose="door"] .rbm-prop--door,
 .rb-mascot[data-pose="calendar"] .rbm-prop--calendar,
 .rb-mascot[data-pose="clipboard"] .rbm-prop--clipboard,
 .rb-mascot[data-pose="key"] .rbm-prop--key,
 .rb-mascot[data-pose="tool"] .rbm-prop--tool,
 .rb-mascot[data-pose="badge"] .rbm-prop--badge { opacity: 1; }
-/* Hands: the right hand grips in every holding pose, the left only when the object is held with two hands. The accent edge (on the
-   hand and along the limb) lets an arm that lies over the same-coloured body stay readable. */
-.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-arm--r :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
-.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) .rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge) { opacity: 1; }
+/* Eyes and sparks: the greeting poses (wave, attend) smile with happy arcs and throw gold sparks. */
+.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--open { opacity: 0; }
+.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-eyes--happy { opacity: 1; }
+.rb-mascot:is([data-pose="wave"], [data-pose="attend"]) .rbm-sparks--r,
+.rb-mascot[data-pose="attend"] .rbm-sparks--l { opacity: 1; }
+/* Hands: two-handed poses show both, one-handed poses the left (carrier), wave the raised right hand and attend both open hands.
+   The accent edge (on the hand and along the limb) is only for holding poses, where an arm lies over the same-coloured body. */
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
+.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge),
+.rb-mascot[data-pose="wave"] .rbm-arm--r .rbm-hand,
+.rb-mascot[data-pose="attend"] .rbm-hand { opacity: 1; }
 .rb-mascot:is([data-pose="door"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) .rbm-pill { opacity: 0; }
 
 /* Only transform and opacity move, and only for a short moment when the pose changes. The feet, body, head and footer never
    move, so the figure stays planted, and there is no idle movement at all. */
-.rbm-arm, .rbm-eyes, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
-.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-hand-ball, .rbm-pill { transition: opacity var(--rbm-duration) var(--rbm-ease); }
+.rbm-arm, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
+.rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-pill, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: opacity var(--rbm-duration) var(--rbm-ease); }
 @media (prefers-reduced-motion: no-preference) {
   /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only after the first
      frame, so arriving on the Home page does not wave on its own. */
-  .rb-mascot[data-ready][data-pose="wave"] .rbm-arm--l { animation: rbm-wave 520ms var(--rbm-ease) var(--rbm-duration) 1; }
+  .rb-mascot[data-ready][data-pose="wave"] .rbm-arm--r { animation: rbm-wave 520ms var(--rbm-ease) var(--rbm-duration) 1; }
 }
 @keyframes rbm-wave {
-  25% { transform: rotate(calc(var(--rbm-l) - 18deg)); }
-  50% { transform: rotate(var(--rbm-l)); }
-  75% { transform: rotate(calc(var(--rbm-l) - 18deg)); }
+  25% { transform: rotate(calc(var(--rbm-r) + 18deg)); }
+  50% { transform: rotate(var(--rbm-r)); }
+  75% { transform: rotate(calc(var(--rbm-r) + 18deg)); }
 }
 /* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. */
 @media (prefers-reduced-motion: reduce) {
-  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-hand-ball, .rbm-pill { transition: none; animation: none; }
+  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand, .rbm-hand-edge, .rbm-limb-edge, .rbm-pill, .rbm-eyes--open, .rbm-eyes--happy, .rbm-sparks { transition: none; animation: none; }
 }

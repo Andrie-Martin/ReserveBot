@@ -7,12 +7,17 @@ Two small, independent changes. Neither needs the global motion layer, view tran
   head/body, cream faceplate, two round eyes, a small smile, antenna with a gold tip, capsule arms, stubby legs, gold chest pill.
   Nine poses share that figure; a pose only changes arm angles, one prop and a 1.6px glance. Side-by-side proof:
   `docs/frontend/mascot-evidence/`.
+- **Nine poses from `docs/frontend/ReserveBot-Mascot-Poses.png`** (compositions only; its RB belly logo and its changed proportions are
+  not used, the gold chest pill stays): idle (relaxed arms), wave (right arm raised, happy eyes, gold sparks), door / calendar /
+  clipboard (held in both hands on one shared footprint), key / wrench / ID badge (held in the left hand), attend (arms opened wide, happy
+  eyes, sparks, no object). Differences from the sheet: attend has no belly check (it is a pose without an accessory), the objects are
+  simplified for 90px, and the arms are straight capsules (the sheet bends them).
 - **One holding system**: limbs are drawn over the body and under the faceplate; each arm has a matching hand group (same classes and
-  angle variable, drawn after the props) so a grip turns with its arm and cannot detach. Two-handed objects (calendar, clipboard, door) sit
-  on the torso with both hands on the side edges (arms -23.4/23.4deg, door -46.3/46.3deg); one-handed objects (key, tool, badge) share one
-  carrier hand at (94,108) (right arm 28.4deg) while the left arm rests. A thin accent edge on hands and limbs keeps an arm readable over
-  the same-coloured body. Idle, wave and attend show no hands and still match the reference; the calendar differs from the reference
-  only in being held. Evidence: `all-poses-3x.png`, `door-calendar-clipboard-closeup.png`, `key-tool-badge-closeup.png`.
+  angle variable, drawn after the props) so a grip turns with its arm and cannot detach. Two-handed objects sit on the torso with both
+  hands on the side edges (arms -23.4/23.4deg); one-handed objects share one carrier hand at (46.2,108.1) (left arm -28.4deg) and key and
+  wrench share one axis through it while the right arm rests. A thin accent edge on hands and limbs keeps an arm readable over the
+  same-coloured body. Evidence: `nine-pose-vs-reference.png`, `all-poses-3x.png`, `door-calendar-clipboard-closeup.png`,
+  `key-tool-badge-closeup.png`, `mascot-all-poses-actual-size.png`, `sidebar-footer-actual-size.png`, `mascot-reference-vs-new.png`.
 - **Pose mapping** (single source, `layouts/partials/navigation.blade.php`, keyed by nav icon): Home wave, Free rooms door, Book / Today
   calendar, My bookings / Requests clipboard, Manage rooms key, Equipment tool, Accounts badge, anything unmapped `attend` (neutral).
   **College Admin** has one link ("Departments", icon `accounts`), so it gets the badge pose with no special case. Pages with no active

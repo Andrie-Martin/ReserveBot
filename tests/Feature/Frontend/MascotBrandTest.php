@@ -88,11 +88,14 @@ final class MascotBrandTest extends TestCase
         foreach (['attend', 'wave', 'door'] as $pose) {
             $this->assertStringContainsString("data-pose=\"$pose\"", $css, "$pose pose parameters");
         }
-        // One holding system: two-handed poses angle both arms inward onto the object's side edges, one-handed poses share one carrier hand.
-        $this->assertStringContainsString('.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }', $css);
-        $this->assertStringContainsString('.rb-mascot[data-pose="door"] { --rbm-l: -46.3deg; --rbm-r: 46.3deg; }', $css);
-        $this->assertStringContainsString('.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-r: 28.4deg; }', $css);
-        $this->assertStringContainsString('.rbm-arm--r :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge)', $css, 'hands are shown only in holding poses');
+        // One holding system: two-handed poses (calendar, clipboard, door share one footprint) angle both arms inward onto the side
+        // edges; one-handed poses (key, tool, badge) share one LEFT carrier hand; the greeting poses raise the right arm / open both.
+        $this->assertStringContainsString('.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="door"]) { --rbm-l: -23.4deg; --rbm-r: 23.4deg; }', $css);
+        $this->assertStringContainsString('.rb-mascot:is([data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-l: -28.4deg; }', $css);
+        $this->assertStringContainsString('.rb-mascot[data-pose="wave"] { --rbm-r: -150deg;', $css);
+        $this->assertStringContainsString('.rb-mascot[data-pose="attend"] { --rbm-l: 100deg; --rbm-r: -100deg;', $css);
+        $this->assertStringContainsString('--rbm-l: 20deg; --rbm-r: -20deg;', $css, 'idle: relaxed arms');
+        $this->assertStringContainsString('.rbm-arm--l :is(.rbm-hand, .rbm-hand-edge, .rbm-limb-edge)', $css, 'one-handed poses show only the carrier hand');
         // One body, built once: head-and-body silhouette, faceplate, legs, antenna, chest pill and two eyes, however many poses.
         $this->assertSame(1, substr_count($svg, 'class="rbm-maroon" x="26" y="40" width="88" height="83" rx="25"'), 'one rounded head/body silhouette');
         $this->assertSame(1, substr_count($svg, 'class="rbm-cream" x="37" y="54" width="66" height="39" rx="17"'), 'one cream faceplate');
@@ -100,6 +103,9 @@ final class MascotBrandTest extends TestCase
         $this->assertSame(2, substr_count($svg, 'cy="69" r="5"'), 'two simple round eyes');
         $this->assertSame(1, substr_count($svg, 'class="rbm-gold rbm-pill"'), 'one gold chest accent');
         $this->assertSame(1, substr_count($svg, 'class="rbm-aerial"'), 'one short antenna');
+        $this->assertStringNotContainsString('>RB<', $svg, 'the pose sheet RB belly logo is not part of the character');
+        $this->assertStringContainsString('rbm-eyes--happy', $svg, 'happy eyes for the greeting poses');
+        $this->assertStringNotContainsString('hand-ball', $svg, 'the old gold wave hand is gone: the raised arm ends in the shared hand');
         $this->assertSame(4, substr_count($svg, 'class="rbm-arm '), 'two limbs and two hands, all posed by the same two angle variables');
         $this->assertSame(2, substr_count($svg, 'rbm-arm rbm-arm--l rbm-hands') + substr_count($svg, 'rbm-arm rbm-arm--r rbm-hands'), 'each hand turns with its own arm');
         $this->assertSame(2, substr_count($svg, 'class="rbm-hand" '), 'one hand per arm, the same size');

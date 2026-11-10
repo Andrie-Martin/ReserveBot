@@ -123,11 +123,11 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
       const face = document.querySelector('.rbm-cream[rx="17"]').getBoundingClientRect();
       const o = prop && prop.getBoundingClientRect();
       const frame = prop && (prop.querySelector('.rbm-frame, .rbm-gold-edge, .rbm-keyring') || prop).getBoundingClientRect();
-      return { l: side('l'), r: side('r'), obj: o && { x: o.x, y: o.y, right: o.right, bottom: o.bottom, w: o.width }, frame: frame && { x: frame.x, right: frame.right }, faceBottom: face.bottom, pose: document.querySelector('[data-rb-mascot]').dataset.pose };
+      return { l: side('l'), r: side('r'), obj: o && { x: o.x, y: o.y, right: o.right, bottom: o.bottom, w: o.width }, frame: frame && { x: frame.x, right: frame.right }, faceCovered: (() => { const root = document.querySelector('.rb-mascot'); const was = root.style.pointerEvents; root.style.pointerEvents = 'auto'; const plate = document.querySelector('.rbm-cream[rx="17"]'); let covered = 0; for (let i = 1; i < 12; i++) for (let j = 1; j < 8; j++) { const x = face.x + face.width * i / 12, y = face.y + face.height * j / 8; const hit = document.elementsFromPoint(x, y); if (!hit.includes(plate)) continue; const top = hit.find((e) => e.closest('svg') && e.tagName !== 'g'); if (top && top.closest('.rbm-prop, .rbm-hands')) covered++; } root.style.pointerEvents = was; return covered; })(), pose: document.querySelector('[data-rb-mascot]').dataset.pose };
     });
     const unit = (await page.evaluate(() => document.querySelector('.rb-mascot__art').getBoundingClientRect().height)) / 140; // px per SVG unit
-    const holding = { 'Today': 'two', 'Requests': 'two', 'Free rooms': 'two', 'Manage rooms': 'one', 'Equipment': 'one', 'Accounts': 'one' };
-    for (const label of ['Home', ...Object.keys(holding), 'Home']) {
+    const holding = { 'Today': 'two', 'Requests': 'two', 'Free rooms': 'two', 'Manage rooms': 'one', 'Equipment': 'one', 'Accounts': 'one', 'Home': null };
+    for (const label of Object.keys(holding)) {
       if (label !== 'Home') { await page.mouse.move(800, 500); await link(page, 'Home').hover(); await wait(260); }
       await link(page, label).hover();
       const samples = [];
@@ -136,26 +136,28 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
       await wait(300);
       const f = await state();
       const kind = holding[label];
-      if (!kind) { assert.ok(f.l.opacity === 0 && f.r.opacity === 0, `${label}: no hands when nothing is held`); continue; }
-      assert.equal(f.r.opacity, 1, `${label}: the right hand is shown`);
-      assert.equal(f.l.opacity, kind === 'two' ? 1 : 0, `${label}: left hand only for two-handed objects`);
-      assert.ok(Math.abs(f.r.w - 13.6 * unit) < 0.6 * unit, 'hands are one size');
+      if (!kind) { assert.ok(f.l.opacity === 0 && f.r.opacity === 1, `${label}: wave shows only the raised right hand`); assert.ok(!f.obj, 'and holds nothing'); continue; }
+      assert.equal(f.l.opacity, 1, `${label}: the left hand is shown`);
+      assert.equal(f.r.opacity, kind === 'two' ? 1 : 0, `${label}: right hand only for two-handed objects`);
+      assert.ok(Math.abs(f.l.w - 13.6 * unit) < 0.6 * unit, 'hands are one size');
       const o = f.obj, inside = (hnd, pad) => hnd.x >= o.x - pad && hnd.x <= o.right + pad && hnd.y >= o.y - pad && hnd.y <= o.bottom + pad;
-      assert.ok(inside(f.r, 1.5 * unit), `${label}: the right hand touches the object (hand ${f.r.x.toFixed(1)},${f.r.y.toFixed(1)} object ${o.x.toFixed(1)}-${o.right.toFixed(1)})`);
+      assert.ok(inside(f.l, 1.5 * unit), `${label}: the left hand touches the object (hand ${f.l.x.toFixed(1)},${f.l.y.toFixed(1)} object ${o.x.toFixed(1)}-${o.right.toFixed(1)})`);
       if (kind === 'two') {
-        assert.ok(inside(f.l, 1.5 * unit), `${label}: the left hand touches the object too`);
+        assert.ok(inside(f.r, 1.5 * unit), `${label}: the right hand touches the object too`);
         const edge = (hnd, e) => Math.abs(hnd.x - e) <= 3.5 * unit;
         assert.ok(edge(f.l, f.frame.x + 1.5 * unit) && edge(f.r, f.frame.right - 1.5 * unit), `${label}: the hands sit on the left and right edges`);
         assert.ok(Math.abs(f.l.y - f.r.y) < 0.5 * unit, `${label}: both hands at the same height`);
       }
-      assert.ok(o.y >= f.faceBottom - 2.5 * unit, `${label}: the object does not cover the face`);
+      // Nothing held (and no hand) may be painted over the faceplate: sample a grid of points inside the real rounded plate.
+      assert.equal(f.faceCovered, 0, `${label}: the object and hands leave the faceplate uncovered (${f.faceCovered} covered samples)`);
     }
-    ok('every accessory pose is held: hands touch the object (both side edges for calendar/clipboard/door, the carrier hand for key/tool/badge), stay on the arm tips through the transition, one hand size, face uncovered; no hands in idle/wave/attend');
-    for (const p of ['idle', 'wave', 'attend']) {
-      await page.evaluate((p) => { document.querySelector('[data-rb-mascot]').dataset.pose = p; }, p); await wait(260);
-      const f = await state();
-      assert.ok(f.l.opacity === 0 && f.r.opacity === 0, `${p}: hands hidden`);
-    }
+    ok('every accessory pose is held: hands touch the object (both side edges for calendar/clipboard/door, the left carrier hand for key/tool/badge), stay on the arm tips through the transition, one hand size, face uncovered');
+    const greet = async (p) => { await page.evaluate((p) => { document.querySelector('[data-rb-mascot]').dataset.pose = p; }, p); await wait(300); return page.evaluate(() => { const op = (sel) => Number(getComputedStyle(document.querySelector(sel)).opacity); return { happy: op('.rbm-eyes--happy'), open: op('.rbm-eyes--open'), sparkR: op('.rbm-sparks--r'), sparkL: op('.rbm-sparks--l') }; }); };
+    let g = await greet('idle'); assert.deepEqual([(await state()).l.opacity, (await state()).r.opacity, g.happy, g.sparkR], [0, 0, 0, 0], 'idle: relaxed, no hands, round eyes, no sparks');
+    g = await greet('wave'); assert.deepEqual([g.happy, g.open, g.sparkR, g.sparkL], [1, 0, 1, 0], 'wave: happy eyes and sparks on the raised side');
+    g = await greet('attend'); const st = await state(); assert.deepEqual([g.happy, g.sparkR, g.sparkL, st.l.opacity, st.r.opacity, st.l.tipGap < 0.6 && st.r.tipGap < 0.6], [1, 1, 1, 1, 1, true], 'attend: both arms open with hands, sparks both sides, no object');
+    assert.ok(!st.obj, 'attend holds nothing');
+    ok('idle (relaxed, no hands), wave (right hand raised, happy eyes, sparks) and attend (both arms open, sparks) match the pose sheet and carry no accessory');
     await ctx.close();
   }
   for (const site of ['rep', 'staff', 'admin', 'college']) {
