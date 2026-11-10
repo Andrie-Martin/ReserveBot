@@ -34,6 +34,7 @@ class TestDataSeeder extends Seeder
 
         $admin = $this->account($bscpe, 'BSCpE Office Admin', 'admin@reservebot.test', 'admin');
         $this->account($bscpe, 'Lab Assistant', 'staff@reservebot.test', 'lab_staff');
+        // Block accounts: one per block, with the block's representative named on it
         $bea = $this->account($bscpe, 'Bea Prieto', 'rep1@reservebot.test', 'rep', 'BSCPE 4-5', '2022-00145-MN-0');
         $maria = $this->account($bscpe, 'Maria Santos', 'rep2@reservebot.test', 'rep', 'BSCPE 3-1', '2023-01872-MN-0');
 
@@ -42,7 +43,7 @@ class TestDataSeeder extends Seeder
         $nextMonday = today()->next(Carbon::MONDAY);
         $nextThursday = today()->next(Carbon::THURSDAY);
 
-        // (a) Bea (BSCPE 4-5) books next Tuesday's CMPE 451 Introduction to Cybersecurity class. Approved.
+        // (a) BSCPE 4-5 (representative: Bea) books next Tuesday's CMPE 451 Introduction to Cybersecurity class. Approved.
         $class = ClassSchedule::where('day_of_week', 'Tue')
             ->whereRelation('section', 'name', 'BSCPE 4-5')
             ->whereRelation('course', 'code', 'CMPE 451')
@@ -50,6 +51,7 @@ class TestDataSeeder extends Seeder
 
         $booking = Reservation::create([
             'user_id' => $bea->id,
+            'rep_name' => $bea->name,          // the block's representative when it was booked
             'room_id' => $class->room_id,
             'class_schedule_id' => $class->id,
             'purpose' => 'Lecture with slides',
@@ -63,9 +65,10 @@ class TestDataSeeder extends Seeder
             ['qty_requested' => 1],
         );
 
-        // (b) Maria (BSCPE 3-1) asks for a free slot for a make-up class. Waiting for approval.
+        // (b) BSCPE 3-1 (representative: Maria) asks for a free slot for a make-up class. Waiting for approval.
         $makeUp = Reservation::create([
             'user_id' => $maria->id,
+            'rep_name' => $maria->name,
             'room_id' => Room::where('name', 'CEA316')->value('id'),
             'purpose' => 'Make-up class',
             'start_time' => $nextMonday->copy()->setTime(8, 0),
@@ -75,7 +78,7 @@ class TestDataSeeder extends Seeder
         ]);
         $makeUp->equipment()->attach($this->items($bscpe, ['Extension Cord']), ['qty_requested' => 2]);
 
-        // (c) Bea borrows equipment only (no room) for next Thursday's CMPE 451 class. Waiting for approval.
+        // (c) BSCPE 4-5 borrows equipment only (no room) for next Thursday's CMPE 451 class. Waiting for approval.
         $thursdayClass = ClassSchedule::where('day_of_week', 'Thu')
             ->whereRelation('section', 'name', 'BSCPE 4-5')
             ->whereRelation('course', 'code', 'CMPE 451')
@@ -83,6 +86,7 @@ class TestDataSeeder extends Seeder
 
         $borrow = Reservation::create([
             'user_id' => $bea->id,
+            'rep_name' => $bea->name,
             'room_id' => null,
             'class_schedule_id' => $thursdayClass->id,
             'purpose' => 'Lab activity',

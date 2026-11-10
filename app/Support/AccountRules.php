@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
  */
 final class AccountRules
 {
-    /** A block rep's email must be Gmail or PUP webmail */
+    /** A block account's email must be Gmail or PUP webmail */
     public const REP_EMAIL_DOMAINS = ['gmail.com', 'iskolarngbayan.pup.edu.ph'];
 
     /** A PUP School ID (student number), e.g. 2021-00123-MN-0 */

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Section;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -14,10 +15,12 @@ use Tests\TestCase;
  */
 class AlreadyLoggedInTest extends TestCase
 {
+    /** A block account (BSCPE 4-5, representative Bea Prieto) unless another role is asked for */
     private function account(string $role = 'rep', string $name = 'Bea Prieto', string $email = 'bea@gmail.com'): User
     {
         $user = new User(['name' => $name, 'email' => $email, 'role' => $role, 'is_active' => true]);
         $user->id = 501;
+        $user->setRelation('section', $role === 'rep' ? new Section(['name' => 'BSCPE 4-5', 'program' => 'BSCPE']) : null);
 
         return $user;
     }
@@ -28,7 +31,7 @@ class AlreadyLoggedInTest extends TestCase
 
         $this->actingAs($bea)->from('/login')->post('/login', ['email' => 'staff@gmail.com', 'password' => 'Password123'])
             ->assertRedirect('/rep')
-            ->assertSessionHas('login_notice', fn ($message) => str_contains($message, 'already logged in as Bea Prieto (Block rep)')
+            ->assertSessionHas('login_notice', fn ($message) => str_contains($message, 'already logged in as BSCPE 4-5 (Block account)')
                 && str_contains($message, 'log out first')
                 && str_contains($message, 'private window'))
             ->assertSessionHasNoErrors();

@@ -16,13 +16,17 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Phase 9 (admins only): the department's accounts. Admins make block rep and lab staff
+ * Phase 9 (admins only): the department's accounts. Admins make block accounts and lab staff
  * accounts with a starting password (the person picks their own at first login), edit them,
  * set a new password, turn them off, and delete them. An account with bookings or history is
  * turned off instead of deleted, so nothing it did is lost.
+ *
+ * A block account belongs to its block: one account per block, with the block's representative named
+ * on it. The representative can be changed here, or by the block in My account.
  */
 class AccountsController extends Controller
 {
@@ -30,8 +34,8 @@ class AccountsController extends Controller
     private const PER_PAGE = 20;
 
     private const MESSAGES = [
-        'role.*' => 'Pick Block rep or Lab staff.',
-        'block_id.required' => 'Pick the block this rep represents.',
+        'role.*' => 'Pick Block account or Lab staff.',
+        'block_id.required' => 'Pick the block this account is for.',
         'block_id.*' => 'Pick a block from the list.',
         'section_id.*' => 'Pick a section from the list.',
     ];
@@ -45,9 +49,9 @@ class AccountsController extends Controller
         $accounts = User::with('section')->where('department_id', $admin->department_id)->orderBy('id')->get();
         $byName = fn (User $user) => Str::lower($user->name);
 
-        // Same order as before (block reps, then lab staff, then admins), cut into pages of PER_PAGE people.
+        // Same order as before (block accounts, then lab staff, then admins), cut into pages of PER_PAGE people.
         $ordered = [
-            'Block reps' => $accounts->where('role', 'rep')->sortBy(fn (User $user) => ($user->section?->name ?? '~').' '.Str::lower($user->name), SORT_NATURAL)->values(),
+            'Block accounts' => $accounts->where('role', 'rep')->sortBy(fn (User $user) => ($user->section?->name ?? '~').' '.Str::lower($user->name), SORT_NATURAL)->values(),
             'Lab staff' => $accounts->where('role', 'lab_staff')->sortBy($byName)->values(),
             'Admins' => $accounts->where('role', 'admin')->sortBy($byName)->values(),
         ];
@@ -75,11 +79,12 @@ class AccountsController extends Controller
     {
         $admin = $request->user();
         AccountFields::tidy($request);
+        $role = (string) $request->input('role');
         $data = $request->validateWithBag('add',
-            $this->rules($admin, (string) $request->input('role')) + ['password' => AccountFields::password()],
-            self::MESSAGES + AccountFields::MESSAGES);
+            $this->rules($admin, $role) + ['password' => AccountFields::password()],
+            $this->messages($role));
 
-        $account = User::create([
+        $account = $this->oneAccountPerBlock($data, null, 'add', fn () => User::create([
             'department_id' => $admin->department_id,
             'role' => $data['role'],
             'section_id' => $data['role'] === 'rep' ? $data['block_id'] : ($data['section_id'] ?? null),
@@ -89,11 +94,13 @@ class AccountsController extends Controller
             'password' => $data['password'],
             'must_change_password' => true,
             'is_active' => true,
-        ]);
+        ]));
         $account->load('section', 'department');
 
-        $message = 'Made an account for '.$account->name.' ('.$account->roleLabel()
-            .($account->role === 'rep' ? ', '.$account->section->name : '').'). Give them the starting password; they’ll pick their own when they first log in.';
+        $message = ($account->isBlock()
+            ? 'Made the block account for '.$account->displayName().' (representative: '.$account->name.').'
+            : 'Made an account for '.$account->name.' ('.$account->roleLabel().').')
+            .' Give them the starting password; they’ll pick their own when they first log in.';
         if (! $account->sendConnectEmail(welcome: true)) {
             return redirect()->route('accounts.index')->with('status', $message)
                 ->with('problem', 'The welcome email to '.$account->email.' couldn’t be sent (see README, Email). After they log in, they can send the link again from My account.');
@@ -122,30 +129,39 @@ class AccountsController extends Controller
         $admin = $request->user();
         $this->check($admin, $account);
         AccountFields::tidy($request);
-        $data = $request->validateWithBag('details',
-            $this->rules($admin, (string) $request->input('role'), $account),
-            self::MESSAGES + AccountFields::MESSAGES);
+        $role = (string) $request->input('role');
+        $data = $request->validateWithBag('details', $this->rules($admin, $role, $account), $this->messages($role));
 
         $wasActive = $account->is_active;
         $emailChanged = $data['email'] !== $account->email;
-        $account->fill([
-            'name' => $data['name'],
-            'role' => $data['role'],
-            'section_id' => $data['role'] === 'rep' ? $data['block_id'] : ($data['section_id'] ?? null),
-            'school_id' => $data['school_id'] ?? null,
-            'is_active' => $request->boolean('is_active'),
-        ]);
-        if ($emailChanged) {
-            $account->email = $data['email'];
-            $account->email_verified_at = null;     // the new email needs its own link
-        }
-        $account->save();
+        $oldRepresentative = $account->representativeName();
+        $this->oneAccountPerBlock($data, $account, 'details', function () use ($account, $data, $request, $emailChanged) {
+            $account->fill([
+                'name' => $data['name'],
+                'role' => $data['role'],
+                'section_id' => $data['role'] === 'rep' ? $data['block_id'] : ($data['section_id'] ?? null),
+                'school_id' => $data['school_id'] ?? null,
+                'is_active' => $request->boolean('is_active'),
+            ]);
+            if ($emailChanged) {
+                $account->email = $data['email'];
+                $account->email_verified_at = null;     // the new email needs its own link
+            }
+            $account->save();
 
+            return $account;
+        });
+        $account->load('section');
+
+        $called = $account->displayName();
         $message = match (true) {
             $wasActive && ! $account->is_active => $this->turnedOff($account),
-            ! $wasActive && $account->is_active => $account->name.' is turned on: the account can log in again.',
-            default => 'Saved '.$account->name.'.',
+            ! $wasActive && $account->is_active => $called.' is turned on: the account can log in again.',
+            default => 'Saved '.$called.'.',
         };
+        if ($account->isBlock() && $oldRepresentative !== null && $oldRepresentative !== $account->name) {
+            $message .= ' Its representative is now '.$account->name.'.';
+        }
         $problem = null;
         if ($emailChanged) {
             if ($account->sendConnectEmail()) {
@@ -170,7 +186,7 @@ class AccountsController extends Controller
             'remember_token' => Str::random(60),
         ])->save();
 
-        return redirect()->route('accounts.edit', $account)->with('status', 'Set a new password for '.$account->name
+        return redirect()->route('accounts.edit', $account)->with('status', 'Set a new password for '.$account->displayName()
             .'. Give it to them; they’ll pick their own when they next log in. Any device logged in to the account is logged out.');
     }
 
@@ -183,22 +199,22 @@ class AccountsController extends Controller
             $wasActive = $account->is_active;
             $account->update(['is_active' => false]);
 
-            return redirect()->route('accounts.edit', $account)->with('status', $account->name.' has bookings or history, so the account was '
+            return redirect()->route('accounts.edit', $account)->with('status', $account->displayName().' has bookings or history, so the account was '
                 .($wasActive ? 'turned off' : 'kept turned off').' instead of deleted: it can’t log in, and its bookings and history stay.'
                 .($wasActive ? ' '.$this->upcomingNote($account) : ''));
         }
 
         Photos::delete($account->photo_path);
         DB::table('password_reset_tokens')->where('email', $account->email)->delete();
-        $name = $account->name;
+        $name = $account->displayName();
         $account->delete();
 
         return redirect()->route('accounts.index')->with('status', 'Deleted '.$name.'’s account.');
     }
 
     /**
-     * The checks shared by adding and editing ($account: the one being edited). A rep's email and
-     * block depend on the role picked; a rep keeping their current email is fine.
+     * The checks shared by adding and editing ($account: the one being edited). A block account's email and
+     * block depend on the role picked; a block account keeping its current email is fine.
      */
     private function rules(User $admin, string $role, ?User $account = null): array
     {
@@ -212,9 +228,48 @@ class AccountsController extends Controller
         ];
     }
 
+    /** A block account's "name" is its representative, so the form's messages say so */
+    private function messages(string $role): array
+    {
+        return ($role === 'rep' ? [
+            'name.required' => 'Type the name of the block’s representative.',
+            'name.max' => 'Keep the representative’s name under 100 characters.',
+        ] : []) + self::MESSAGES + AccountFields::MESSAGES;
+    }
+
+    /**
+     * One account per block. $save makes or changes the account; when that gives a block an account (a new block
+     * account, another block picked, or a lab staff account turned into a block account), the block's row is locked
+     * first and checked, so two admins saving at the same moment can't both give the same block an account.
+     * An account that already has its block is saved as usual, even if an older duplicate exists.
+     *
+     * @param  callable(): User  $save
+     */
+    private function oneAccountPerBlock(array $data, ?User $account, string $bag, callable $save): User
+    {
+        $blockId = $data['role'] === 'rep' ? (int) $data['block_id'] : null;
+        $takesBlock = $blockId !== null && ! ($account && $account->isBlock() && (int) $account->section_id === $blockId);
+        if (! $takesBlock) {
+            return $save();
+        }
+
+        return DB::transaction(function () use ($blockId, $account, $bag, $save) {
+            $block = Section::whereKey($blockId)->lockForUpdate()->first();
+            $taken = User::where('role', 'rep')->where('section_id', $blockId)
+                ->when($account, fn ($query) => $query->whereKeyNot($account->id))
+                ->orderBy('id')->first();
+            if ($taken) {
+                throw ValidationException::withMessages(['block_id' => ($block?->name ?? 'That block').' already has a block account (representative: '
+                    .$taken->name.'). Each block has one account: edit that one instead, for example to change its representative.'])->errorBag($bag);
+            }
+
+            return $save();
+        });
+    }
+
     private function turnedOff(User $account): string
     {
-        return trim($account->name.' is turned off: the account can’t log in anymore. '.$this->upcomingNote($account));
+        return trim($account->displayName().' is turned off: the account can’t log in anymore. '.$this->upcomingNote($account));
     }
 
     private function upcomingNote(User $account): string
@@ -239,7 +294,7 @@ class AccountsController extends Controller
             ->get();
     }
 
-    /** A rep's block must be one of the department's: the sections in its timetable */
+    /** A block account's block must be one of the department's: the sections in its timetable */
     private function blocks(User $admin): Collection
     {
         return $this->blocks ??= Section::whereIn('id', ClassSchedule::where('department_id', $admin->department_id)
@@ -255,7 +310,7 @@ class AccountsController extends Controller
         return Section::orderBy('program')->orderBy('name')->get()->groupBy('program');
     }
 
-    /** Admins manage the reps and lab staff of their own department only */
+    /** Admins manage the block accounts and lab staff of their own department only */
     private function check(User $admin, User $account): void
     {
         abort_unless($account->department_id === $admin->department_id && in_array($account->role, User::MANAGED_ROLES, true), 404);

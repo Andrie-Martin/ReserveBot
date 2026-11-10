@@ -57,7 +57,7 @@ final class AccountFields
     }
 
     /**
-     * An account's email. A block rep's must be Gmail or PUP webmail; $keep is a rep's current
+     * An account's email. A block account's must be Gmail or PUP webmail; $keep is its current
      * email, which stays allowed (accounts made before this rule, like the test accounts).
      */
     public static function email(string $role, ?int $ignoreId = null, ?string $keep = null): array
@@ -65,7 +65,7 @@ final class AccountFields
         return ['bail', 'required', 'string', 'max:150', 'email:rfc', Rule::unique('users', 'email')->ignore($ignoreId),
             function (string $attribute, mixed $value, Closure $fail) use ($role, $keep) {
                 if ($role === 'rep' && $value !== $keep && ! AccountRules::isRepEmail((string) $value)) {
-                    $fail('A block rep’s email must be Gmail (…@gmail.com) or PUP webmail (…@iskolarngbayan.pup.edu.ph).');
+                    $fail('A block account’s email must be Gmail (…@gmail.com) or PUP webmail (…@iskolarngbayan.pup.edu.ph).');
                 }
             }];
     }

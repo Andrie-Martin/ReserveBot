@@ -68,7 +68,7 @@
           <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
         </header>
         <dl class="req-facts">
-          <div class="req-fact req-fact--who"><dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->name }}@if ($r->user->section) · {{ $r->user->section->name }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd></div>
+          <div class="req-fact req-fact--who"><dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->displayName() }}@if ($r->representativeName()) · Rep: {{ $r->representativeName() }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd></div>
           <div class="req-fact req-fact--room"><dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd></div>
           <div class="req-fact"><dt>Needs</dt><dd>{{ $r->needLabel() }}</dd></div>
           @if ($r->hasEquipment())
@@ -113,7 +113,7 @@
           <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
           <div class="decided-main">
             <a class="decided-title" href="{{ route('bookings.show', $r) }}">{{ $r->purpose }}</a>
-            <p class="decided-meta"><span>{{ $r->user->name }}</span><span>{{ $r->start_time->format('M j, g:i A') }}</span><span>Decided by {{ $r->reviewer?->name }}</span></p>
+            <p class="decided-meta"><span>{{ $r->user->displayName() }}</span><span>{{ $r->start_time->format('M j, g:i A') }}</span><span>Decided by {{ $r->reviewer?->name }}</span></p>
             @if ($r->status === 'Rejected' && filled($r->status_reason))
               <p class="decided-why">“{{ $r->status_reason }}”</p>
             @endif

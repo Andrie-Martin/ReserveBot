@@ -30,7 +30,7 @@ class EmailLinkController extends Controller
 
         return view('auth.email_link', [
             'ok' => true,
-            'message' => $user->email.' is connected to '.$user->name.'’s account.'
+            'message' => $user->email.' is connected to '.$user->displayName().'’s account.'
                 .($user->role === 'rep' ? ' You can book rooms and equipment now.' : ''),
         ]);
     }

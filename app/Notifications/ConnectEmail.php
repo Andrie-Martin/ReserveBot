@@ -26,7 +26,9 @@ class ConnectEmail extends Notification
             ->greeting('Hi '.$user->name.',');
 
         if ($this->welcome) {
-            $mail->line('An admin of the '.$user->department->name.' made you a ReserveBot account ('.$user->roleLabel().').')
+            $mail->line($user->isBlock() && $user->section
+                ? 'An admin of the '.$user->department->name.' made the ReserveBot account of your block, '.$user->section->name.', and named you as its representative.'
+                : 'An admin of the '.$user->department->name.' made you a ReserveBot account ('.$user->roleLabel().').')
                 ->line('Log in at '.route('login').' with this email and the starting password your admin gives you. You’ll pick your own password after that.');
         }
 

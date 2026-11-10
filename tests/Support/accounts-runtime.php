@@ -70,7 +70,7 @@ function accountsRender(array $case): string
         session()->put('_old_input', $old);
         app('view')->share('errors', $errors);
 
-        return view('accounts.index', ['admin' => $admin, 'groups' => ['Block reps' => $reps, 'Lab staff' => $staff, 'Admins' => $admins], 'blocks' => $blocks, 'sections' => $sections, 'emailSends' => $state !== 'noemail'])->render();
+        return view('accounts.index', ['admin' => $admin, 'groups' => ['Block accounts' => $reps, 'Lab staff' => $staff, 'Admins' => $admins], 'blocks' => $blocks, 'sections' => $sections, 'emailSends' => $state !== 'noemail'])->render();
     }
 
     $role = $state === 'lab' ? 'lab_staff' : 'rep';

@@ -89,20 +89,24 @@ so they work right away (`@reservebot.test` addresses can't receive email).
 
 | Email | Role |
 |---|---|
-| rep1@reservebot.test | Block rep, BSCPE 4-5 (Bea Prieto) |
-| rep2@reservebot.test | Block rep, BSCPE 3-1 (Maria Santos) |
+| rep1@reservebot.test | Block account of BSCPE 4-5 (representative: Bea Prieto) |
+| rep2@reservebot.test | Block account of BSCPE 3-1 (representative: Maria Santos) |
 | staff@reservebot.test | Lab staff |
 | admin@reservebot.test | Admin |
 
 ## Accounts and email
 
-- Admins make the block rep and lab staff accounts on the **Accounts** page, with a starting
+- Admins make the block accounts and lab staff accounts on the **Accounts** page, with a starting
   password they give to the person. The person picks their own password at the first login.
   Deleting an account that has bookings turns it off instead, so its history stays.
+- A **block account** belongs to its block (BSCPE 4-5, say), not to one person, and each block has
+  one. The block's **representative** is named on the account. The admin (Accounts) or the block
+  itself (My account) changes the name when a new representative takes over; every booking keeps
+  the representative it was made under.
 - Everyone has **My account** (click your name at the top): photo, name, email, School ID,
   and a Password tab. **Forgot your password?** on the login page emails a link.
-- New accounts get an email with a **Connect my email** button. Block reps can't book until
-  they click it, and their email must be Gmail or PUP webmail (`@iskolarngbayan.pup.edu.ph`).
+- New accounts get an email with a **Connect my email** button. Block accounts can't book until
+  it is clicked, and their email must be Gmail or PUP webmail (`@iskolarngbayan.pup.edu.ph`).
 - Photos are kept in `storage/app/private/photos` (in Docker, in the `photos` volume). Only the
   person and their department's lab staff and admins can see them.
 
@@ -135,7 +139,7 @@ was opened with, so while you test on `localhost`, open them on the same PC.
 
 ## Reminders and the face-to-face check
 
-Block reps get emails 1 day, 5 hours and 1 hour before:
+Block accounts get emails 1 day, 5 hours and 1 hour before:
 
 - **their approved bookings** (a reminder), and
 - **their block's classes**, asking *"Is it face-to-face?"*. **Online** frees the class's room

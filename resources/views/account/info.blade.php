@@ -7,7 +7,9 @@
 
 @section('content')
 <section class="rb-account-page rb-ui rb-stack" aria-labelledby="account-heading">
-  @include('account._hero', ['description' => 'Update your own information, profile photo, and email connection.'])
+  @include('account._hero', ['description' => $user->isBlock()
+      ? 'Update your block’s representative, profile photo, and email connection.'
+      : 'Update your own information, profile photo, and email connection.'])
   @include('account._tabs')
   {{-- DOM order is the focus order and the visual order: information, email connection, then photo. --}}
   <div class="rb-account-layout">

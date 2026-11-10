@@ -60,6 +60,35 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   like a placeholder. It now says "Review requests and run the day's room schedule."
 - **File:** `app/Http/Controllers/StaffController.php`.
 
+## Issue 6: block accounts (the account belongs to the block, with a changeable representative)
+
+- **Before:** a "Block rep" account was a person's account. When a new representative was elected, the block needed
+  a new account, and the old bookings stayed with a person who no longer stood for the block.
+- **Now:** the account is the **block's** ("Block account"). It goes by the block's name everywhere (BSCPE 4-5), and
+  the block's **representative** is named on it.
+  - **One account per block.** Adding a second account for a block is refused: "BSCPE 4-5 already has a block account
+    (representative: Bea Prieto). Each block has one account: edit that one instead…". The check locks the block's row,
+    so two admins saving at the same moment can't both give a block an account.
+  - **The representative can be changed** by the department's admin (Accounts → Edit → "Representative's name") and
+    by the block itself (My account → "Representative's name"). Same account, same login, same bookings.
+  - **Bookings keep the representative they were made under.** A new column, `reservations.rep_name`, stores the
+    representative's name when the booking is made, so changing the representative later doesn't rewrite older
+    bookings. Lab staff see "BSCPE 4-5 · Rep: Bea Prieto" on requests, on Today and on the booking's page.
+- **Kept as it was:** the role's key in the database and the code is still `rep`, and the pages are still at `/rep`,
+  so no data has to be converted. `users.name` holds the representative's name for a block account. A block
+  account's email must still be Gmail or PUP webmail, and it still books only after its email is connected.
+- **Database:** new migration `2026_11_10_000021_add_rep_name_to_reservations` (adds `rep_name`, and fills it for
+  the bookings that already exist). Run `php artisan migrate` (Docker does it when it starts).
+- **Main files:** `app/Models/User.php` (`isBlock`, `displayName`, `representativeName`), `app/Models/Reservation.php`
+  (`representativeName`, `bookedBy`), `app/Http/Controllers/AccountsController.php` (`oneAccountPerBlock`),
+  `AccountController.php`, `app/Services/Bookings.php`, the account, accounts, home, requests, today and booking views.
+  Tests: `tests/Feature/BlockAccountNamingTest.php` and `tests/Feature/BlockAccountWorkflowTest.php`.
+- **Check it:**
+  1. Log in as rep1: the top bar and the home page say "BSCPE 4-5", with "Representative: Bea Prieto".
+  2. My account → change "Representative's name" → Save: "BSCPE 4-5's representative is now …".
+  3. As admin, Accounts → "+ Add an account" → Block account → pick BSCPE 4-5: refused, it already has one.
+  4. As lab staff, open a booking made before the change: it still shows the old representative.
+
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 
 - **What the tester saw:** a wrong password showed "Wrong email or password.", but pressing Log in again let them
@@ -89,7 +118,7 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   Edge, say), a private (incognito) window, or another device. Checked with three accounts (block rep, lab staff,
   admin) logging in at the same moment and using the site together, five rounds, no failures.
 - **The fix (the project owner chose "keep the first account and show a message"):** the first account stays logged
-  in, and its home page now says, in a yellow box: "This browser is already logged in as Bea Prieto (Block rep), so
+  in, and its home page now says, in a yellow box: "This browser is already logged in as BSCPE 4-5 (Block account), so
   the other login was not used. To switch accounts, log out first. To use two accounts at the same time, open the
   second one in a private window or in another browser."
 - **Safe by design:** nothing typed in that second form is checked, so the reply is the same for real and made-up

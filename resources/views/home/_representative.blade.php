@@ -3,9 +3,10 @@
 <div class="rb-dashboard rb-ui">
 <header class="rb-dashboard__intro">
   <p class="rb-dashboard__kicker">{{ $user->roleLabel() }}</p>
-  <h1>Welcome, {{ $user->name }}</h1>
+  {{-- The account belongs to the block; its representative is named under it and is changed in My account --}}
+  <h1>Welcome, {{ $user->displayName() }}</h1>
   <p class="muted">
-    {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
+    {{ $user->department->name }} · Representative: {{ $user->name }}
   </p>
 
   @if ($stat)

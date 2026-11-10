@@ -20,9 +20,13 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /** What each role is called on the pages */
+    /**
+     * What each role is called on the pages. 'rep' is a block's account: it belongs to the block (one account per
+     * block), not to one person. The block's current representative is named on it (the `name` column) and can
+     * be changed by the department's admin or by the block itself. The key stays 'rep' in the database and the code.
+     */
     public const ROLE_LABELS = [
-        'rep' => 'Block rep',
+        'rep' => 'Block account',
         'lab_staff' => 'Lab staff',
         'admin' => 'Admin',
     ];
@@ -56,7 +60,7 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
-    /** A rep: the block they represent. Lab staff: their own class section (optional). */
+    /** A block account: the block it belongs to. Lab staff: their own class section (optional). */
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
@@ -70,6 +74,27 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return self::ROLE_LABELS[$this->role] ?? $this->role;
+    }
+
+    /** Is this a block's account? */
+    public function isBlock(): bool
+    {
+        return $this->role === 'rep';
+    }
+
+    /**
+     * What the account is called on the pages. A block account goes by its block ("BSCPE 4-5"), because it belongs
+     * to the block; lab staff and admins go by their own name.
+     */
+    public function displayName(): string
+    {
+        return $this->isBlock() && $this->section ? $this->section->name : (string) $this->name;
+    }
+
+    /** A block account's current representative (kept in `name`); null for lab staff and admins */
+    public function representativeName(): ?string
+    {
+        return $this->isBlock() ? (string) $this->name : null;
     }
 
     /** Where this user lands after logging in */

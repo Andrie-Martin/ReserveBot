@@ -35,7 +35,7 @@ class ClassCheckController extends Controller
 
         if ($request->isMethod('post')) {
             if (! $isRep) {
-                return back()->with('problem', 'This link isn’t for '.$user->name.' anymore. Answer on your home page instead.');
+                return back()->with('problem', 'This link isn’t for '.$user->displayName().' anymore. Answer on your home page instead.');
             }
             $answer = (string) $request->input('answer');
             abort_unless(in_array($answer, self::ANSWERS, true), 422);

@@ -50,7 +50,7 @@ Evidence: [routes/web.php](../../routes/web.php#L25), [LoginController](../../ap
 
 | Exact role | Home | Allowed workflows | Scope/exclusions |
 |---|---|---|---|
-| `rep` (Block rep) | `rep.home` | Own account; availability; create bookings after email connection; own booking history/detail/cancel; block class answers | Cannot open requests, Today, management, or account administration. Class booking/answer checks use section membership. |
+| `rep` (Block account: one per block, with its representative named on it) | `rep.home` | Own account; availability; create bookings after email connection; own booking history/detail/cancel; block class answers | Cannot open requests, Today, management, or account administration. Class booking/answer checks use section membership. |
 | `lab_staff` (Lab staff) | `staff.home` | Own account; availability; review, handover, movement/cancellation; department class marking; rooms/equipment/categories/rules/semesters/timetable | No booking-creation route; no account administration. Shared rooms/semesters have cross-department effects described below. |
 | `admin` (Admin) | `admin.home` | All staff workflows (including `staff.home`); own account; account administration | Can administer only own-department `rep` and `lab_staff` accounts. Other admins are listed but not editable through these routes. No booking-creation route. |
 

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Phase 9: a block rep books only after clicking the emailed link that connects their Gmail or
+ * Phase 9: a block account books only after clicking the emailed link that connects its Gmail or
  * PUP webmail. Their bookings already made can still be seen and cancelled.
  */
 class RequireConnectedEmail

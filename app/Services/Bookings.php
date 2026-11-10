@@ -188,6 +188,7 @@ class Bookings
                 'end_time' => $b['end'],
                 'status' => $b['rules']->needsApproval ? 'Pending' : 'Confirmed',
                 'other_items' => $b['other_items'],
+                'rep_name' => $b['user']->representativeName(),   // the block's representative today; it can change later
             ]);
             $reservation->equipment()->attach(
                 collect($b['items'])->map(fn ($qty) => ['qty_requested' => $qty])->all()

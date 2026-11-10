@@ -38,7 +38,7 @@ final class TimetableFile
         'Room: like CEA300. A room that isn’t on your list yet is added to it.',
         'Course code and Course title: like CMPE 402 and Project Management.',
         'Time a room isn’t available (another department’s day, repairs): write BLOCKED as the course code and the reason in Note.',
-        'Block: the section, like BSCPE 4-1. Its reps get the reminder emails for the class. Leave it empty for a class with no block (like GEED).',
+        'Block: the section, like BSCPE 4-1. Its block account gets the reminder emails for the class. Leave it empty for a class with no block (like GEED).',
         'Instructor and Note: optional.',
         'An empty Day or Room cell means the same as the row above (handy with merged cells).',
         'Keep row 1 (the column names). The order of the rows doesn’t matter.',

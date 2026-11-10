@@ -72,7 +72,7 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
     // Phase 4: which rooms are free (every role)
     Route::get('/rooms', [AvailabilityController::class, 'index'])->name('rooms');
 
-    // Phase 5: booking a room, equipment, or both (block reps)
+    // Phase 5: booking a room, equipment, or both (block accounts; the role key is still 'rep')
     Route::middleware('role:rep')->group(function () {
         // Phase 9: only after the rep's Gmail or PUP webmail is connected
         Route::middleware('email.connected')->group(function () {
@@ -152,7 +152,7 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         });
     });
 
-    // Block reps
+    // Block accounts
     Route::prefix('rep')->name('rep.')->middleware('role:rep')->group(function () {
         Route::get('/', [RepController::class, 'home'])->name('home');
     });
@@ -167,7 +167,7 @@ Route::middleware(['auth', 'auth.session', 'account'])->group(function () {
         Route::get('/', [AdminController::class, 'home'])->name('home');
     });
 
-    // Phase 9 (admins only): the department's rep and lab staff accounts
+    // Phase 9 (admins only): the department's block accounts and lab staff accounts
     Route::prefix('accounts')->name('accounts.')->middleware('role:admin')->group(function () {
         Route::get('/', [AccountsController::class, 'index'])->name('index');
         Route::post('/', [AccountsController::class, 'store'])->name('store');

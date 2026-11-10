@@ -73,7 +73,7 @@
       @foreach ($upcoming as $b)
         <li>
           <span class="mlist-when">{{ $b->start_time->format('D, M j') }} · {{ TimeSlots::span($b->start_time->hour * 60 + $b->start_time->minute, $b->end_time->isSameDay($b->start_time) ? $b->end_time->hour * 60 + $b->end_time->minute : 1440) }}</span>
-          <span class="mlist-what">{{ $b->user->name }}@if ($b->user->section) ({{ $b->user->section->name }})@endif: {{ $b->purpose }}</span>
+          <span class="mlist-what">{{ $b->bookedBy() }}: {{ $b->purpose }}</span>
           <span class="status-badge st-{{ strtolower($b->status) }}">{{ $b->statusLabel() }}</span>
           <a href="{{ route('bookings.show', $b) }}#change">Open</a>
         </li>

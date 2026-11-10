@@ -74,7 +74,7 @@ class TodayController extends Controller
         }
 
         return $this->result($this->desk->setStatus($reservation, 'Confirmed', 'InUse', $user, 'Key and items handed out'),
-            $reservation, 'Handed out booking #'.$reservation->id.' to '.$reservation->user->name.'.');
+            $reservation, 'Handed out booking #'.$reservation->id.' to '.$reservation->user->displayName().'.');
     }
 
     /** Everything came back (In use → Completed), with an optional note about missing or damaged items */

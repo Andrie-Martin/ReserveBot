@@ -3,7 +3,7 @@
     <div class="rb-account-photo__head">
       <x-avatar :user="$user" size="lg" />
       <div class="rb-account-photo__identity">
-        <p class="rb-account-photo__name">{{ $user->name }}</p>
+        <p class="rb-account-photo__name">{{ $user->displayName() }}</p>
         <p class="rb-description">{{ $user->roleLabel() }} · {{ $user->department->name }}</p>
       </div>
     </div>

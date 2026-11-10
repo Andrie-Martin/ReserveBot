@@ -151,7 +151,7 @@ class LoginController extends Controller
         }
 
         // Shown at the top of the home page (resources/views/home/_login-notice.blade.php)
-        return $home->with('login_notice', 'This browser is already logged in as '.$current->name.' ('.$current->roleLabel().'), so the other login was not used. '
+        return $home->with('login_notice', 'This browser is already logged in as '.$current->displayName().' ('.$current->roleLabel().'), so the other login was not used. '
             .'To switch accounts, log out first. To use two accounts at the same time, open the second one in a private window or in another browser.');
     }
 

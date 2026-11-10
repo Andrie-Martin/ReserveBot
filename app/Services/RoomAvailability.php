@@ -107,7 +107,7 @@ class RoomAvailability
                 $detail[] = 'Instructor: '.$entry->instructor;
             }
             if ($session && $staffView) {
-                $detail[] = 'Room booked by '.$session->user->name;
+                $detail[] = 'Room booked by '.$session->bookedBy();
             }
 
             $busy[$entry->room_id][] = [
@@ -129,7 +129,7 @@ class RoomAvailability
             $mine = ! $staffView && $booking->user_id === $viewer->id;
 
             if ($staffView) {
-                $who = $booker->name.($block ? ' ('.$block.')' : '');
+                $who = $booking->bookedBy();     // "BSCPE 4-5 (Rep: Bea Prieto)"
                 $label = 'Booked by '.$who;
                 $detail = ['Purpose: '.($booking->purpose ?: 'scheduled class')];
             } else {
@@ -240,11 +240,11 @@ class RoomAvailability
                 $end = $booking->end_time->isSameDay($booking->start_time) ? $booking->end_time->hour * 60 + $booking->end_time->minute : 24 * 60;
                 $what = $booking->purpose ?: ($booking->classSchedule?->course?->code ?? 'Booking');
                 $booker = $booking->user;
-                $who = $booker->name.($booker->section ? ' ('.$booker->section->name.')' : '');
+                $who = $booking->bookedBy();
                 $where = $booking->room?->name;   // empty for an equipment-only booking
                 $items[] = [
                     'kind' => 'booking', 'start' => $start, 'end' => $end, 'room' => $where ?? 'Equipment only', 'noRoom' => $where === null,
-                    'text' => $staffView ? ($booker->section?->name ?? $booker->name) : $what,
+                    'text' => $staffView ? $booker->displayName() : $what,
                     'title' => $staffView ? $who.': '.$what : 'Your booking: '.$what,
                     'status' => $booking->status,
                     'tag' => self::tag($booking),
