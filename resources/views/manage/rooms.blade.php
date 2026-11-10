@@ -58,13 +58,13 @@
   </div>
 
   <div class="rb-booking__panel">
-  @if ($rooms->isEmpty())
+  @if ($rooms->total() === 0)
     <p class="empty">No rooms yet. Use “+ Add a room” above to add the first one; it can be booked as soon as it’s added.</p>
   @else
   <table class="mtable rooms-table">
-    <colgroup><col class="c-room"><col class="c-building"><col class="c-seats"><col class="c-note"><col class="c-status"><col class="c-edit"></colgroup>
+    <colgroup><col class="c-room"><col class="c-building"><col class="c-seats"><col class="c-note"><col class="c-status"><col class="c-edit"><col class="c-delete"></colgroup>
     <thead>
-      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr>
+      <tr><th>Room</th><th class="hide-sm">Building</th><th>Seats</th><th class="hide-sm">Note</th><th>Status</th><th class="col-action">Edit</th><th class="col-action">Delete</th></tr>
     </thead>
     <tbody>
       @foreach ($rooms as $room)
@@ -74,11 +74,13 @@
           <td>{{ $room->capacity }}</td>
           <td class="hide-sm note">{{ $room->fixed_equipment_note }}</td>
           <td><span @class(['status-badge', 'st-confirmed' => $room->is_active, 'st-cancelled' => ! $room->is_active])>{{ $room->is_active ? 'On' : 'Off' }}</span></td>
-          <td class="room-edit"><div class="row-actions"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a>@if (\App\Support\ResourceDeletion::roomLooksDeletable($room))<a class="row-delete" href="{{ route('manage.rooms.edit', $room) }}#delete">Delete<span class="sr-only"> {{ $room->name }}: review and confirm on its page</span></a>@endif</div></td>
+          <td class="col-action room-edit"><a class="row-edit" href="{{ route('manage.rooms.edit', $room) }}">Edit<span class="sr-only"> {{ $room->name }}</span></a></td>
+          <td class="col-action room-delete">@if (\App\Support\ResourceDeletion::roomLooksDeletable($room))<a class="row-delete" href="{{ route('manage.rooms.edit', $room) }}#delete">Delete<span class="sr-only"> {{ $room->name }}: review and confirm on its page</span></a>@endif</td>
         </tr>
       @endforeach
     </tbody>
   </table>
+  <x-ui.pager :paginator="$rooms" noun="rooms" />
   @endif
   </div>
 

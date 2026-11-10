@@ -160,7 +160,7 @@
   .rb-manage .mcat .mtable td:first-child { grid-column: 1 / -1; font-weight: var(--rb-weight-semibold); }
   .rb-manage .mcat .mtable td:nth-child(2)::before { content: "Stock "; color: var(--rb-text-secondary); }
   .rb-manage .mcat .mtable td:nth-child(3)::before { content: "Most per booking "; color: var(--rb-text-secondary); }
-  .rb-manage .mcat .mtable td:nth-child(5) { grid-column: 1 / -1; }
+  .rb-manage .mcat .mtable td.col-action:empty { display: none; }
   .rb-manage .rules-form fieldset, .rb-manage .term-form { padding: var(--rb-space-4); }
   }
 
@@ -180,7 +180,7 @@
   .rb-manage .rooms-table td { display: block; min-width: 0; padding: 0; border: 0; }
   .rb-manage .rooms-table td:first-child { grid-column: 1 / -1; }
   .rb-manage .rooms-table td:nth-child(3)::before { content: "Seats "; color: var(--rb-text-secondary); }
-  .rb-manage .rooms-table td:nth-child(6) { grid-column: 1 / -1; }
+  .rb-manage .rooms-table td.col-action:empty { display: none; }
   .rb-manage .rooms-table td.note { grid-column: 1 / -1; }
   .rb-manage .rooms-table td.note:empty { display: none; }
 }
@@ -192,10 +192,10 @@
 /* Touch: the row "Edit" links of the Rooms and Equipment lists are 44px targets in their card layouts and on coarse pointers
    (the compact desktop table keeps its small links). Scoped to these two lists so the Accounts list is unchanged. */
 @container rooms (max-width: 56rem) {
-  .rb-manage .rooms-table td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+  .rb-manage .rooms-table td.col-action a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
 @media (max-width: 40rem), (pointer: coarse) {
-  .rb-manage .rooms-table td:last-child a, .rb-manage .mcat .mtable td:last-child a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
+  .rb-manage .rooms-table td.col-action a, .rb-manage .mcat .mtable td.col-action a { display: inline-flex; align-items: center; min-width: var(--rb-control-height); min-height: var(--rb-control-height); }
 }
 .rb-manage [id$="-errors"][tabindex="-1"]:focus { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); border-radius: var(--rb-radius-control); }
 
@@ -212,13 +212,12 @@
 .rb-manage .eq-search[hidden] { display: none; }
 .rb-manage [data-eq-section][hidden], .rb-manage [data-eq-row][hidden], .rb-manage [data-eq-none][hidden] { display: none; }
 .rb-manage .eq-table { table-layout: fixed; }
-.rb-manage .eq-table .c-item { width: 34%; }
+.rb-manage .eq-table .c-item { width: 32%; }
 .rb-manage .eq-table .c-stock { width: 12%; }
-.rb-manage .eq-table .c-max { width: 20%; }
+.rb-manage .eq-table .c-max { width: 16%; }
 .rb-manage .eq-table .c-status { width: 12%; }
-.rb-manage .eq-table .c-edit { width: 22%; }
+.rb-manage .eq-table .c-edit, .rb-manage .eq-table .c-delete { width: 14%; }
 .rb-manage .eq-table :is(th, td):is(:nth-child(2), :nth-child(3)) { text-align: right; padding-right: var(--rb-space-4); font-variant-numeric: tabular-nums; }
-.rb-manage .eq-table :is(th, td):last-child { text-align: right; }
 .rb-manage a.row-edit { display: inline-flex; align-items: center; justify-content: center; min-width: 4rem; min-height: 2.25rem; padding: 0 var(--rb-space-4); border: 1px solid var(--rb-action-secondary-border); border-radius: var(--rb-radius-control); background: var(--rb-surface-panel); text-decoration: none; }
 .rb-manage a.row-edit:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
 /* Edit and Delete sit side by side with one size, one radius, one border weight; Delete is the outlined destructive variant. */
@@ -247,9 +246,8 @@
 .rb-manage .btn-ghost:hover { background: var(--rb-surface-active); color: var(--rb-color-deep); }
 .rb-manage .btn-ghost:focus-visible { outline: var(--rb-focus-width) solid var(--rb-focus-color); outline-offset: var(--rb-focus-offset); }
 @media (max-width: 40rem) {
-  .rb-manage .eq-table .c-item, .rb-manage .eq-table .c-stock, .rb-manage .eq-table .c-max, .rb-manage .eq-table .c-status, .rb-manage .eq-table .c-edit { width: auto; }
+  .rb-manage .eq-table .c-item, .rb-manage .eq-table .c-stock, .rb-manage .eq-table .c-max, .rb-manage .eq-table .c-status, .rb-manage .eq-table .c-edit, .rb-manage .eq-table .c-delete { width: auto; }
   .rb-manage .mcat .mtable td:nth-child(2), .rb-manage .mcat .mtable td:nth-child(3) { text-align: left; padding-right: 0; }
-  .rb-manage .mcat .mtable td:last-child { text-align: left; }
   .rb-manage .mcat-rename > * { max-width: 100%; }
   .rb-manage .add-row .add-box { flex: 1 1 100%; }
   .rb-manage .add-row .add-box > summary { width: 100%; box-sizing: border-box; justify-content: center; }
@@ -258,17 +256,13 @@
 /* ---- Rooms: add action above the list, fixed column proportions, aligned Edit buttons ---- */
 .rb-manage .rooms-table { table-layout: fixed; }
 .rb-manage .rooms-table .c-room { width: 17%; }
-.rb-manage .rooms-table .c-building { width: 17%; }
-.rb-manage .rooms-table .c-seats { width: 12%; }
-.rb-manage .rooms-table .c-note { width: 26%; }
+.rb-manage .rooms-table .c-building { width: 15%; }
+.rb-manage .rooms-table .c-seats { width: 9%; }
+.rb-manage .rooms-table .c-note { width: 25%; }
 .rb-manage .rooms-table .c-status { width: 10%; }
-.rb-manage .rooms-table .c-edit { width: 18%; }
+.rb-manage .rooms-table .c-edit, .rb-manage .rooms-table .c-delete { width: 12%; }
 .rb-manage .rooms-table td:first-child, .rb-manage .rooms-table td.note { min-width: 0; }
-.rb-manage .rooms-table :is(th, td):last-child { text-align: right; }
 .rb-manage .rooms-table td.room-edit { white-space: nowrap; }
-@container rooms (max-width: 56rem) {
-  .rb-manage .rooms-table td:last-child { text-align: left; }
-}
 
 /* ---- Equipment: the category name is the rename target ---- */
 .rb-manage .mcat-title { min-width: 0; margin: 0; overflow-wrap: anywhere; }
@@ -337,3 +331,45 @@
 .rb-manage .mform .inline-form select { flex: 1 1 16rem; width: auto; min-width: 0; max-width: 100%; }
 @media (max-width: 40rem) { .rb-manage .mform .inline-form select { flex-basis: 100%; } }
 .rb-manage .college-dept__setup { margin: 0 0 var(--rb-space-4); }
+
+/* ---- Edit and Delete: two fixed columns. Every Edit button lines up with every other Edit, every Delete with every other
+   Delete; a row that can't be deleted leaves its Delete cell empty, so Edit never moves. ---- */
+.rb-manage .mtable :is(th, td).col-action { text-align: center; padding-inline: var(--rb-space-1); }
+.rb-manage .mtable td.col-action > a { display: flex; box-sizing: border-box; width: 100%; max-width: 5.5rem; min-width: 0; margin-inline: auto; padding-inline: var(--rb-space-2); font-size: var(--rb-text-small); font-weight: var(--rb-weight-semibold); }
+@media (max-width: 40rem) {
+  .rb-manage .mcat .mtable td.col-action { text-align: left; }
+  .rb-manage .mcat .mtable td.col-action > a { margin-inline: 0; }
+}
+@container rooms (max-width: 56rem) {
+  .rb-manage .rooms-table td.col-action { text-align: left; }
+  .rb-manage .rooms-table td.col-action > a { margin-inline: 0; }
+}
+
+/* ---- Equipment search (a real GET form: works without a script and pages with the results) ---- */
+.rb-manage .eq-search__row { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--rb-space-2); }
+.rb-manage .eq-search__row .rb-search { flex: 1 1 14rem; min-width: 0; }
+.rb-manage .eq-search__row .rb-search__input { box-sizing: border-box; height: var(--rb-control-height); }
+.rb-manage .eq-search__row button.btn-small { box-sizing: border-box; height: var(--rb-control-height); }
+
+/* ---- Category rename: the field, Save and Cancel share one height and one baseline ---- */
+.rb-manage .mcat-rename { align-items: stretch; }
+.rb-manage .mcat-rename :is(input[name="name"], button.btn-small, .btn-ghost) { box-sizing: border-box; height: var(--rb-control-height); min-height: var(--rb-control-height); margin: 0; line-height: 1.2; }
+.rb-manage .mcat-rename :is(button.btn-small, .btn-ghost) { flex: 0 0 auto; padding-block: 0; }
+.rb-manage .mcat-rename input[name="name"] { padding-block: 0; }
+@media (max-width: 40rem) { .rb-manage .mcat-rename :is(button.btn-small, .btn-ghost) { flex: 1 1 0; } }
+
+/* ---- Accounts: the three groups share one column grid (name, context, status, action) so they line up when read down the page.
+   Admins have no context, so that column stays empty rather than letting the others shift. ---- */
+.rb-manage .acct-table { table-layout: fixed; }
+.rb-manage .acct-table .c-name { width: 36%; }
+.rb-manage .acct-table .c-context { width: 20%; }
+.rb-manage .acct-table .c-status { width: 32%; }
+.rb-manage .acct-table .c-edit { width: 12%; }
+.rb-manage .acct-table :is(th, td) { padding-inline: var(--rb-space-2); text-align: left; vertical-align: middle; }
+.rb-manage .acct-table :is(th, td):last-child { text-align: right; }
+.rb-manage .acct-table td.acct-block { white-space: normal; overflow-wrap: anywhere; }
+@container acct (max-width: 38rem) {
+  .rb-manage .acct-table td.acct-block:empty { display: none; }
+  .rb-manage .acct-table tbody td { padding-inline: 0; }
+  .rb-manage .acct-table td:last-child { text-align: left; }
+}
