@@ -26,7 +26,7 @@ function accountsCases(): array
 
 function accountsUser(int $id, string $name, string $role, array $o = []): User
 {
-    $u = new User(['name' => $name, 'role' => $role, 'email' => $o['email'] ?? strtolower(str_replace(' ', '.', $name)).'@example.invalid', 'school_id' => $o['school'] ?? null]);
+    $u = new User(['name' => $name, 'role' => $role, 'email' => $o['email'] ?? strtolower(str_replace(' ', '.', $name)).'@example.invalid']);
     $u->id = $id;
     $u->is_active = $o['active'] ?? true;
     $u->must_change_password = $o['must'] ?? false;
@@ -57,15 +57,15 @@ function accountsRender(array $case): string
 
     if ($page === 'index') {
         $reps = $state === 'empty' ? collect() : collect([
-            accountsUser(101, $nm('Ana Cruz'), 'rep', ['section' => $sec(12, '3-2'), 'school' => '2021-00123-MN-0', 'email' => $mail('a')]),
-            accountsUser(102, 'Ben Reyes', 'rep', ['section' => $sec(13, '3-3'), 'school' => '2021-00456-MN-0', 'connected' => false, 'must' => true]),
+            accountsUser(101, $nm('Ana Cruz'), 'rep', ['section' => $sec(12, '3-2'), 'email' => $mail('a')]),
+            accountsUser(102, 'Ben Reyes', 'rep', ['section' => $sec(13, '3-3'), 'connected' => false, 'must' => true]),
             accountsUser(103, 'Carla Dizon', 'rep', ['section' => $sec(14, '4-1'), 'active' => false]),
         ]);
-        $staff = $state === 'empty' ? collect() : collect([accountsUser(201, 'Dan Lopez', 'lab_staff', ['school' => '2019-00001-MN-0']), accountsUser(202, 'Eli Tan', 'lab_staff', ['section' => $sec(21, '2-1', 'BSECE'), 'connected' => false])]);
+        $staff = $state === 'empty' ? collect() : collect([accountsUser(201, 'Dan Lopez', 'lab_staff'), accountsUser(202, 'Eli Tan', 'lab_staff', ['section' => $sec(21, '2-1', 'BSECE'), 'connected' => false])]);
         $admins = collect([$admin, accountsUser(301, 'Fay Gomez', 'admin')]);
         if ($state === 'errors') {
             $errors->put('add', new MessageBag(['email' => ['That email is already used by another account.'], 'password' => ['Use at least 8 characters.']]));
-            $old = ['role' => 'lab_staff', 'name' => 'Old example name', 'email' => 'old@example.invalid', 'school_id' => '2020-00001-MN-0', 'password' => 'MUST-NOT-RENDER-PW'];
+            $old = ['role' => 'lab_staff', 'name' => 'Old example name', 'email' => 'old@example.invalid', 'password' => 'MUST-NOT-RENDER-PW'];
         }
         session()->put('_old_input', $old);
         app('view')->share('errors', $errors);
@@ -74,7 +74,7 @@ function accountsRender(array $case): string
     }
 
     $role = $state === 'lab' ? 'lab_staff' : 'rep';
-    $acct = accountsUser(101, $nm('Ana Cruz'), $role, ['section' => $sec(12, '3-2'), 'school' => '2021-00123-MN-0', 'active' => $state !== 'inactive', 'must' => in_array($state, ['inactive', 'errors'], true), 'connected' => ! in_array($state, ['inactive', 'errors'], true), 'email' => $mail('a')]);
+    $acct = accountsUser(101, $nm('Ana Cruz'), $role, ['section' => $sec(12, '3-2'), 'active' => $state !== 'inactive', 'must' => in_array($state, ['inactive', 'errors'], true), 'connected' => ! in_array($state, ['inactive', 'errors'], true), 'email' => $mail('a')]);
     $booking = function (int $id, string $status, int $add) use ($now) {
         $r = new Reservation(['purpose' => 'Example lecture with slides', 'status' => $status, 'room_id' => 11]);
         $r->id = $id;

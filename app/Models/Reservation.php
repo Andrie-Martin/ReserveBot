@@ -30,6 +30,7 @@ class Reservation extends Model
     protected $fillable = [
         'user_id', 'room_id', 'class_schedule_id', 'purpose', 'start_time', 'end_time',
         'status', 'status_reason', 'other_items', 'reviewed_by', 'rep_name',
+        'borrower_name', 'borrower_id_number',
     ];
 
     protected function casts(): array
@@ -104,6 +105,12 @@ class Reservation extends Model
         $representative = $this->representativeName();
 
         return $account->displayName().($account->isBlock() && filled($representative) ? ' (Rep: '.$representative.')' : '');
+    }
+
+    /** Was the person who borrows the equipment written down? (Asked on every equipment booking since sandbox issue 7.) */
+    public function hasBorrower(): bool
+    {
+        return filled($this->borrower_name) && filled($this->borrower_id_number);
     }
 
     public function hasEquipment(): bool

@@ -13,11 +13,6 @@
   <form method="post" action="{{ route('welcome.save') }}" class="rb-stack rb-auth-form">
     @csrf
     @method('PUT')
-    @if ($askSchoolId)
-      <x-ui.field field-id="school_id" :label="'School ID number'.($user->role === 'lab_staff' ? ' (optional)' : '')" hint="Your PUP student number." :error="$errors->getBag('default')->first('school_id')">
-        <x-ui.input name="school_id" maxlength="20" :value="old('school_id')" placeholder="e.g. 2021-00123-MN-0" :required="$user->role === 'rep'" spellcheck="false" autocapitalize="characters" />
-      </x-ui.field>
-    @endif
     <x-ui.field field-id="password" label="New password" :error="$errors->getBag('default')->first('password')" :hint="AccountFields::PASSWORD_HINT">
   <x-ui.input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="64" required autofocus />
 </x-ui.field>

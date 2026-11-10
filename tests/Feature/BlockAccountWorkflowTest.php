@@ -134,12 +134,12 @@ class BlockAccountWorkflowTest extends TestCase
             ->assertSee('Representative’s name')
             ->assertSee('Change it when a new representative takes over.');
 
-        $this->put('/account', ['name' => 'Carlo Reyes', 'email' => $account->email, 'school_id' => '2021-00123-MN-0'])
+        $this->put('/account', ['name' => 'Carlo Reyes', 'email' => $account->email])
             ->assertRedirect('/account')
             ->assertSessionHas('status', 'Saved. '.$this->block->name.'’s representative is now Carlo Reyes.');
         $this->assertSame('Carlo Reyes', $account->fresh()->name);
 
-        $this->put('/account', ['name' => '', 'email' => $account->email, 'school_id' => '2021-00123-MN-0'])
+        $this->put('/account', ['name' => '', 'email' => $account->email])
             ->assertSessionHasErrorsIn('info', ['name' => 'Type the name of your block’s representative.']);
     }
 

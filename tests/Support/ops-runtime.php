@@ -34,7 +34,7 @@ function opsCases(): array
 function opsReservation(int $id, string $status, int $addDays, array $o = []): Reservation
 {
     $today = CarbonImmutable::now();
-    $user = new User(['name' => $o['name'] ?? 'Example Booker', 'role' => 'rep', 'school_id' => $o['school'] ?? '2021-00123-MN-0', 'email' => 'booker@example.invalid']);
+    $user = new User(['name' => $o['name'] ?? 'Example Booker', 'role' => 'rep', 'email' => 'booker@example.invalid']);
     $user->id = 70 + ($id % 7);
     $section = new Section(['name' => '3-2', 'program' => 'BSCPE']);
     $user->setRelation('section', $section);

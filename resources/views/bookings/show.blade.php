@@ -52,8 +52,20 @@
 
     <div class="bfact bfact--who">
       <dt>Booked by</dt>
-      <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->displayName() }}@if ($reservation->representativeName()) · Rep: {{ $reservation->representativeName() }}@endif</span>@if ($booker->school_id)<span class="who-id">{{ $booker->school_id }}</span>@endif</span></dd>
+      <dd class="who-cell"><x-avatar :user="$booker" /> <span class="who-text"><span class="who-name">{{ $booker->displayName() }}@if ($reservation->representativeName()) · Rep: {{ $reservation->representativeName() }}@endif</span></span></dd>
     </div>
+
+    @if ($reservation->hasEquipment())
+      {{-- Who picks up the items (typed on the booking form). Lab staff check this ID when they hand the items out. --}}
+      <div class="bfact bfact--borrower">
+        <dt>Borrower</dt>
+        @if ($reservation->hasBorrower())
+          <dd>{{ $reservation->borrower_name }} · ID <span class="who-id-inline">{{ $reservation->borrower_id_number }}</span></dd>
+        @else
+          <dd class="muted">Not recorded (booked before a borrower was asked for)</dd>
+        @endif
+      </div>
+    @endif
 
     <div class="bfact">
       <dt>Sent</dt>

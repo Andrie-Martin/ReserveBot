@@ -35,8 +35,8 @@ class TestDataSeeder extends Seeder
         $admin = $this->account($bscpe, 'BSCpE Office Admin', 'admin@reservebot.test', 'admin');
         $this->account($bscpe, 'Lab Assistant', 'staff@reservebot.test', 'lab_staff');
         // Block accounts: one per block, with the block's representative named on it
-        $bea = $this->account($bscpe, 'Bea Prieto', 'rep1@reservebot.test', 'rep', 'BSCPE 4-5', '2022-00145-MN-0');
-        $maria = $this->account($bscpe, 'Maria Santos', 'rep2@reservebot.test', 'rep', 'BSCPE 3-1', '2023-01872-MN-0');
+        $bea = $this->account($bscpe, 'Bea Prieto', 'rep1@reservebot.test', 'rep', 'BSCPE 4-5');
+        $maria = $this->account($bscpe, 'Maria Santos', 'rep2@reservebot.test', 'rep', 'BSCPE 3-1');
 
         // Dated relative to today, so they stay useful
         $nextTuesday = today()->next(Carbon::TUESDAY);
@@ -59,6 +59,9 @@ class TestDataSeeder extends Seeder
             'end_time' => $nextTuesday->copy()->setTimeFromTimeString($class->end_time),
             'status' => 'Confirmed',
             'reviewed_by' => $admin->id,
+            // Equipment bookings name who will borrow the items (made-up PUP student numbers)
+            'borrower_name' => 'Bea Prieto',
+            'borrower_id_number' => '2022-00145-MN-0',
         ]);
         $booking->equipment()->attach(
             $this->items($bscpe, ['Projector', 'Projector Power Cord', 'HDMI Cable']),
@@ -75,6 +78,8 @@ class TestDataSeeder extends Seeder
             'end_time' => $nextMonday->copy()->setTime(10, 0),
             'status' => 'Pending',
             'other_items' => 'Bluetooth speaker x1',
+            'borrower_name' => 'Maria Santos',
+            'borrower_id_number' => '2023-01872-MN-0',
         ]);
         $makeUp->equipment()->attach($this->items($bscpe, ['Extension Cord']), ['qty_requested' => 2]);
 
@@ -93,18 +98,19 @@ class TestDataSeeder extends Seeder
             'start_time' => $nextThursday->copy()->setTimeFromTimeString($thursdayClass->start_time),
             'end_time' => $nextThursday->copy()->setTimeFromTimeString($thursdayClass->end_time),
             'status' => 'Pending',
+            'borrower_name' => 'Jose Ramos',            // a block member, not the representative
+            'borrower_id_number' => '2022-00731-MN-0',
         ]);
         $borrow->equipment()->attach($this->items($bscpe, ['Digital Multi-Tester', 'Power Supply']), ['qty_requested' => 2]);
 
         $this->command?->info('Test data: 4 accounts (password Password123!), 3 sample reservations');
     }
 
-    private function account(Department $department, string $name, string $email, string $role, ?string $section = null, ?string $schoolId = null): User
+    private function account(Department $department, string $name, string $email, string $role, ?string $section = null): User
     {
         $user = User::create([
             'department_id' => $department->id,
             'section_id' => $section ? Section::where('name', $section)->value('id') : null,
-            'school_id' => $schoolId,      // made-up PUP student numbers
             'name' => $name,
             'email' => $email,
             'role' => $role,

@@ -24,14 +24,6 @@
 
       </div>
 
-      @if ($user->role !== 'admin')
-        <div>
-          <x-ui.field field-id="school_id" :label="'School ID number'.($user->role === 'lab_staff' ? ' (optional)' : '')" :error="$errors->getBag('info')->first('school_id')">
-          <x-ui.input name="school_id" maxlength="20" :value="old('school_id', $user->school_id)" placeholder="e.g. 2021-00123-MN-0" :required="$user->role === 'rep'" spellcheck="false" autocapitalize="characters" />
-        </x-ui.field>
-        </div>
-      @endif
-
       @if ($user->role === 'rep')
         <div>
           <span class="rb-field__label">Program and block</span>

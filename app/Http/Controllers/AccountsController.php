@@ -90,7 +90,6 @@ class AccountsController extends Controller
             'section_id' => $data['role'] === 'rep' ? $data['block_id'] : ($data['section_id'] ?? null),
             'name' => $data['name'],
             'email' => $data['email'],
-            'school_id' => $data['school_id'] ?? null,
             'password' => $data['password'],
             'must_change_password' => true,
             'is_active' => true,
@@ -140,7 +139,6 @@ class AccountsController extends Controller
                 'name' => $data['name'],
                 'role' => $data['role'],
                 'section_id' => $data['role'] === 'rep' ? $data['block_id'] : ($data['section_id'] ?? null),
-                'school_id' => $data['school_id'] ?? null,
                 'is_active' => $request->boolean('is_active'),
             ]);
             if ($emailChanged) {
@@ -224,7 +222,6 @@ class AccountsController extends Controller
             'email' => AccountFields::email($role, $account?->id, $account?->role === 'rep' ? $account->email : null),
             'block_id' => [Rule::requiredIf($role === 'rep'), 'nullable', 'integer', Rule::in($this->blocks($admin)->pluck('id')->all())],
             'section_id' => ['nullable', 'integer', 'exists:sections,id'],
-            'school_id' => AccountFields::schoolId(false, $account?->id),
         ];
     }
 

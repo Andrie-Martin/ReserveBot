@@ -22,11 +22,10 @@ function authCases(): array
     ];
     foreach (['rep', 'lab_staff', 'admin'] as $role) {
         $cases['welcome-'.$role] = ['account.welcome', $role, ['route' => 'welcome', 'onboarding' => true]];
-        $cases['welcome-existing-'.$role] = ['account.welcome', $role, ['route' => 'welcome', 'onboarding' => true, 'school' => '2021-00123-MN-0']];
-        $cases['welcome-error-'.$role] = ['account.welcome', $role, ['route' => 'welcome', 'onboarding' => true, 'errors' => ['default' => ['school_id' => ['Type the School ID number.'], 'password' => ['Pick a different password.']]], 'old' => ['school_id' => 'old-id', 'password' => 'MUST-NOT-RENDER']]];
+        $cases['welcome-error-'.$role] = ['account.welcome', $role, ['route' => 'welcome', 'onboarding' => true, 'errors' => ['default' => ['password' => ['Pick a different password.']]], 'old' => ['password' => 'MUST-NOT-RENDER']]];
         $cases['account-'.$role] = ['account.info', $role, ['route' => 'account', 'connected' => false]];
         $cases['account-connected-'.$role] = ['account.info', $role, ['route' => 'account', 'photo' => 'photos/example.jpg', 'section' => true]];
-        $cases['account-errors-'.$role] = ['account.info', $role, ['route' => 'account', 'connected' => false, 'photo' => 'photos/example.jpg', 'status' => 'Saved information.', 'problem' => 'Saved, but the email could not be sent.', 'note' => 'Wait 42 seconds.', 'errors' => ['info' => ['name' => ['Info name error'], 'email' => ['Info email error'], 'current_password' => ['Info password error'], 'school_id' => ['Info school error'], 'section_id' => ['Info section error']], 'photo' => ['photo' => ['Photo error']], 'default' => ['email' => ['WRONG-BAG-MUST-NOT-RENDER']]], 'old' => ['name' => 'Old <name>', 'email' => 'old@example.invalid', 'school_id' => 'old-id', 'section_id' => 8, 'current_password' => 'MUST-NOT-RENDER', 'photo' => 'MUST-NOT-RENDER']]];
+        $cases['account-errors-'.$role] = ['account.info', $role, ['route' => 'account', 'connected' => false, 'photo' => 'photos/example.jpg', 'status' => 'Saved information.', 'problem' => 'Saved, but the email could not be sent.', 'note' => 'Wait 42 seconds.', 'errors' => ['info' => ['name' => ['Info name error'], 'email' => ['Info email error'], 'current_password' => ['Info password error'], 'section_id' => ['Info section error']], 'photo' => ['photo' => ['Photo error']], 'default' => ['email' => ['WRONG-BAG-MUST-NOT-RENDER']]], 'old' => ['name' => 'Old <name>', 'email' => 'old@example.invalid', 'section_id' => 8, 'current_password' => 'MUST-NOT-RENDER', 'photo' => 'MUST-NOT-RENDER']]];
         $cases['password-'.$role] = ['account.password', $role, ['route' => 'password.edit', 'connected' => false]];
         $cases['password-errors-'.$role] = ['account.password', $role, ['route' => 'password.edit', 'note' => 'Already connected.', 'status' => 'Your password is changed.', 'errors' => ['default' => ['current_password' => ['Wrong current password'], 'password' => ['Pick a different password'], 'password_confirmation' => ['Confirm password']]], 'old' => ['current_password' => 'MUST-NOT-RENDER', 'password' => 'MUST-NOT-RENDER']]];
     }
@@ -56,7 +55,6 @@ function authRender(array $case): string
     $section = new Section(['name' => '3-2', 'program' => 'BSCPE']);
     $section->id = 8;
     if ($user) {
-        $user->school_id = $options['school'] ?? null;
         $user->section_id = ($options['section'] ?? false) ? 8 : null;
         $user->setRelation('department', new Department(['name' => 'Example Engineering']));
         $user->setRelation('section', ($options['section'] ?? false) ? $section : null);
@@ -76,7 +74,6 @@ function authRender(array $case): string
 
     return view($view, [
         'user' => $user, 'sections' => collect(['BSCPE' => collect([$section])]),
-        'askSchoolId' => $user && in_array($role, ['rep', 'lab_staff'], true) && $user->school_id === null,
         'token' => 'sample-reset-token', 'email' => 'reset@example.invalid', 'ok' => $ok,
         'message' => $options['message'] ?? ($ok ? 'Example email is connected.' : 'This link is for an email the account doesn’t use anymore.'),
     ])->render();
@@ -124,8 +121,8 @@ function authContracts(): int
             $check($x->query('//input[@name="current_password" and @required]')->length === 0, "$name email password optional HTML");
             $role = $case[1];
             $check($x->query('//select[@name="section_id"]')->length === (int) ($role === 'lab_staff'), "$name section ownership");
-            $check($x->query('//input[@name="school_id"]')->length === (int) ($role !== 'admin'), "$name school condition");
-            $check($x->query('//input[@name="school_id" and @required]')->length === (int) ($role === 'rep'), "$name school required");
+            // The ID number is not a profile field anymore (it is asked for the borrower on equipment bookings).
+            $check($x->query('//input[@name="school_id"]')->length === 0, "$name no ID number on the profile");
             $check($x->query('//input[@name="_method" and @value="DELETE"]')->length === (int) ! empty($case[2]['photo']), "$name remove condition");
             $check($x->query('//main//form[contains(@action,"email-link")]')->length === (int) ! (($case[2]['connected'] ?? true)), "$name resend condition");
             // Document order is keyboard order: information, email connection (when shown), photo upload, photo removal (when a photo exists).
@@ -143,8 +140,7 @@ function authContracts(): int
             $check($x->query('//*[contains(concat(" ", normalize-space(@class), " "), " rb-auth-card--message ")]')->length === 1, "$name card sizes its heading to its width");
         }
         if (str_starts_with($name, 'welcome-')) {
-            $ask = in_array($case[1], ['rep', 'lab_staff']) && ! isset($case[2]['school']);
-            $check($x->query('//input[@name="school_id"]')->length === (int) $ask, "$name asks school");
+            $check($x->query('//input[@name="school_id"]')->length === 0, "$name no ID number at first login");
             $check($x->query('//nav[@aria-label="Workspace"]')->length === 0, "$name no workspace");
         }
         if (str_starts_with($name, 'login')) {

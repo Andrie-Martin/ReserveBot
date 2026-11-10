@@ -34,7 +34,7 @@
       @csrf
       @php
         $addBag = $errors->getBag('add');
-        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id', 'password'])->first(fn ($field) => $addBag->has($field));
+        $addFocus = collect(['name', 'email', 'block_id', 'section_id', 'password'])->first(fn ($field) => $addBag->has($field));
       @endphp
       @if ($addBag->any())<div id="add-errors">@include('manage._errors', ['bag' => $addBag])</div>@endif
       @include('accounts._fields', ['prefix' => 'add', 'account' => null, 'bag' => $addBag, 'focus' => $addFocus])
@@ -65,7 +65,6 @@
             <th>{{ $title === 'Block accounts' ? 'Block' : 'Name' }}</th>
             @if ($title !== 'Admins')
               <th>{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}</th>
-              <th class="hide-sm">School ID</th>
             @endif
             <th>Status</th>
             <th><span class="sr-only">Edit</span></th>
@@ -85,7 +84,6 @@
               </td>
               @if ($title !== 'Admins')
                 <td class="acct-block" data-label="{{ $title === 'Block accounts' ? 'Representative' : 'Section' }}">{{ $title === 'Block accounts' ? $person->name : ($person->section?->name ?? '—') }}</td>
-                <td class="hide-sm">{{ $person->school_id ?? '—' }}</td>
               @endif
               <td class="acct-status">
                 @if (! $person->is_active)

@@ -68,11 +68,12 @@
           <span class="status-badge st-{{ strtolower($r->status) }}">{{ $r->statusLabel() }}</span>
         </header>
         <dl class="req-facts">
-          <div class="req-fact req-fact--who"><dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->displayName() }}@if ($r->representativeName()) · Rep: {{ $r->representativeName() }}@endif</span>@if ($r->user->school_id)<span class="who-id">{{ $r->user->school_id }}</span>@endif</span></dd></div>
+          <div class="req-fact req-fact--who"><dt>Booked by</dt><dd class="who-cell"><x-avatar :user="$r->user" /> <span class="who-text"><span class="who-name">{{ $r->user->displayName() }}@if ($r->representativeName()) · Rep: {{ $r->representativeName() }}@endif</span></span></dd></div>
           <div class="req-fact req-fact--room"><dt>Room</dt><dd>{{ $r->room?->name ?? 'No room' }}@if ($r->classSchedule) <span class="muted">({{ $r->classSchedule->course?->code ?? 'Class' }} class)</span>@endif</dd></div>
           <div class="req-fact"><dt>Needs</dt><dd>{{ $r->needLabel() }}</dd></div>
           @if ($r->hasEquipment())
             <div class="req-fact req-fact--items"><dt>Items</dt><dd>{{ $r->itemsText() }}</dd></div>
+            <div class="req-fact req-fact--borrower"><dt>Borrower</dt><dd>@if ($r->hasBorrower()){{ $r->borrower_name }} · ID <span class="who-id-inline">{{ $r->borrower_id_number }}</span>@else<span class="muted">Not recorded</span>@endif</dd></div>
           @endif
           <div class="req-fact"><dt>Sent</dt><dd>{{ $r->created_at?->format('M j, g:i A') }}</dd></div>
         </dl>

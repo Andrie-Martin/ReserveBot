@@ -104,3 +104,19 @@
     });
   }
 })();
+
+/* Borrower: the name and ID number are needed only when the booking includes equipment. The server checks this
+   either way; here the two boxes are just made required in the browser while "Room only" is not picked, so the
+   browser points at an empty box before the form is sent (a hidden required box would block sending instead). */
+(() => {
+  'use strict';
+  const fields = [...document.querySelectorAll('[data-borrower-field]')];
+  const needs = [...document.querySelectorAll('.step2 input[name=need]')];
+  if (!fields.length || !needs.length) return;
+  const sync = () => {
+    const need = needs.find(option => option.checked)?.value;
+    fields.forEach(field => { field.required = need !== 'room'; });
+  };
+  needs.forEach(option => option.addEventListener('change', sync));
+  sync();
+})();

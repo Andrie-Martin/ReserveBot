@@ -39,7 +39,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'department_id', 'section_id', 'name', 'email', 'password', 'role', 'is_active',
-        'school_id', 'photo_path', 'must_change_password',
+        'photo_path', 'must_change_password',
     ];
 
     // Never sent to the browser or included in JSON

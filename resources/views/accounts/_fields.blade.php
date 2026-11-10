@@ -49,8 +49,4 @@
       @endforeach
     </select>
   </div>
-  <div>
-    <label for="{{ $prefix }}-school" class="field-label">School ID number <span class="optional">(optional)</span></label>
-    <input id="{{ $prefix }}-school" name="school_id" maxlength="20" {!! $invalid('school_id') !!} value="{{ old('school_id', $account?->school_id) }}" placeholder="e.g. 2021-00123-MN-0" spellcheck="false" autocapitalize="characters">
-  </div>
 </div>

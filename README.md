@@ -103,8 +103,10 @@ so they work right away (`@reservebot.test` addresses can't receive email).
   one. The block's **representative** is named on the account. The admin (Accounts) or the block
   itself (My account) changes the name when a new representative takes over; every booking keeps
   the representative it was made under.
-- Everyone has **My account** (click your name at the top): photo, name, email, School ID,
-  and a Password tab. **Forgot your password?** on the login page emails a link.
+- Everyone has **My account** (click your name at the top): photo, name, email,
+  and a Password tab. No profile has an ID number: instead, every booking that includes
+  equipment asks for the **borrower's name and PUP ID number** (like 2021-00123-MN-0), and lab
+  staff see them where they approve and hand out. **Forgot your password?** on the login page emails a link.
 - New accounts get an email with a **Connect my email** button. Block accounts can't book until
   it is clicked, and their email must be Gmail or PUP webmail (`@iskolarngbayan.pup.edu.ph`).
 - Photos are kept in `storage/app/private/photos` (in Docker, in the `photos` volume). Only the
@@ -224,7 +226,9 @@ Other examples: `StartTime` → `start_time`, `PasswordHash` → `password`,
 
 Added since then: `class_checks` and `reminder_log` (the face-to-face answers and the
 reminders already sent), and `timetable_drafts` and `timetable_backups` (a new timetable in
-progress, and the timetables it replaced).
+progress, and the timetables it replaced). On the `sandbox` branch, `reservations` gained
+`rep_name` (the block's representative when it was booked) and `borrower_name` /
+`borrower_id_number` (who borrows the equipment), and `users.school_id` was removed.
 
 Laravel also keeps a few tables of its own: `migrations`, `sessions` (who is logged in),
 `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`.

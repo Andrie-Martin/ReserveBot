@@ -89,6 +89,36 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
   3. As admin, Accounts → "+ Add an account" → Block account → pick BSCPE 4-5: refused, it already has one.
   4. As lab staff, open a booking made before the change: it still shows the old representative.
 
+## Issue 7: no ID number on profiles; the borrower's name and ID number on equipment bookings
+
+- **Removed:** the "School ID number" box is gone from every profile: My account, the first-login page and the
+  admin's Accounts pages (add, edit, and the list's column). The `users.school_id` column is dropped.
+- **Added:** when a booking includes equipment ("Room and equipment" or "Equipment only", listed items or typed-in
+  ones), the form asks **"Who will borrow the equipment?"**: the borrower's name and ID number, both required.
+  A "Room only" booking asks for neither; the section hides with the equipment.
+  - The ID number must look like a PUP student number, 2021-00123-MN-0 (the same rule the profile used). It is
+    tidied as before: `202100123mn0` is saved as `2021-00123-MN-0`.
+  - The borrower does not have to be the block's representative.
+- **Where lab staff see it:** on Requests ("Borrower"), on the booking's page, and on the Today card next to the
+  hand-out button ("Borrower: Juan Dela Cruz · ID 2021-00123-MN-0"), so the ID can be checked when the items are
+  picked up. The hand-out message names the borrower too. A room-only booking shows "Room key only".
+- **Database:** migration `2026_11_10_000022_move_id_number_from_accounts_to_equipment_bookings` adds
+  `reservations.borrower_name` and `borrower_id_number`, with a CHECK (`chk_reservations_borrower`) that keeps the
+  two together: both filled or both empty. Equipment bookings that already existed get their account's representative
+  and School ID as the borrower before the old column is dropped, so nothing known is lost. Older equipment bookings
+  with no ID on record show "Not recorded". Undoing the migration brings the column back empty.
+- **Main files:** `app/Http/Controllers/BookingController.php` (the checks), `app/Services/Bookings.php`,
+  `resources/views/bookings/create.blade.php`, `public/js/booking.js` (makes the two boxes required in the browser
+  only while equipment is part of the booking), `public/css/booking.css`, the requests, today and booking views; the
+  account controllers, views and `AccountFields` lose the School ID. Tests: `tests/Feature/BorrowerOnEquipmentBookingTest.php`.
+- **Check it:**
+  1. Log in as rep1 → Book → pick a time → "Equipment only" → pick an item → Send booking with the borrower boxes
+     empty: the browser points at "Borrower's name".
+  2. Type a name and `2021-123` as the ID: "An ID number looks like 2021-00123-MN-0."
+  3. With a proper ID the booking is sent and its page shows "Borrower". As lab staff, see it on Requests and Today.
+  4. Choose "Room only": the borrower boxes disappear and the booking goes through without them.
+  5. My account and the admin's Accounts pages no longer show an ID number anywhere.
+
 ## Issue 9 (QA AUTH-01): after a wrong password, pressing Log in again logged in
 
 - **What the tester saw:** a wrong password showed "Wrong email or password.", but pressing Log in again let them

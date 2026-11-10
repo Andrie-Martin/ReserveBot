@@ -37,7 +37,6 @@
         @else
           <span class="meta-unit">{{ $account->roleLabel() }}@if ($account->section) · {{ $account->section->name }}@endif</span>
         @endif
-        @if ($account->school_id)<span class="meta-unit">{{ $account->school_id }}</span>@endif
         <span class="meta-unit">{{ $bookingCount === 1 ? '1 booking' : $bookingCount.' bookings' }}</span>
       </p>
       <p class="acct-status">
@@ -64,7 +63,7 @@
     @method('PUT')
     @php
       $detailsBag = $errors->getBag('details');
-      $detailsFocus = collect(['name', 'email', 'block_id', 'section_id', 'school_id'])->first(fn ($field) => $detailsBag->has($field));
+      $detailsFocus = collect(['name', 'email', 'block_id', 'section_id'])->first(fn ($field) => $detailsBag->has($field));
     @endphp
     @if ($detailsBag->any())<div id="edit-errors">@include('manage._errors', ['bag' => $detailsBag])</div>@endif
     @include('accounts._fields', ['prefix' => 'edit', 'bag' => $detailsBag, 'focus' => $detailsFocus])

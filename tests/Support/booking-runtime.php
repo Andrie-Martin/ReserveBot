@@ -116,7 +116,7 @@ function bookingRender(array $case): string
     }
 
     // Reservations
-    $booker = new User(['name' => 'Example Booker', 'role' => 'rep', 'school_id' => '2021-00123-MN-0', 'email' => 'booker@example.invalid']);
+    $booker = new User(['name' => 'Example Booker', 'role' => 'rep', 'email' => 'booker@example.invalid']);
     $booker->id = 77;
     $booker->setRelation('section', $section);
     $mk = function (int $id, string $status, int $addDays, array $extra = []) use ($today, $booker, $classRoom, $long) {

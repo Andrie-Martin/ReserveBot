@@ -12,7 +12,7 @@ final class AccountRules
     /** A block account's email must be Gmail or PUP webmail */
     public const REP_EMAIL_DOMAINS = ['gmail.com', 'iskolarngbayan.pup.edu.ph'];
 
-    /** A PUP School ID (student number), e.g. 2021-00123-MN-0 */
+    /** A PUP ID number (student number), e.g. 2021-00123-MN-0. Asked for the borrower on equipment bookings. */
     public const SCHOOL_ID_PATTERN = '/^\d{4}-\d{5}-[A-Z]{2}-\d$/';
 
     /** Emails are saved without spaces and in small letters, so logging in ignores capitals */
@@ -30,7 +30,7 @@ final class AccountRules
         return $at !== false && $at > 0 && in_array(substr($email, $at + 1), self::REP_EMAIL_DOMAINS, true);
     }
 
-    /** A typed School ID tidied up: capitals, no spaces, and dashes added when they were left out */
+    /** A typed ID number tidied up: capitals, no spaces, and dashes added when they were left out */
     public static function schoolId(?string $id): string
     {
         $id = strtoupper((string) preg_replace('/\s+/', '', (string) $id));

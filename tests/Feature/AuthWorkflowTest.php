@@ -81,13 +81,13 @@ final class AuthWorkflowTest extends TestCase
             'department_id' => $this->department->id, 'name' => 'Example account',
             'email' => 'http-'.Str::lower(Str::random(16)).'@gmail.com',
             'role' => $role, 'password' => 'Starting123', 'is_active' => true,
-            'must_change_password' => false, 'school_id' => null,
+            'must_change_password' => false,
         ], $attributes));
     }
 
     private function info(User $user, array $changes = []): array
     {
-        return array_replace(['name' => $user->name, 'email' => $user->email, 'school_id' => '2021-00123-MN-0'], $changes);
+        return array_replace(['name' => $user->name, 'email' => $user->email], $changes);
     }
 
     public function test_guest_gates_role_redirects_login_normalization_and_logout(): void
@@ -535,33 +535,30 @@ final class AuthWorkflowTest extends TestCase
         $this->assertGuest();
         $user->update(['is_active' => true, 'must_change_password' => true]);
         $this->actingAs($user)->get('/account')->assertRedirect('/welcome');
-        $this->get('/welcome')->assertOk()->assertSee('school_id', false);
+        $this->get('/welcome')->assertOk()->assertSee('name="password"', false)->assertDontSee('school_id', false);
         $this->get('/photos/'.$user->id)->assertNotFound();
         $this->post('/logout')->assertRedirect('/login');
     }
 
-    public function test_onboarding_password_policy_confirmation_school_id_and_completion(): void
+    public function test_onboarding_password_policy_confirmation_and_completion(): void
     {
         $user = $this->user('rep', ['must_change_password' => true]);
         $this->actingAs($user);
         foreach ([['password' => 'Starting123', 'password_confirmation' => 'Starting123'], ['password' => 'short', 'password_confirmation' => 'other']] as $data) {
-            $this->from('/welcome')->put('/welcome', $data)->assertSessionHasErrors(['password', 'school_id']);
+            $this->from('/welcome')->put('/welcome', $data)->assertSessionHasErrors(['password'])->assertSessionDoesntHaveErrors(['school_id']);
         }
-        $this->put('/welcome', ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123', 'school_id' => '202100123mn0'])
+        // Only a password is asked at the first login: no ID number (it is asked for the borrower on equipment bookings)
+        $this->put('/welcome', ['password' => 'NewPassword123', 'password_confirmation' => 'NewPassword123'])
             ->assertRedirect('/account')->assertSessionHas('status');
         $this->assertFalse($user->fresh()->must_change_password);
-        $this->assertSame('2021-00123-MN-0', $user->fresh()->school_id);
         $this->assertTrue(Hash::check('NewPassword123', $user->fresh()->password));
     }
 
-    public function test_staff_optional_and_admin_absent_onboarding_school_fields(): void
+    public function test_no_role_is_asked_for_an_id_number_at_the_first_login(): void
     {
         foreach (['lab_staff', 'admin'] as $role) {
             $user = $this->user($role, ['must_change_password' => true]);
-            $page = $this->actingAs($user)->get('/welcome')->assertOk();
-            if ($role === 'admin') {
-                $page->assertDontSee('name="school_id"', false);
-            }
+            $this->actingAs($user)->get('/welcome')->assertOk()->assertDontSee('name="school_id"', false)->assertDontSee('School ID');
             $this->put('/welcome', ['password' => 'OwnPassword123', 'password_confirmation' => 'OwnPassword123'])->assertRedirect('/account');
             $this->assertFalse($user->fresh()->must_change_password);
             // End this user's session before the next role signs in.
@@ -585,11 +582,11 @@ final class AuthWorkflowTest extends TestCase
         $this->get('/my-bookings')->assertOk();
     }
 
-    public function test_staff_can_choose_section_but_rep_cannot_change_block_and_admin_has_no_school_field(): void
+    public function test_staff_can_choose_section_but_rep_cannot_change_block_and_nobody_has_an_id_number_field(): void
     {
         $section = Section::create(['name' => 'TEST-'.Str::random(8), 'program' => 'TEST']);
         $staff = $this->user('lab_staff');
-        $this->actingAs($staff)->put('/account', $this->info($staff, ['school_id' => null, 'section_id' => $section->id]))->assertSessionHasNoErrors();
+        $this->actingAs($staff)->put('/account', $this->info($staff, ['section_id' => $section->id]))->assertSessionHasNoErrors();
         $this->assertSame($section->id, $staff->fresh()->section_id);
         $rep = $this->user();
         $this->actingAs($rep)->put('/account', $this->info($rep, ['section_id' => $section->id]))->assertSessionHasNoErrors();

@@ -13,7 +13,8 @@ use Illuminate\View\View;
 
 /**
  * Phase 9: My account, Information tab, for everyone: photo, name, email and, for block accounts and lab
- * staff, School ID and program/section. A block account's "name" is the block's representative, which the
+ * staff, program/section. (No ID number here anymore: it is asked for the borrower on equipment bookings.)
+ * A block account's "name" is the block's representative, which the
  * block can change here when a new representative takes over. Its block is set by an admin (it decides which
  * classes it can book for). Changing the email needs the current password and a new link.
  */
@@ -41,9 +42,6 @@ class AccountController extends Controller
             'email' => AccountFields::email($user->role, $user->id, keep: $user->email),
             'current_password' => $emailChanged ? ['required', 'current_password'] : ['nullable'],
         ];
-        if ($user->role !== 'admin') {
-            $rules['school_id'] = AccountFields::schoolId($user->role === 'rep', $user->id);
-        }
         if ($user->role === 'lab_staff') {
             $rules['section_id'] = ['nullable', 'integer', 'exists:sections,id'];
         }
@@ -57,9 +55,6 @@ class AccountController extends Controller
 
         $newRepresentative = $user->isBlock() && $data['name'] !== $user->name;
         $user->name = $data['name'];
-        if ($user->role !== 'admin') {
-            $user->school_id = $data['school_id'] ?? null;
-        }
         if ($user->role === 'lab_staff') {
             $user->section_id = $data['section_id'] ?? null;
         }

@@ -252,6 +252,25 @@
         <input id="other_items" name="other_items" maxlength="200" value="{{ old('other_items') }}" placeholder="e.g. Bluetooth speaker x1">
       </section>
 
+      {{-- Borrower: the person who picks up the items. Asked on every booking that includes equipment, so it hides
+           with the equipment (the same stylesheet rule) when "Room only" is picked. The server checks it; booking.js
+           only makes the two boxes required in the browser while equipment is part of the booking. --}}
+      <section class="part part-equipment part-borrower" aria-labelledby="borrower-title">
+        <h2 id="borrower-title">Who will borrow the equipment?</h2>
+        <p class="hint">The person who picks up the items. Lab staff check their ID when they hand the items out.</p>
+        <div class="borrower-grid">
+          <div>
+            <label for="borrower_name" class="field-label">Borrower’s name</label>
+            <input id="borrower_name" name="borrower_name" maxlength="100" value="{{ old('borrower_name') }}" placeholder="e.g. Juan Dela Cruz" autocomplete="off" data-borrower-field @error('borrower_name') aria-invalid="true" @enderror>
+          </div>
+          <div>
+            <label for="borrower_id" class="field-label">Borrower’s ID number</label>
+            <input id="borrower_id" name="borrower_id" maxlength="20" value="{{ old('borrower_id') }}" placeholder="e.g. 2021-00123-MN-0" spellcheck="false" autocapitalize="characters" autocomplete="off" data-borrower-field @error('borrower_id') aria-invalid="true" @enderror>
+            <p class="hint">Their PUP student number.</p>
+          </div>
+        </div>
+      </section>
+
       <section class="part" aria-labelledby="purpose-label">
         <label for="purpose" id="purpose-label" class="field-label">Reason</label>
         <textarea id="purpose" name="purpose" rows="2" maxlength="150" required placeholder="e.g. Lecture with slides, make-up class, lab activity, org meeting">{{ old('purpose') }}</textarea>
