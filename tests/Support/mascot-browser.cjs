@@ -65,6 +65,17 @@ const settle = async (page) => { await page.waitForLoadState('load'); await page
     assert.equal(await pose(page), 'clipboard', 'the destination page starts from its own pose');
     await link(page, 'Accounts').hover(); await page.goto(origin + '/today'); await settle(page);
     assert.equal(await pose(page), 'calendar', 'a hovered pose never survives into an unrelated page load');
+    // Quick clicking through the sidebar: the cursor is parked over some other link while the next page loads. The browser reports that
+    // link as hovered on the new page; it must not flash that link's pose (it used to), only a real pointer movement may.
+    await link(page, 'Accounts').hover(); await wait(100);
+    const poses = [];
+    await page.evaluate(() => { window.__p = []; });
+    await page.goto(origin + '/today'); // the cursor is still over Accounts
+    for (let i = 0; i < 10; i++) { poses.push(await pose(page)); await wait(40); }
+    assert.ok(poses.every((x) => x === 'calendar'), 'a parked pointer never previews another link after a load: ' + poses.join(','));
+    await page.mouse.move(60, 466); await page.mouse.move(64, 468); await wait(60);
+    assert.equal(await pose(page), 'badge', 'real pointer movement over a link previews it again');
+    ok('after a page load a parked pointer does not flash another link\'s pose; a real movement still previews');
     ok('hover persists after the pointer leaves and after clicks in the page; the next page load resets to its own pose');
     await page.goto(origin + '/rooms'); await settle(page);
     const seen = [];

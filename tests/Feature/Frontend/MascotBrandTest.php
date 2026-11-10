@@ -201,18 +201,19 @@ final class MascotBrandTest extends TestCase
     {
         $js = $this->read('public/js/mascot.js');
         $this->assertStringContainsString("document.getElementById('rb-navigation')", $js);
-        $this->assertSame(3, preg_match_all('/addEventListener\(/', $js), 'delegated pointerover and focusin on the sidebar, plus pageshow');
-        foreach (["'pointerover'", "'focusin'", "'pageshow'"] as $event) {
+        $this->assertSame(4, preg_match_all('/addEventListener\(/', $js), 'delegated pointerover, pointermove and focusin on the sidebar, plus pageshow');
+        foreach (["'pointerover'", "'pointermove'", "'focusin'", "'pageshow'"] as $event) {
             $this->assertStringContainsString($event, $js);
         }
         foreach (["'pointerout'", "'focusout'", "'mouseleave'", "'blur'", "'click'", 'setTimeout', 'GRACE_MS'] as $absent) {
             $this->assertStringNotContainsString($absent, $js, "the pose never resets on $absent: it stays until the next page load");
         }
         $this->assertStringContainsString(':focus-visible', $js, 'only keyboard focus counts, not a mouse click');
-        $this->assertStringContainsString("pointerType !== 'touch'", $js);
+        $this->assertStringContainsString("pointerType === 'touch'", $js);
+        $this->assertStringContainsString('event.movementX || event.movementY', $js, 'a parked pointer after a page load must not preview another link');
         $this->assertStringContainsString("pagePose = mascot.dataset.pose", $js, 'starts from the server-rendered page pose');
         $this->assertStringContainsString('mascot.dataset.pose !== pose', $js, 'no DOM write when nothing changes');
-        foreach (['fetch(', 'XMLHttpRequest', 'sendBeacon', 'localStorage', 'sessionStorage', 'document.cookie', 'indexedDB', "'mousemove'", "'pointermove'", 'setInterval', 'preventDefault', 'location', '.focus(', 'aria-live', 'innerHTML'] as $forbidden) {
+        foreach (['fetch(', 'XMLHttpRequest', 'sendBeacon', 'localStorage', 'sessionStorage', 'document.cookie', 'indexedDB', "'mousemove'", 'setInterval', 'preventDefault', 'location', '.focus(', 'aria-live', 'innerHTML'] as $forbidden) {
             $this->assertStringNotContainsString($forbidden, $js, "mascot.js must not use $forbidden");
         }
         // Without script the server-rendered page pose is all there is.
