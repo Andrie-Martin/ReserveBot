@@ -1,5 +1,5 @@
-@props(['href', 'label', 'mobile' => null, 'icon', 'active' => false, 'count' => 0])
-<a href="{{ $href }}" @if ($active) aria-current="page" @endif {{ $attributes->class(['rb-nav-item', 'rb-nav-item--active' => $active]) }}>
+@props(['href', 'label', 'mobile' => null, 'icon', 'active' => false, 'count' => 0, 'pose' => 'attend'])
+<a href="{{ $href }}" @if ($active) aria-current="page" @endif data-rb-pose="{{ $pose }}" {{ $attributes->class(['rb-nav-item', 'rb-nav-item--active' => $active]) }}>
   <x-ui.icon :name="$icon" class="rb-nav-item__icon" />
   <span class="rb-nav-item__label">{{ $label }}</span>
   @if ($mobile)<span class="rb-nav-item__mobile">{{ $mobile }}</span>@endif

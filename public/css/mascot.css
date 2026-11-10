@@ -1,0 +1,81 @@
+/* Sidebar mascot (resources/views/components/ui/mascot.blade.php), a footer for the desktop sidebar. Decorative only: no
+   pointer events, no focus, no semantics. data-pose on .rb-mascot starts as the current page's pose (set by the server) and
+   public/js/mascot.js swaps it when a sidebar link is hovered or keyboard-focused; it stays there until the next page load.
+   Without script it simply shows the page's pose.
+
+   Space: the slot is whatever height is left under the navigation (flex: 1 1 0, so it can never push or squeeze a link).
+   A container query shows the footer (hairline, figure, grounding shadow) only when that leftover space can hold all of it,
+   which hides it by itself on short windows, at high zoom, with enlarged text and for every role's different navigation
+   length. The negative top margin cancels the sidebar's row gap, so an empty slot adds no height and no scroll. The figure
+   has intrinsic dimensions, so changing pose never moves the footer. Phones, tablets and short windows never show it. */
+.rb-mascot { display: none; }
+@media (min-width: 80rem) and (min-height: 39.5rem) {
+  .rb-sidebar > .rb-mascot {
+    display: grid; align-content: end;
+    flex: 1 1 0; min-height: 0; margin-top: calc(-1 * var(--rb-space-8));
+    container: rb-mascot / size;
+    pointer-events: none; user-select: none; -webkit-user-select: none;
+  }
+}
+.rb-mascot__stage { display: none; justify-items: center; padding-top: .875rem; border-top: var(--rb-border-width) solid var(--rb-border-warm); }
+.rb-mascot__art { display: block; width: auto; height: 5.625rem; max-width: 100%; overflow: visible; }
+@container rb-mascot (min-height: 7.5rem) { .rb-mascot__stage { display: grid; } }
+
+/* Palette: the shared tokens, so the mascot is the same maroon, cream and gold as the rest of the interface. */
+.rbm-maroon { fill: var(--rb-color-maroon); }
+.rbm-cream { fill: var(--rb-color-cream); }
+.rbm-gold { fill: var(--rb-color-gold); }
+.rbm-shadow { fill: var(--rb-color-maroon); opacity: .12; }
+.rbm-aerial { stroke: var(--rb-color-maroon); stroke-width: 4.5; stroke-linecap: round; }
+.rbm-limb { stroke: var(--rb-color-maroon); stroke-width: 12; stroke-linecap: round; }
+.rbm-hand-ball { fill: var(--rb-color-gold); opacity: 0; }
+.rbm-mouth { fill: none; stroke: var(--rb-color-maroon); stroke-width: 3.4; stroke-linecap: round; }
+.rbm-frame { fill: none; stroke: var(--rb-color-gold); stroke-width: 3; }
+.rbm-gold-edge { stroke: var(--rb-color-gold); stroke-width: 3; }
+.rbm-line { fill: none; stroke: var(--rb-color-maroon); stroke-width: 2.4; stroke-linecap: round; }
+.rbm-keyring { fill: none; stroke: var(--rb-color-gold); stroke-width: 4; }
+.rbm-keyshaft { fill: none; stroke: var(--rb-color-gold); stroke-width: 4; stroke-linecap: round; }
+
+/* Pose parameters: clockwise degrees for each arm about its shoulder, and a tiny glance. Everything not listed stays at rest.
+   idle = arms out at the sides (the reference). Holding poses bring the hands in a little; wave raises the left arm (with the
+   gold hand), door points the right arm at the door, attend is a neutral half-raised arm. */
+.rb-mascot { --rbm-duration: 180ms; --rbm-ease: cubic-bezier(.4, 0, .2, 1); --rbm-l: 35deg; --rbm-r: -35deg; --rbm-ex: 0px; --rbm-smile: 1; }
+.rb-mascot[data-pose="attend"] { --rbm-r: -62deg; }
+.rb-mascot[data-pose="wave"] { --rbm-l: 156deg; --rbm-smile: 1.18; }
+.rb-mascot[data-pose="door"] { --rbm-r: -70deg; --rbm-ex: 1.6px; }
+.rb-mascot:is([data-pose="calendar"], [data-pose="clipboard"], [data-pose="key"], [data-pose="tool"], [data-pose="badge"]) { --rbm-l: 24deg; --rbm-r: -24deg; }
+
+.rbm-arm--l { transform: rotate(var(--rbm-l)); transform-origin: 31px 80px; }
+.rbm-arm--r { transform: rotate(var(--rbm-r)); transform-origin: 109px 80px; }
+.rbm-eyes { transform: translateX(var(--rbm-ex)); }
+.rbm-mouth { transform: scaleX(var(--rbm-smile)); transform-origin: 70px 77px; }
+.rbm-prop { opacity: 0; }
+.rbm-pill { opacity: 1; }
+
+.rb-mascot[data-pose="wave"] .rbm-hand-ball,
+.rb-mascot[data-pose="door"] .rbm-prop--door,
+.rb-mascot[data-pose="calendar"] .rbm-prop--calendar,
+.rb-mascot[data-pose="clipboard"] .rbm-prop--clipboard,
+.rb-mascot[data-pose="key"] .rbm-prop--key,
+.rb-mascot[data-pose="tool"] .rbm-prop--tool,
+.rb-mascot[data-pose="badge"] .rbm-prop--badge { opacity: 1; }
+.rb-mascot:is([data-pose="key"], [data-pose="tool"]) .rbm-pill { opacity: 0; }
+
+/* Only transform and opacity move, and only for a short moment when the pose changes. The feet, body, head and footer never
+   move, so the figure stays planted, and there is no idle movement at all. */
+.rbm-arm, .rbm-eyes, .rbm-mouth { transition: transform var(--rbm-duration) var(--rbm-ease); }
+.rbm-prop, .rbm-hand-ball, .rbm-pill { transition: opacity var(--rbm-duration) var(--rbm-ease); }
+@media (prefers-reduced-motion: no-preference) {
+  /* One friendly wave (two swings) when the wave pose is chosen by hovering; mascot.js sets data-ready only after the first
+     frame, so arriving on the Home page does not wave on its own. */
+  .rb-mascot[data-ready][data-pose="wave"] .rbm-arm--l { animation: rbm-wave 520ms var(--rbm-ease) var(--rbm-duration) 1; }
+}
+@keyframes rbm-wave {
+  25% { transform: rotate(calc(var(--rbm-l) - 18deg)); }
+  50% { transform: rotate(var(--rbm-l)); }
+  75% { transform: rotate(calc(var(--rbm-l) - 18deg)); }
+}
+/* Reduced motion: poses still change (they are useful), but instantly and without any arm movement. */
+@media (prefers-reduced-motion: reduce) {
+  .rbm-arm, .rbm-eyes, .rbm-mouth, .rbm-prop, .rbm-hand-ball, .rbm-pill { transition: none; animation: none; }
+}
