@@ -20,11 +20,17 @@ use Tests\TestCase;
 final class BookingActionLayoutTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Department $otherDepartment;
+
     private Room $room;
+
     private User $admin;
+
     private User $staff;
+
     private User $rep;
 
     protected function setUp(): void

@@ -1,5 +1,19 @@
 <?php
 
+use App\Models\Department;
+use App\Models\DepartmentConfig;
+use App\Models\Equipment;
+use App\Models\EquipmentCategory;
+use App\Models\Reservation;
+use App\Models\Room;
+use App\Models\Section;
+use App\Models\Term;
+use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+
 require_once __DIR__.'/layout-runtime.php';
 
 /** Rooms, equipment and booking-rules management fixtures. Sample data only; no database, no mail. */
@@ -19,19 +33,19 @@ function manageCases(): array
     return $cases;
 }
 
-function manageBookings(string $kind, bool $long, bool $none, array $over = []): Illuminate\Support\Collection
+function manageBookings(string $kind, bool $long, bool $none, array $over = []): Collection
 {
     if ($none) {
         return collect();
     }
-    $now = Carbon\CarbonImmutable::now();
+    $now = CarbonImmutable::now();
     $who = $long ? str_repeat('LongBookerName', 5) : 'Ana Cruz';
 
-    return collect([[401, 'Pending', 1], [402, 'Confirmed', 3], [403, 'Confirmed', 5]])->map(function ($row) use ($now, $who, $kind) {
+    return collect([[401, 'Pending', 1], [402, 'Confirmed', 3], [403, 'Confirmed', 5]])->map(function ($row) use ($now, $who) {
         [$id, $status, $add] = $row;
-        $u = new App\Models\User(['name' => $who, 'role' => 'rep']);
-        $u->setRelation('section', new App\Models\Section(['name' => '3-2', 'program' => 'BSCPE']));
-        $r = new App\Models\Reservation(['purpose' => 'Example lecture with slides', 'status' => $status]);
+        $u = new User(['name' => $who, 'role' => 'rep']);
+        $u->setRelation('section', new Section(['name' => '3-2', 'program' => 'BSCPE']));
+        $r = new Reservation(['purpose' => 'Example lecture with slides', 'status' => $status]);
         $r->id = $id;
         $r->start_time = $now->startOfDay()->addDays($add)->addHours(13);
         $r->end_time = $now->startOfDay()->addDays($add)->addHours(15);
@@ -46,25 +60,26 @@ function manageBookings(string $kind, bool $long, bool $none, array $over = []):
 function manageRender(array $case): string
 {
     [$page, $role, $state] = $case;
-    $now = Carbon\CarbonImmutable::parse('2026-11-04 11:30:00', 'Asia/Manila');
-    Carbon\Carbon::setTestNow($now); Carbon\CarbonImmutable::setTestNow($now);
+    $now = CarbonImmutable::parse('2026-11-04 11:30:00', 'Asia/Manila');
+    Carbon\Carbon::setTestNow($now);
+    CarbonImmutable::setTestNow($now);
     $long = $state === 'long';
     $routes = ['rooms' => 'manage.rooms', 'room-edit' => 'manage.rooms.edit', 'equipment' => 'manage.equipment', 'equipment-edit' => 'manage.equipment.edit', 'rules' => 'manage.rules'];
     layoutState($role, ['route' => $routes[$page], 'waiting' => 3]);
     $user = auth()->user();
-    $user->setRelation('department', new App\Models\Department(['name' => $long ? str_repeat('LongDepartmentName', 5) : 'Example Engineering']));
-    $errors = new Illuminate\Support\ViewErrorBag;
+    $user->setRelation('department', new Department(['name' => $long ? str_repeat('LongDepartmentName', 5) : 'Example Engineering']));
+    $errors = new ViewErrorBag;
     $old = [];
-    $bag = fn (array $m) => new Illuminate\Support\MessageBag($m);
+    $bag = fn (array $m) => new MessageBag($m);
     $msg = ['Example validation message for this form.'];
     $name = fn (string $n) => $long ? str_repeat('LongExampleName', 5) : $n;
     $errs = $state === 'errors';
 
     if ($page === 'rooms') {
         $rooms = $state === 'empty' ? collect() : collect([
-            tap(new App\Models\Room(['name' => $name('CE-305'), 'building' => 'CEA Building', 'capacity' => 40, 'fixed_equipment_note' => $long ? str_repeat('Long note words ', 8) : 'Has a TV and aircon']), fn ($r) => [$r->id = 11, $r->is_active = true, $r->departments_count = 2]),
-            tap(new App\Models\Room(['name' => 'CE-306', 'building' => null, 'capacity' => null, 'fixed_equipment_note' => null]), fn ($r) => [$r->id = 12, $r->is_active = true, $r->departments_count = 1]),
-            tap(new App\Models\Room(['name' => 'CE-307', 'building' => 'NDC', 'capacity' => 30, 'fixed_equipment_note' => 'Projector is broken']), fn ($r) => [$r->id = 13, $r->is_active = false, $r->departments_count = 1]),
+            tap(new Room(['name' => $name('CE-305'), 'building' => 'CEA Building', 'capacity' => 40, 'fixed_equipment_note' => $long ? str_repeat('Long note words ', 8) : 'Has a TV and aircon']), fn ($r) => [$r->id = 11, $r->is_active = true, $r->departments_count = 2]),
+            tap(new Room(['name' => 'CE-306', 'building' => null, 'capacity' => null, 'fixed_equipment_note' => null]), fn ($r) => [$r->id = 12, $r->is_active = true, $r->departments_count = 1]),
+            tap(new Room(['name' => 'CE-307', 'building' => 'NDC', 'capacity' => 30, 'fixed_equipment_note' => 'Projector is broken']), fn ($r) => [$r->id = 13, $r->is_active = false, $r->departments_count = 1]),
         ]);
         if ($errs) {
             $errors->put('add', $bag(['name' => ['Another room already has that name.'], 'capacity' => ['Seats must be a whole number from 0 to 1000.']]));
@@ -77,7 +92,7 @@ function manageRender(array $case): string
     }
 
     if ($page === 'room-edit') {
-        $room = tap(new App\Models\Room(['name' => $name('CE-305'), 'building' => 'CEA Building', 'capacity' => 40, 'fixed_equipment_note' => 'Has a TV and aircon']), fn ($r) => [$r->id = 11, $r->is_active = $state !== 'off']);
+        $room = tap(new Room(['name' => $name('CE-305'), 'building' => 'CEA Building', 'capacity' => 40, 'fixed_equipment_note' => 'Has a TV and aircon']), fn ($r) => [$r->id = 11, $r->is_active = $state !== 'off']);
         if ($errs) {
             $errors->put('default', $bag(['name' => ['Another room already has that name.'], 'capacity' => ['Seats must be a whole number from 0 to 1000.']]));
             $old = ['_token' => 'x', 'name' => 'Old example room', 'building' => 'Old building', 'capacity' => '2000', 'note' => 'Old note'];
@@ -90,9 +105,9 @@ function manageRender(array $case): string
     }
 
     $cat = function (int $id, string $n, array $items) {
-        $c = new App\Models\EquipmentCategory(['name' => $n]);
+        $c = new EquipmentCategory(['name' => $n]);
         $c->id = $id;
-        $c->setRelation('equipment', collect($items)->map(fn ($i) => tap(new App\Models\Equipment(['name' => $i[0], 'total_qty' => $i[1], 'max_per_request' => $i[2], 'category_id' => $id]), fn ($e) => [$e->id = $i[4], $e->is_active = $i[3]])));
+        $c->setRelation('equipment', collect($items)->map(fn ($i) => tap(new Equipment(['name' => $i[0], 'total_qty' => $i[1], 'max_per_request' => $i[2], 'category_id' => $id]), fn ($e) => [$e->id = $i[4], $e->is_active = $i[3]])));
 
         return $c;
     };
@@ -116,7 +131,7 @@ function manageRender(array $case): string
     }
 
     if ($page === 'equipment-edit') {
-        $item = tap(new App\Models\Equipment(['name' => $name('Projector'), 'total_qty' => 4, 'max_per_request' => 1, 'category_id' => 1]), fn ($e) => [$e->id = 21, $e->is_active = $state !== 'off']);
+        $item = tap(new Equipment(['name' => $name('Projector'), 'total_qty' => 4, 'max_per_request' => 1, 'category_id' => 1]), fn ($e) => [$e->id = 21, $e->is_active = $state !== 'off']);
         if ($errs) {
             $errors->put('default', $bag(['total_qty' => ['Stock must be a whole number from 0 to 9999.']]));
             $old = ['_token' => 'x', 'name' => 'Old example name', 'category_id' => '2', 'total_qty' => '99999', 'max_per_request' => '4'];
@@ -129,8 +144,8 @@ function manageRender(array $case): string
     }
 
     // rules
-    $config = new App\Models\DepartmentConfig(App\Models\DepartmentConfig::DEFAULTS + ['department_id' => 73]);
-    $terms = collect([['1st Semester', '2026-08-10', '2026-12-19'], ['2nd Semester', '2027-01-11', '2027-05-22']])->map(fn ($t, $i) => tap(new App\Models\Term(['name' => $t[0], 'start_date' => $t[1], 'end_date' => $t[2]]), fn ($m) => $m->id = $i + 1));
+    $config = new DepartmentConfig(DepartmentConfig::DEFAULTS + ['department_id' => 73]);
+    $terms = collect([['1st Semester', '2026-08-10', '2026-12-19'], ['2nd Semester', '2027-01-11', '2027-05-22']])->map(fn ($t, $i) => tap(new Term(['name' => $t[0], 'start_date' => $t[1], 'end_date' => $t[2]]), fn ($m) => $m->id = $i + 1));
     if ($state === 'term-error') {
         // Only the Semester-dates form failed: its old input (and CSRF token) is flashed, the rules form's fields are not
         $errors->put('term1', $bag(['end_date' => ['The last day has to be after the first day.']]));
@@ -150,7 +165,10 @@ function manageRender(array $case): string
 function manageContracts(): int
 {
     $count = 0;
-    $check = function ($ok, $message) use (&$count) { foundationsCheck((bool) $ok, $message); $count++; };
+    $check = function ($ok, $message) use (&$count) {
+        foundationsCheck((bool) $ok, $message);
+        $count++;
+    };
     foreach (manageCases() as $name => $case) {
         $html = manageRender($case);
         $x = foundationsDocument($html);
@@ -162,10 +180,18 @@ function manageContracts(): int
             $check($x->query('//main//h2[normalize-space()="'.substr($h1, 5).'"]')->length === 0, "$name the item name is not repeated as a second heading");
         }
         $ids = [];
-        foreach ($x->query('//*[@id]') as $node) { $id = $node->getAttribute('id'); $check(! isset($ids[$id]), "$name unique ID $id"); $ids[$id] = true; }
+        foreach ($x->query('//*[@id]') as $node) {
+            $id = $node->getAttribute('id');
+            $check(! isset($ids[$id]), "$name unique ID $id");
+            $ids[$id] = true;
+        }
         foreach ($x->query('//main//input[not(@type="hidden")]|//main//select|//main//textarea') as $node) {
             $id = $node->getAttribute('id');
-            if (in_array($node->getAttribute('type'), ['radio', 'checkbox'], true)) { $check($x->query('ancestor::label', $node)->length === 1, "$name choice wrapped by label"); continue; }
+            if (in_array($node->getAttribute('type'), ['radio', 'checkbox'], true)) {
+                $check($x->query('ancestor::label', $node)->length === 1, "$name choice wrapped by label");
+
+                continue;
+            }
             $check($id && $x->query('//label[@for="'.$id.'"]')->length === 1, "$name labelled $id");
         }
         foreach ($x->query('//main//form[@method="post"]') as $form) {
@@ -187,7 +213,9 @@ function manageContracts(): int
         }
         if (str_starts_with($name, 'manage-equipment-') && ! str_starts_with($name, 'manage-equipment-edit-')) {
             $labels = [];
-            foreach ($x->query('//main//details[contains(@class,"rename")]/summary') as $summary) { $labels[] = preg_replace('/\s+/', ' ', trim($summary->textContent)); }
+            foreach ($x->query('//main//details[contains(@class,"rename")]/summary') as $summary) {
+                $labels[] = preg_replace('/\s+/', ' ', trim($summary->textContent));
+            }
             $check(count($labels) === count(array_unique($labels)), "$name every Rename control has a distinguishable accessible name");
             $check(count(array_filter($labels, fn ($l) => $l === 'Rename')) === 0, "$name no Rename control is announced as just 'Rename'");
         }

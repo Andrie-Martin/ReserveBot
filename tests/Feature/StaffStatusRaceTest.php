@@ -4,13 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\DepartmentConfig;
+use App\Models\Equipment;
+use App\Models\EquipmentCategory;
 use App\Models\OverrideLog;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Section;
 use App\Models\User;
-use App\Models\Equipment;
-use App\Models\EquipmentCategory;
 use App\Services\Bookings;
 use App\Services\StaffDesk;
 use Carbon\Carbon;
@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /**
@@ -33,10 +34,15 @@ use Tests\TestCase;
 class StaffStatusRaceTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Section $section;
+
     private Room $room;
+
     private User $rep;
+
     private User $staff;
 
     protected function setUp(): void
@@ -220,7 +226,7 @@ class StaffStatusRaceTest extends TestCase
         try {
             $this->moveTo($r, '2026-11-05', 14 * 60, 15 * 60);
             $this->fail('moving an in-use booking must be refused');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->assertArrayHasKey('move', $e->errors());
         }
         $fresh = $r->fresh();

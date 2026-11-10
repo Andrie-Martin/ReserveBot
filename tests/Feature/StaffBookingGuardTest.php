@@ -24,10 +24,15 @@ use Tests\TestCase;
 class StaffBookingGuardTest extends TestCase
 {
     private bool $transactionStarted = false;
+
     private Department $department;
+
     private Section $section;
+
     private Room $room;
+
     private User $rep;
+
     private User $staff;
 
     protected function setUp(): void

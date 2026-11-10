@@ -1,5 +1,15 @@
 <?php
 
+use App\Models\Department;
+use App\Models\Reservation;
+use App\Models\Section;
+use App\Models\User;
+use App\Support\BookingRules;
+use App\Support\StaffRules;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
+
 require_once __DIR__.'/layout-runtime.php';
 
 /** Explicit sample data only. Never calls controllers, opens PDO, saves models or sends mail. */
@@ -31,23 +41,23 @@ function bookingCases(): array
 function bookingRender(array $case): string
 {
     [$page, $role, $state] = $case;
-    $today = Carbon\CarbonImmutable::parse('2026-11-04 09:05:00', 'Asia/Manila');
+    $today = CarbonImmutable::parse('2026-11-04 09:05:00', 'Asia/Manila');
     Carbon\Carbon::setTestNow($today);
-    Carbon\CarbonImmutable::setTestNow($today);
+    CarbonImmutable::setTestNow($today);
     $long = str_contains($state, 'long');
     $routes = ['book' => 'book', 'mine' => 'bookings.mine', 'show' => 'bookings.show'];
     layoutState($role, ['route' => $routes[$page], 'name' => $long ? str_repeat('LongExampleName', 6) : null]);
     $user = auth()->user();
-    $section = new App\Models\Section(['name' => '3-2', 'program' => 'BSCPE']);
+    $section = new Section(['name' => '3-2', 'program' => 'BSCPE']);
     $section->id = 12;
-    $user->setRelation('department', new App\Models\Department(['name' => 'Example Engineering']));
+    $user->setRelation('department', new Department(['name' => 'Example Engineering']));
     $user->setRelation('section', $role === 'rep' ? $section : null);
 
-    $errors = new Illuminate\Support\ViewErrorBag;
+    $errors = new ViewErrorBag;
     $old = [];
     // Approval notice shows on some step-2 states; everything else uses direct confirmation.
     $needsApproval = in_array($state, ['step2-approval', 'step2-other', 'step2-errors'], true);
-    $rules = new App\Support\BookingRules(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 450, 1260, 30, 30, 240, 14, 60, 120, $needsApproval, $today);
+    $rules = new BookingRules(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], 450, 1260, 30, 30, 240, 14, 60, 120, $needsApproval, $today);
 
     $room = fn (int $id, string $name, ?int $cap = 40) => (object) ['id' => $id, 'name' => $name, 'capacity' => $cap];
     $course = (object) ['code' => 'CMPE 451', 'title' => 'Example Engineering Laboratory'];
@@ -95,7 +105,7 @@ function bookingRender(array $case): string
                 $view += ['rooms' => $rooms, 'preRoom' => 0];
             }
             if ($state === 'step2-errors') {
-                $errors->put('default', new Illuminate\Support\MessageBag(['purpose' => ['Write the reason for your booking.'], 'qty' => ['Only 2 Projector are free then.']]));
+                $errors->put('default', new MessageBag(['purpose' => ['Write the reason for your booking.'], 'qty' => ['Only 2 Projector are free then.']]));
                 $old = ['need' => 'both', 'room' => '13', 'purpose' => 'Old example reason', 'other_items' => 'Old example item', 'qty' => [1 => '2', 4 => '1']];
             }
         }
@@ -106,11 +116,11 @@ function bookingRender(array $case): string
     }
 
     // Reservations
-    $booker = new App\Models\User(['name' => 'Example Booker', 'role' => 'rep', 'school_id' => '2021-00123-MN-0', 'email' => 'booker@example.invalid']);
+    $booker = new User(['name' => 'Example Booker', 'role' => 'rep', 'school_id' => '2021-00123-MN-0', 'email' => 'booker@example.invalid']);
     $booker->id = 77;
     $booker->setRelation('section', $section);
-    $mk = function (int $id, string $status, int $addDays, array $extra = []) use ($today, $user, $booker, $classRoom, $class, $long) {
-        $r = new App\Models\Reservation(['purpose' => ($long ? str_repeat('Long reason ', 12) : 'Example lecture with slides'), 'status' => $status, 'status_reason' => null,
+    $mk = function (int $id, string $status, int $addDays, array $extra = []) use ($today, $booker, $classRoom, $long) {
+        $r = new Reservation(['purpose' => ($long ? str_repeat('Long reason ', 12) : 'Example lecture with slides'), 'status' => $status, 'status_reason' => null,
             'other_items' => $extra['other'] ?? null, 'room_id' => array_key_exists('noroom', $extra) ? null : 11]);
         $r->id = $id;
         $r->user_id = $booker->id;
@@ -133,7 +143,8 @@ function bookingRender(array $case): string
     $reviewer = (object) ['name' => 'Example Lab Staff'];
 
     if ($page === 'mine') {
-        $upcoming = collect(); $past = collect();
+        $upcoming = collect();
+        $past = collect();
         if ($state !== 'empty') {
             $upcoming = collect([
                 $mk(101, 'Pending', 1, ['equipment' => [['Projector', 1], ['HDMI cable', 1]], 'other' => 'Bluetooth speaker x1']),
@@ -158,30 +169,56 @@ function bookingRender(array $case): string
         'errors' => ['Pending', 1], 'history' => ['Confirmed', 3], 'equipment' => ['Pending', 1], 'eqonly' => ['Confirmed', 1], 'long' => ['Pending', 1], 'inuse' => ['InUse', 0]];
     [$status, $add] = $map[$state];
     $extra = [];
-    if (in_array($state, ['equipment', 'long'], true)) { $extra = ['equipment' => [['Projector', 2], ['HDMI cable', 1]], 'other' => 'Bluetooth speaker x1']; }
-    if ($state === 'eqonly') { $extra = ['noroom' => true, 'equipment' => [['Portable speaker', 1]]]; }
-    if (in_array($state, ['confirmed', 'history', 'rejected', 'inuse'], true)) { $extra['reviewer'] = $reviewer; }
-    if (in_array($state, ['confirmed', 'history'], true)) { $extra['class'] = $class; }
+    if (in_array($state, ['equipment', 'long'], true)) {
+        $extra = ['equipment' => [['Projector', 2], ['HDMI cable', 1]], 'other' => 'Bluetooth speaker x1'];
+    }
+    if ($state === 'eqonly') {
+        $extra = ['noroom' => true, 'equipment' => [['Portable speaker', 1]]];
+    }
+    if (in_array($state, ['confirmed', 'history', 'rejected', 'inuse'], true)) {
+        $extra['reviewer'] = $reviewer;
+    }
+    if (in_array($state, ['confirmed', 'history'], true)) {
+        $extra['class'] = $class;
+    }
     $r = $mk(55, $status, $add, $extra);
-    if ($state === 'rejected') { $r->status_reason = 'The lab is closed for maintenance that day'; }
-    if ($state === 'cancelled') { $r->status_reason = 'Our class was moved online'; }
+    if ($state === 'rejected') {
+        $r->status_reason = 'The lab is closed for maintenance that day';
+    }
+    if ($state === 'cancelled') {
+        $r->status_reason = 'Our class was moved online';
+    }
 
     $isStaff = $role !== 'rep';
-    $staffRules = new App\Support\StaffRules(30, $today);
-    $cancellable = ! $isStaff && in_array($status, App\Models\Reservation::CANCELLABLE_STATUSES, true);
+    $staffRules = new StaffRules(30, $today);
+    $cancellable = ! $isStaff && in_array($status, Reservation::CANCELLABLE_STATUSES, true);
     $log = fn (string $when, string $text, ?string $why) => new class($today->subHours(5), $text, $why)
     {
-        public function __construct(public $created_at, private string $text, public ?string $reason) { $this->changedBy = (object) ['name' => 'Example Lab Staff']; }
+        public function __construct(public $created_at, private string $text, public ?string $reason)
+        {
+            $this->changedBy = (object) ['name' => 'Example Lab Staff'];
+        }
+
         public $changedBy;
-        public function describe(): string { return $this->text; }
-        public function hasOwnReason(): bool { return filled($this->reason); }
+
+        public function describe(): string
+        {
+            return $this->text;
+        }
+
+        public function hasOwnReason(): bool
+        {
+            return filled($this->reason);
+        }
     };
     $history = $state === 'history' ? collect([$log('', 'moved the booking to CE-306', 'The projector in CE-305 is broken'), $log('', 'approved it', null)]) : collect();
     if ($state === 'errors') {
-        $errors->put('default', new Illuminate\Support\MessageBag(['reason' => ['Write why you are cancelling.']]));
+        $errors->put('default', new MessageBag(['reason' => ['Write why you are cancelling.']]));
     }
     session()->put('_old_input', []);
-    if ($state === 'late') { session()->forget('problem'); }
+    if ($state === 'late') {
+        session()->forget('problem');
+    }
     app('view')->share('errors', $errors);
 
     return view('bookings.show', [
@@ -191,23 +228,34 @@ function bookingRender(array $case): string
         'rooms' => $isStaff ? collect([$classRoom, (object) ['id' => 12, 'name' => 'CE-306', 'capacity' => 30]]) : collect(),
         'canReview' => $isStaff && $status === 'Pending',
         'canCancel' => $cancellable && $state !== 'late', 'tooLateToCancel' => $cancellable && $state === 'late',
-        'cancelDeadline' => $rules->cancelDeadline($r->start_time), 'cancelHours' => App\Support\BookingRules::duration($rules->cancelMinutes),
+        'cancelDeadline' => $rules->cancelDeadline($r->start_time), 'cancelHours' => BookingRules::duration($rules->cancelMinutes),
     ])->render();
 }
 
 function bookingContracts(): int
 {
     $count = 0;
-    $check = function ($ok, $message) use (&$count) { foundationsCheck((bool) $ok, $message); $count++; };
+    $check = function ($ok, $message) use (&$count) {
+        foundationsCheck((bool) $ok, $message);
+        $count++;
+    };
     foreach (bookingCases() as $name => $case) {
         $html = bookingRender($case);
         $x = foundationsDocument($html);
         $check($x->query('//main//h1')->length === 1, "$name one main heading");
         $ids = [];
-        foreach ($x->query('//*[@id]') as $node) { $id = $node->getAttribute('id'); $check(! isset($ids[$id]), "$name unique ID $id"); $ids[$id] = true; }
+        foreach ($x->query('//*[@id]') as $node) {
+            $id = $node->getAttribute('id');
+            $check(! isset($ids[$id]), "$name unique ID $id");
+            $ids[$id] = true;
+        }
         foreach ($x->query('//main//input[not(@type="hidden")]|//main//select|//main//textarea') as $node) {
             $id = $node->getAttribute('id');
-            if ($node->getAttribute('type') === 'radio') { $check($x->query('ancestor::label', $node)->length === 1, "$name radio wrapped by label"); continue; }
+            if ($node->getAttribute('type') === 'radio') {
+                $check($x->query('ancestor::label', $node)->length === 1, "$name radio wrapped by label");
+
+                continue;
+            }
             $check($id && $x->query('//label[@for="'.$id.'"]')->length === 1, "$name labelled $id");
         }
         foreach ($x->query('//main//form[@method="post"]') as $form) {
@@ -227,8 +275,12 @@ function bookingContracts(): int
                 foreach ($x->query('//*[contains(@class,"room-opt-name")]') as $nameNode) {
                     $text = trim(preg_replace('/\s+/', ' ', $nameNode->textContent));
                     $check(preg_match('/^\S+( \d+ seats?)?$/', $text) === 1, "$name room name is the name alone or name plus seats: $text");
-                    if ($text === 'CE-307') { $check($x->query('.//*[contains(@class,"room-opt-cap")]', $nameNode)->length === 0, "$name empty capacity renders no element"); }
-                    if ($text === 'CE-306 30 seats') { $check($x->query('.//*[contains(@class,"room-opt-cap")]', $nameNode)->length === 1, "$name known capacity kept"); }
+                    if ($text === 'CE-307') {
+                        $check($x->query('.//*[contains(@class,"room-opt-cap")]', $nameNode)->length === 0, "$name empty capacity renders no element");
+                    }
+                    if ($text === 'CE-306 30 seats') {
+                        $check($x->query('.//*[contains(@class,"room-opt-cap")]', $nameNode)->length === 1, "$name known capacity kept");
+                    }
                 }
                 // The unavailable rooms are listed in the page itself: no disclosure, no controls, one row per room.
                 $check($x->query('//details[contains(@class,"busy-rooms")]')->length === 0 && ! str_contains($html, 'busy-rooms'), "$name no busy-rooms disclosure");
@@ -239,11 +291,15 @@ function bookingContracts(): int
                     $check($x->query('.//input|.//select|.//button|.//textarea|.//a', $panel->item(0))->length === 0, "$name unavailable rooms have no controls");
                     $check($x->query('.//*[contains(@class,"count")]', $panel->item(0))->item(0)->textContent == $rows->length, "$name unavailable count matches the rows");
                     foreach ($rows as $row) {
-                        foreach (['unavail__room', 'unavail__reason', 'unavail__time'] as $part) { $check($x->query('.//*[contains(@class,"'.$part.'")]', $row)->length === 1, "$name row has $part"); }
+                        foreach (['unavail__room', 'unavail__reason', 'unavail__time'] as $part) {
+                            $check($x->query('.//*[contains(@class,"'.$part.'")]', $row)->length === 1, "$name row has $part");
+                        }
                     }
                 }
             } else {
-                foreach (['date', 'from', 'to'] as $f) { $check($x->query('//select[@name="'.$f.'"]')->length === 1, "$name $f field"); }
+                foreach (['date', 'from', 'to'] as $f) {
+                    $check($x->query('//select[@name="'.$f.'"]')->length === 1, "$name $f field");
+                }
             }
         }
         if ($case[0] === 'show' && $case[1] === 'rep') {

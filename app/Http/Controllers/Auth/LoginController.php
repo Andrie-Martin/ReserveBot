@@ -8,10 +8,10 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -21,10 +21,15 @@ class LoginController extends Controller
     // (or, for an address that matches nothing, on its canonical form), and every reply looks the same for real and
     // made-up emails.
     public const MAX_FAILURES_PER_ACCOUNT_AND_IP = 5;   // same email from the same IP
+
     public const MAX_FAILURES_PER_IP = 20;              // one IP trying many emails
+
     public const DECAY_SECONDS = 60;
+
     private const LOCK_SECONDS = 10;        // longest one attempt may hold its account's turn
+
     private const LOCK_WAIT_SECONDS = 5;    // longest an attempt waits for its turn before being refused
+
     private const ADMISSION_WAIT_SECONDS = 3.0;   // longest an attempt waits for in-flight attempts from its IP to settle
 
     /**

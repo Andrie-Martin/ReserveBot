@@ -164,8 +164,8 @@ final class UiPolishPresentationTest extends TestCase
     public function test_requests_are_grouped_by_room_with_counts_and_unchanged_forms(): void
     {
         $view = $this->read('resources/views/requests/index.blade.php');
-        $this->assertStringContainsString("fn (\$r) => (bool) \$r->room_id", $view);
-        $this->assertStringContainsString("fn (\$r) => ! \$r->room_id", $view);
+        $this->assertStringContainsString('fn ($r) => (bool) $r->room_id', $view);
+        $this->assertStringContainsString('fn ($r) => ! $r->room_id', $view);
         $this->assertStringContainsString("\$tab['items']->count()", $view);
         $this->assertStringContainsString("route('bookings.approve', \$r)", $view);
         $this->assertStringContainsString("route('bookings.reject', \$r)", $view);

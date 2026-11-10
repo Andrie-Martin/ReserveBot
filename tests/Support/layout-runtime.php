@@ -1,12 +1,18 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Database\Connection;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+
 require_once __DIR__.'/foundations-runtime.php';
 require_once dirname(__DIR__, 2).'/vendor/autoload.php';
 
 /** Compiles the real Eloquent count query, but has no PDO or network connection. */
-class LayoutRecordingConnection extends Illuminate\Database\Connection
+class LayoutRecordingConnection extends Connection
 {
     public array $queries = [];
+
     public int $waiting = 0;
 
     public function select($query, $bindings = [], $useReadPdo = true, array $fetchUsing = [])
@@ -44,9 +50,9 @@ function layoutState(string $role = 'rep', array $options = []): array
     if (isset($options['note'])) {
         $session->put('connect_note', $options['note']);
     }
-    $request = Illuminate\Http\Request::create('http://reservebot.test/example');
+    $request = Request::create('http://reservebot.test/example');
     $request->setLaravelSession($session);
-    $route = new Illuminate\Routing\Route('GET', 'example', fn () => null);
+    $route = new Route('GET', 'example', fn () => null);
     $route->name($options['route'] ?? match ($role) {
         'rep' => 'rep.home', 'lab_staff' => 'staff.home', 'admin' => 'admin.home', default => 'login',
     });
@@ -54,7 +60,7 @@ function layoutState(string $role = 'rep', array $options = []): array
     $route->bind($request);
     app()->instance('request', $request);
     if ($role !== 'guest') {
-        $user = new App\Models\User([
+        $user = new User([
             'name' => $options['name'] ?? 'Example '.$role,
             'role' => $role, 'email' => 'example@example.invalid', 'department_id' => 73,
             'must_change_password' => $options['onboarding'] ?? false, 'photo_path' => $options['photo'] ?? null,
@@ -140,7 +146,7 @@ function layoutContracts(): int
             }
         }
         $html = layoutRender($role, ['connected' => false, 'note' => '<Sent & waiting>']);
-        $check(str_contains($html, '&lt;Sent &amp; waiting&gt;') && !str_contains($html, 'Send it again'), 'Flash replaces resend and is escaped');
+        $check(str_contains($html, '&lt;Sent &amp; waiting&gt;') && ! str_contains($html, 'Send it again'), 'Flash replaces resend and is escaped');
     }
     $activeCases = [
         ['rep', 'bookings.show', 'bookings.mine'], ['rep', 'book', 'book'], ['rep', 'rooms', 'rooms'],

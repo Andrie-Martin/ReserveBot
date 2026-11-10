@@ -1,5 +1,14 @@
 <?php
 
+use App\Models\ClassSchedule;
+use App\Models\Department;
+use App\Models\Section;
+use App\Models\User;
+use App\Services\ClassChecks;
+use App\Support\TimeSlots;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\ViewErrorBag;
+
 require_once __DIR__.'/layout-runtime.php';
 
 /** Signed class-check page fixtures (the page the email buttons open). Sample data only; nothing is answered or sent. */
@@ -29,35 +38,42 @@ function checkModel(string $role, string $state): array
 function checkRender(array $case): string
 {
     [$role, $state] = $case;
-    $now = Carbon\CarbonImmutable::parse('2026-11-04 11:30:00', 'Asia/Manila');
-    Carbon\Carbon::setTestNow($now); Carbon\CarbonImmutable::setTestNow($now);
+    $now = CarbonImmutable::parse('2026-11-04 11:30:00', 'Asia/Manila');
+    Carbon\Carbon::setTestNow($now);
+    CarbonImmutable::setTestNow($now);
     $long = $state === 'long';
     layoutState($role, ['route' => 'class-check', 'waiting' => 0]);
-    if ($role !== 'guest') { auth()->user()->setRelation('department', new App\Models\Department(['name' => 'Example Engineering'])); }
-    $errors = new Illuminate\Support\ViewErrorBag;
+    if ($role !== 'guest') {
+        auth()->user()->setRelation('department', new Department(['name' => 'Example Engineering']));
+    }
+    $errors = new ViewErrorBag;
     session()->put('_old_input', []);
-    if ($state === 'status') { session()->flash('status', 'Saved: CMPE 402 is face-to-face, so CEA300 stays yours.'); }
-    if ($state === 'problem') { session()->flash('problem', 'Someone booked CEA300 in the meantime, so it can’t be taken back.'); }
+    if ($state === 'status') {
+        session()->flash('status', 'Saved: CMPE 402 is face-to-face, so CEA300 stays yours.');
+    }
+    if ($state === 'problem') {
+        session()->flash('problem', 'Someone booked CEA300 in the meantime, so it can’t be taken back.');
+    }
     app('view')->share('errors', $errors);
 
     $room = (object) ['id' => 11, 'name' => $long ? str_repeat('LongRoomName', 6) : 'CEA300'];
     $course = (object) ['code' => $long ? str_repeat('CMPE4020', 5) : 'CMPE 402', 'title' => $long ? str_repeat('Project Management ', 6) : 'Project Management'];
-    $class = new App\Models\ClassSchedule(['entry_type' => 'Class']);
+    $class = new ClassSchedule(['entry_type' => 'Class']);
     $class->id = 21;
     $class->setRelation('course', $course);
     $class->setRelation('room', $room);
-    $class->setRelation('section', new App\Models\Section(['name' => $long ? str_repeat('BSCPE4', 8) : '4-1', 'program' => 'BSCPE']));
+    $class->setRelation('section', new Section(['name' => $long ? str_repeat('BSCPE4', 8) : '4-1', 'program' => 'BSCPE']));
     [$stateKey, $picked] = checkModel($role, $state);
     $ended = $state === 'ended';
     $isRep = $state !== 'stranger';
     $start = $now->startOfDay()->addHours($ended ? 8 : 13);
     $end = $start->addHours(2);
-    $rep = new App\Models\User(['name' => $long ? str_repeat('LongRepName', 6) : 'Ana Cruz', 'role' => 'rep']);
+    $rep = new User(['name' => $long ? str_repeat('LongRepName', 6) : 'Ana Cruz', 'role' => 'rep']);
 
     return view('classes.check', [
-        'class' => $class, 'name' => App\Services\ClassChecks::name($class), 'start' => $start,
-        'span' => App\Support\TimeSlots::span($start->hour * 60 + $start->minute, $end->hour * 60 + $end->minute),
-        'state' => $stateKey, 'label' => App\Services\ClassChecks::LABELS[$stateKey],
+        'class' => $class, 'name' => ClassChecks::name($class), 'start' => $start,
+        'span' => TimeSlots::span($start->hour * 60 + $start->minute, $end->hour * 60 + $end->minute),
+        'state' => $stateKey, 'label' => ClassChecks::LABELS[$stateKey],
         'picked' => $picked,
         'open' => ! $ended && $stateKey !== 'booked' && $isRep, 'isRep' => $isRep, 'rep' => $rep,
     ])->render();
@@ -66,13 +82,20 @@ function checkRender(array $case): string
 function checkContracts(): int
 {
     $count = 0;
-    $check = function ($ok, $message) use (&$count) { foundationsCheck((bool) $ok, $message); $count++; };
+    $check = function ($ok, $message) use (&$count) {
+        foundationsCheck((bool) $ok, $message);
+        $count++;
+    };
     foreach (checkCases() as $name => $case) {
         $html = checkRender($case);
         $x = foundationsDocument($html);
         $check($x->query('//main//h1')->length === 1, "$name one main heading");
         $ids = [];
-        foreach ($x->query('//*[@id]') as $node) { $id = $node->getAttribute('id'); $check(! isset($ids[$id]), "$name unique ID $id"); $ids[$id] = true; }
+        foreach ($x->query('//*[@id]') as $node) {
+            $id = $node->getAttribute('id');
+            $check(! isset($ids[$id]), "$name unique ID $id");
+            $ids[$id] = true;
+        }
         $forms = $x->query('//main//form');
         $open = $x->query('//button[@name="answer"]')->length;
         $check($forms->length === ($open ? 1 : 0), "$name answer form only while the class is open");
@@ -92,7 +115,9 @@ function checkContracts(): int
         $focusTargets = $x->query('//*[@autofocus]');
         $hasResult = in_array($case[1], ['status', 'problem'], true);
         $check($focusTargets->length === (int) $hasResult, "$name autofocus only on a result message (".$focusTargets->length.')');
-        foreach ($focusTargets as $target) { $check($target->getAttribute('id') === 'check-result' && $target->getAttribute('tabindex') === '-1', "$name the focused element is the result message"); }
+        foreach ($focusTargets as $target) {
+            $check($target->getAttribute('id') === 'check-result' && $target->getAttribute('tabindex') === '-1', "$name the focused element is the result message");
+        }
         // A state with no answer to give offers a way on (a real link), and a state with answers does not.
         $check($x->query('//a[contains(@class,"check-next")][@href]')->length === ($open ? 0 : 1), "$name way on only from a state with no answer to give");
         // The saved answer, not a leftover ?answer=, decides what is marked; the mark is text, not tint alone.

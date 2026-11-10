@@ -34,8 +34,8 @@ class LoginThrottleKeyTest extends TestCase
     {
         $plain = LoginController::accountKey('alice@example.com', '203.0.113.5');
         foreach (["ali\u{200B}ce@example.com", "ali\u{200C}\u{200D}ce@example.com", "al\u{2060}ice@example.com", "\u{FEFF}alice@example.com",
-                  "ali\u{200E}ce@example.com", "ali\u{0001}ce@example.com", "alice\u{0301}@example.com", "al ice@example.com", "ALICE@EXAMPLE.COM",
-                  "\u{FF41}lice@example.com", "al\u{00ED}ce@example.com"] as $spelling) {
+            "ali\u{200E}ce@example.com", "ali\u{0001}ce@example.com", "alice\u{0301}@example.com", 'al ice@example.com', 'ALICE@EXAMPLE.COM',
+            "\u{FF41}lice@example.com", "al\u{00ED}ce@example.com"] as $spelling) {
             $this->assertSame($plain, LoginController::accountKey($spelling, '203.0.113.5'), 'Spelling should share the canonical bucket: '.json_encode($spelling));
         }
         $this->assertNotSame($plain, LoginController::accountKey('alicf@example.com', '203.0.113.5'));
