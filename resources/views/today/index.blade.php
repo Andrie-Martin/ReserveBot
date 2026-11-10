@@ -89,8 +89,9 @@
       $waitingCount = collect($classes)->where('state', 'waiting')->count();
     @endphp
     <div class="rb-booking__panel class-list" id="classes">
-      <h2>Classes <span class="count">{{ $classes->count() }}</span>
-        <span class="muted">{{ $freedCount }} {{ $freedCount === 1 ? 'room' : 'rooms' }} freed · {{ $waitingCount }} not confirmed yet</span></h2>
+      <h2 class="class-list__head">Classes <span class="count">{{ $classes->count() }}</span>
+        <span class="class-list__badge">{{ $freedCount }} {{ $freedCount === 1 ? 'Room' : 'Rooms' }} Freed</span>
+        <span class="class-list__badge">{{ $waitingCount }} Not Confirmed Yet</span></h2>
       <table class="mtable class-table">
         <thead>
           <tr><th>Time</th><th>Room</th><th>Class</th><th>Face-to-face?</th><th><span class="sr-only">Mark</span></th></tr>

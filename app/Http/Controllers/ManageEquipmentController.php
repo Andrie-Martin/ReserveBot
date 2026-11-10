@@ -62,6 +62,10 @@ class ManageEquipmentController extends Controller
 
         $categoryCounts = EquipmentCategory::where('department_id', $user->department_id)->withCount('equipment')->get()->keyBy('id');
         $groups = $pager->getCollection()->groupBy('category_id')->map(fn ($rows, $id) => ['category' => $categoryCounts[$id] ?? $rows->first()->category, 'items' => $rows])->values();
+        // A category whose items started on the previous page is labelled "(continued)".
+        $continuedId = $page > 1
+            ? (clone $items)->offset(($page - 1) * self::PER_PAGE - 1)->limit(1)->value('equipment.category_id')
+            : null;
         $empty = $page === $lastPage
             ? $categoryCounts->filter(fn ($c) => $c->equipment_count === 0 && ($q === '' || mb_stripos($c->name, $q) !== false))->sortBy([['sort_order', 'asc'], ['name', 'asc']])->values()
             : collect();
@@ -70,6 +74,7 @@ class ManageEquipmentController extends Controller
             'groups' => $groups,
             'emptyCategories' => $empty,
             'pager' => $pager,
+            'continuedId' => $continuedId,
             'q' => $q,
             'categories' => $categoryCounts->sortBy([['sort_order', 'asc'], ['name', 'asc']])->values(),
         ]);

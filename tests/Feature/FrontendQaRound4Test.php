@@ -251,6 +251,8 @@ final class FrontendQaRound4Test extends TestCase
         $this->assertStringContainsString('Projector 03', $two);
         $this->assertStringContainsString('id="cat-title-'.$none->id.'"', $two);
         $this->assertStringContainsString('Video', $two, 'the category heading repeats where its items continue');
+        $this->assertSame(1, substr_count($two, '(continued)'), 'only the category continuing from page one is marked');
+        $this->assertStringNotContainsString('(continued)', $one);
         $this->assertStringContainsString('<span class="count">8</span>', $two, 'the badge is the category total, not the page');
         // Search keeps results server-side, in the pager links too.
         $found = $this->as($this->admin)->get('/manage/equipment?q=projector')->assertOk()->getContent();

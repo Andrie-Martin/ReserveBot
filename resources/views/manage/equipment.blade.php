@@ -108,6 +108,7 @@
       <div class="mcat-head">
         <h2 class="mcat-title" id="cat-title-{{ $category->id }}">
           <a class="mcat-name-link" href="#cat-rename-{{ $category->id }}" data-rb-rename="cat-rename-{{ $category->id }}" aria-describedby="cat-hint-{{ $category->id }}" title="Double-click to rename"><span class="mcat-name" data-eq-category>{{ $category->name }}</span><svg class="mcat-pencil" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M11.5 2.5l2 2-8 8-3 1 1-3 8-8z"/></svg></a>
+          @if ($continuedId === $category->id && $pageItems->isNotEmpty())<span class="mcat-continued muted">(continued)</span>@endif
           <span class="count">{{ $category->equipment_count }}</span>
         </h2>
         <span class="mcat-hint" aria-hidden="true"><span class="mcat-hint__fine">Double-click the name to rename</span><span class="mcat-hint__coarse">Tap the name to rename</span></span>
