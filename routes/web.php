@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\Route;
 // 'guest' = only for people who aren't logged in (others go to their home page)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
 
     // Phase 9: "Forgot password?" emails a link to pick a new one
     Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
@@ -33,6 +32,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:reset-password')->name('password.update');
 });
+// Not 'guest': a browser that is already logged in (the form was still open in another tab) is told so,
+// instead of the new login being dropped without a word. See LoginController::login.
+Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // Phase 9: the button in the "connect your email" email. 'signed' = only the exact link we sent,

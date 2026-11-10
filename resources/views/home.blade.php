@@ -20,6 +20,7 @@
       {{ $user->department->name }}@if ($user->section) · {{ $user->section->name }}@endif
     </p>
   </header>
+  @include('home._login-notice')
   <div class="rb-dashboard__banner">
     <p class="rb-dashboard__banner-kicker">Your workspace</p>
     <p class="rb-dashboard__banner-text">{{ $intro }}</p>

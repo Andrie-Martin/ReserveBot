@@ -78,6 +78,30 @@ equipment) and 4 (do not merge into `main` yet) needed no code change.
 - **Check it:** in Chrome or Edge with the password saved, type a wrong password and press Log in. The password box
   is empty and pressing Log in again shows "Please fill out this field".
 
+## Issue 10: two accounts logged in at the same time
+
+- **What the tester saw:** with two accounts being logged in at the same time, only one was "entertained".
+- **What is really happening:** a browser keeps **one** login per website, shared by all its tabs and windows. That
+  is how every website's login works, so two accounts can never be logged in inside the same browser at once.
+  When the login form was sent from a second tab, the site kept the first account and showed its home page without
+  saying anything, so the second login looked ignored.
+- **Two accounts at the same time already work** when each one has its own browser: a second browser (Chrome and
+  Edge, say), a private (incognito) window, or another device. Checked with three accounts (block rep, lab staff,
+  admin) logging in at the same moment and using the site together, five rounds, no failures.
+- **The fix (the project owner chose "keep the first account and show a message"):** the first account stays logged
+  in, and its home page now says, in a yellow box: "This browser is already logged in as Bea Prieto (Block rep), so
+  the other login was not used. To switch accounts, log out first. To use two accounts at the same time, open the
+  second one in a private window or in another browser."
+- **Safe by design:** nothing typed in that second form is checked, so the reply is the same for real and made-up
+  accounts, and it does not count towards the login lockout. Typing the email of the account that is already
+  logged in just opens its home page, with no message.
+- **Files:** `routes/web.php` (POST `/login` is no longer behind `guest`), `app/Http/Controllers/Auth/LoginController.php`
+  (`alreadyLoggedIn`), new `resources/views/home/_login-notice.blade.php`, shown by `home.blade.php` and
+  `home/_representative.blade.php`; tests in `tests/Feature/AlreadyLoggedInTest.php`.
+- **Check it:** open the login page in two tabs. Log in as rep1 in the first tab, then as staff in the second. The
+  second tab shows Bea's home page with the yellow message. Then open a private window and log in as staff there:
+  both accounts now work side by side.
+
 ## Issue 11: The password reset link lasts 20 minutes
 
 - **Before:** the link emailed by "Forgot your password?" worked for 60 minutes.

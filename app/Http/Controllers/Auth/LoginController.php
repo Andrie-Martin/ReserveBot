@@ -70,6 +70,12 @@ class LoginController extends Controller
         $email = Str::lower(trim((string) $request->input('email')));
         $password = (string) $request->input('password');
 
+        // A browser keeps one login, shared by all its tabs. If this one is already logged in, that account stays
+        // and nothing typed here is checked or counted; the person is told why (sandbox issue 10).
+        if ($current = $request->user()) {
+            return $this->alreadyLoggedIn($current, $email);
+        }
+
         // Resolve the account with the same comparison Auth::attempt uses (the database collation), so that
         // spellings the database treats as one address cannot be spread over several counters.
         $accountId = $email === '' ? null : User::query()->where('email', $email)->value('id');
@@ -129,6 +135,24 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         return redirect($request->user()->homeUrl());
+    }
+
+    /**
+     * The login form was sent from a browser that is already logged in (it was open in another tab or window).
+     * The first account stays logged in. Typing that same account's email just goes to its home page; any other
+     * email gets a message saying why it wasn't used and how to use two accounts at once. The typed email and
+     * password are never checked here, so the reply is the same for real and made-up accounts.
+     */
+    private function alreadyLoggedIn(User $current, string $typedEmail): RedirectResponse
+    {
+        $home = redirect($current->homeUrl());
+        if ($typedEmail === '' || $typedEmail === Str::lower($current->email)) {
+            return $home;
+        }
+
+        // Shown at the top of the home page (resources/views/home/_login-notice.blade.php)
+        return $home->with('login_notice', 'This browser is already logged in as '.$current->name.' ('.$current->roleLabel().'), so the other login was not used. '
+            .'To switch accounts, log out first. To use two accounts at the same time, open the second one in a private window or in another browser.');
     }
 
     private function tooManyAttempts(Request $request, string $email, string $accountKey, string $ipKey): RedirectResponse
