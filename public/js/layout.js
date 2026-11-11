@@ -90,3 +90,10 @@
   }).observe(navigation);
   sync();
 })();
+
+// Header logo expressions (css/brand-logo.css) pause while the tab is hidden. CSS does the animating; this only flags visibility.
+(() => {
+  const flag = () => document.documentElement.toggleAttribute('data-rb-hidden', document.hidden);
+  document.addEventListener('visibilitychange', flag);
+  flag();
+})();

@@ -1,5 +1,5 @@
 <header class="rb-header rb-ui">
-  <x-ui.brand :href="url('/')" />
+  <x-ui.brand :href="url('/')" :animated="(bool) $workspace" />
   @if ($workspace)
     {{-- Desktop topbar only (CSS hides it in the mobile layout); the page title comes from the view's own section. --}}
     @hasSection('title')

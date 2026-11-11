@@ -14,6 +14,7 @@ const sites = {
   rep: { role: 'rep', pages: { '/': 'rep.home', '/rooms': 'rooms', '/book': 'book', '/my-bookings': 'bookings.mine', '/my-bookings/9': 'bookings.show', '/account': 'account' } },
   staff: { role: 'lab_staff', pages: { ...shared, '/': 'staff.home' } },
   admin: { role: 'admin', pages: { ...shared, '/': 'admin.home', '/accounts': 'accounts.index' } },
+  guest: { role: 'guest', pages: { '/login': 'login' } },
   college: { role: 'college_admin', pages: { '/college': 'college.home', '/account': 'account' } },
 };
 const cache = new Map();

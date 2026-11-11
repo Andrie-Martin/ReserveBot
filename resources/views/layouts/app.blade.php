@@ -5,6 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title') · ReserveBot</title>
+  <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ asset('favicon-32.png') }}" type="image/png" sizes="32x32">
+  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
   {{-- Start the above-the-fold Inter weights with the document, not after the CSS is parsed, so text does not swap late. --}}
   @foreach (['Regular', 'Medium', 'SemiBold', 'Bold'] as $weight)
     <link rel="preload" href="{{ asset('fonts/inter/Inter-'.$weight.'.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -16,6 +20,7 @@
   <link rel="stylesheet" href="{{ asset('css/foundations/components.css') }}?v={{ filemtime(public_path('css/foundations/components.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/layout.css') }}?v={{ filemtime(public_path('css/layout.css')) }}">
   <link rel="stylesheet" href="{{ asset('css/mascot.css') }}?v={{ filemtime(public_path('css/mascot.css')) }}">
+  <link rel="stylesheet" href="{{ asset('css/brand-logo.css') }}?v={{ filemtime(public_path('css/brand-logo.css')) }}">
   @stack('styles')
   <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}" defer></script>
   <script src="{{ asset('js/ui.js') }}?v={{ filemtime(public_path('js/ui.js')) }}" defer></script>
