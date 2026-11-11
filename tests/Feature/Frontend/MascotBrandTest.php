@@ -86,7 +86,6 @@ final class MascotBrandTest extends TestCase
         $this->assertStringNotContainsString('font-display: swap', $fonts);
     }
 
-
     public function test_the_mascot_component_is_decorative_inert_and_has_no_text_or_controls(): void
     {
         $svg = $this->read('resources/views/components/ui/mascot.blade.php');
@@ -102,7 +101,6 @@ final class MascotBrandTest extends TestCase
         $this->assertLessThan(10 * 1024, strlen($svg), 'a small asset');
         $this->assertFileExists(dirname(__DIR__, 3).'/docs/frontend/ReserveBot-Mascot.jpg', 'the design reference lives beside the docs');
     }
-
 
     public function test_every_pose_has_a_prop_and_a_stylesheet_rule_and_the_geometry_is_shared(): void
     {
@@ -158,7 +156,6 @@ final class MascotBrandTest extends TestCase
         $this->assertStringNotContainsString('box-shadow', $css);
     }
 
-
     public function test_pose_mapping_lives_in_the_shared_navigation_and_covers_every_icon_with_a_fallback(): void
     {
         $nav = $this->read('resources/views/layouts/partials/navigation.blade.php');
@@ -198,7 +195,6 @@ final class MascotBrandTest extends TestCase
         }
     }
 
-
     public function test_mascot_footer_rules_hide_it_instead_of_squeezing_the_navigation(): void
     {
         $css = $this->read('public/css/mascot.css');
@@ -223,7 +219,6 @@ final class MascotBrandTest extends TestCase
         $this->assertStringNotContainsString('max-height', $css);
     }
 
-
     public function test_mascot_script_previews_links_and_returns_to_the_page_pose_with_no_side_effects(): void
     {
         $js = $this->read('public/js/mascot.js');
@@ -240,7 +235,7 @@ final class MascotBrandTest extends TestCase
         $this->assertStringContainsString(':focus-visible', $js, 'only keyboard focus counts, not a mouse click');
         $this->assertStringContainsString("pointerType === 'touch'", $js);
         $this->assertStringContainsString('event.movementX || event.movementY', $js, 'a parked pointer after a page load must not preview another link');
-        $this->assertStringContainsString("pagePose = mascot.dataset.pose", $js, 'starts from the server-rendered page pose');
+        $this->assertStringContainsString('pagePose = mascot.dataset.pose', $js, 'starts from the server-rendered page pose');
         $this->assertStringContainsString('mascot.dataset.pose === pose', $js, 'no DOM write when nothing changes');
         $this->assertStringContainsString("mascot.dataset.ready = ''", $js);
         $this->assertStringNotContainsString('requestAnimationFrame', $js, 'nothing is armed on arrival: the wave only plays on a preview');

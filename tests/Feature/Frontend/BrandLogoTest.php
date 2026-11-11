@@ -44,7 +44,7 @@ final class BrandLogoTest extends TestCase
         $this->assertStringContainsString('.rbh-x { opacity: 0; }', $css, 'overlays hidden by default: first paint is the normal smile');
         $this->assertStringContainsString('(max-width: 79.999rem) and (prefers-reduced-motion: no-preference), (max-height: 39.499rem) and (prefers-reduced-motion: no-preference)', $css);
         $this->assertStringContainsString('.rb-shell--workspace .rbh[data-rb-head-expressive]', $css, 'never on guest/login');
-        $this->assertSame(0, preg_match('/^(?!\s*\/\*).*(?<![-\w])(transform|width|height|margin|padding)\s*:/m', preg_replace(['/\/\*.*?\*\//s', '/\.rbh-x\s*\{[^}]*\}/'], '', $css)) , 'the loop touches no geometry');
+        $this->assertSame(0, preg_match('/^(?!\s*\/\*).*(?<![-\w])(transform|width|height|margin|padding)\s*:/m', preg_replace(['/\/\*.*?\*\//s', '/\.rbh-x\s*\{[^}]*\}/'], '', $css)), 'the loop touches no geometry');
         $this->assertStringNotContainsString('infinite', preg_replace('/@media.*?\n\}\n/s', '', $css), 'no animation outside the gated block');
         $sidebar = $this->read('public/css/mascot.css');
         $this->assertStringContainsString('@media (min-width: 80rem) and (min-height: 39.5rem)', $sidebar, 'the complement this loop relies on');
@@ -57,7 +57,7 @@ final class BrandLogoTest extends TestCase
             $this->assertFileExists(dirname(__DIR__, 3).'/public/'.$file);
         }
         $layout = $this->read('resources/views/layouts/app.blade.php');
-        foreach (["asset('favicon.svg')", "asset('favicon-32.png')", "asset('favicon.ico')", "asset('apple-touch-icon.png')", "css/brand-logo.css"] as $needle) {
+        foreach (["asset('favicon.svg')", "asset('favicon-32.png')", "asset('favicon.ico')", "asset('apple-touch-icon.png')", 'css/brand-logo.css'] as $needle) {
             $this->assertStringContainsString($needle, $layout);
         }
         $svg = $this->read('public/favicon.svg');
