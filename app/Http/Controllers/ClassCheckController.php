@@ -77,7 +77,8 @@ class ClassCheckController extends Controller
         $staff = $request->user();
         abort_unless($class->department_id === $staff->department_id, 404);
 
-        return $this->save($request, $class, $date, $staff, 'staff');
+        // Back to the class list on Today (same page of it), where the result is shown, not the top of the page
+        return $this->save($request, $class, $date, $staff, 'staff')->withFragment('classes')->with('class_marked', true);
     }
 
     private function save(Request $request, ClassSchedule $class, string $date, User $by, string $via): RedirectResponse

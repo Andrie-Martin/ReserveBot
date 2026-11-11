@@ -314,3 +314,17 @@ suite, a walk through every page as each of the four roles (desktop and phone), 
   on the booking form, open days on the booking rules) are not affected.
 - **Files:** new `app/Http/Middleware/SingleValueInputs.php`, switched on for all pages in `bootstrap/app.php`;
   tests in `tests/Feature/OddAddressesTest.php`.
+
+## Marking a class on Today returns to the class list
+
+- **Before:** pressing "Face-to-face" or "Online" for a class on Today reloaded the page at the top, so on page 2 or 3
+  of the class list the person had to scroll back down to find it.
+- **Now:** the page comes back to the class list, on the same page of it, and the green result message is shown
+  inside the list.
+- **Files:** `app/Http/Controllers/ClassCheckController.php` (`asStaff`), `resources/views/today/index.blade.php`;
+  test in `tests/Feature/TodayClassMarkTest.php`.
+
+## Wording: "Reps" is now "Block accounts"
+
+- The booking rules label ("Block accounts can cancel until"), the hint under Today's class list, and the expired
+  class-link message said "Reps". They now say "Block accounts", like the rest of the site.

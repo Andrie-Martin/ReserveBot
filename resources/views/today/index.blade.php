@@ -30,10 +30,11 @@
     </div>
   </div>
 
-  @if (session('status'))
+  {{-- After marking a class the result is shown in the class list (below), where the page returns to. --}}
+  @if (session('status') && ! session('class_marked'))
     <p class="success" role="status">{{ session('status') }}</p>
   @endif
-  @if (session('problem'))
+  @if (session('problem') && ! session('class_marked'))
     <p class="error" role="alert">{{ session('problem') }}</p>
   @endif
 
@@ -92,6 +93,11 @@
       <h2 class="class-list__head">Classes <span class="count">{{ $classes->count() }}</span>
         <span class="class-list__badge">{{ $freedCount }} {{ $freedCount === 1 ? 'Room' : 'Rooms' }} Freed</span>
         <span class="class-list__badge">{{ $waitingCount }} Not Confirmed Yet</span></h2>
+      @if (session('class_marked') && session('status'))
+        <p class="success" role="status">{{ session('status') }}</p>
+      @elseif (session('class_marked') && session('problem'))
+        <p class="error" role="alert">{{ session('problem') }}</p>
+      @endif
       <table class="mtable class-table">
         <thead>
           <tr><th>Time</th><th>Room</th><th>Class</th><th>Face-to-face?</th><th><span class="sr-only">Mark</span></th></tr>
@@ -115,7 +121,7 @@
         </tbody>
       </table>
       <x-ui.pager :paginator="$classPager" noun="classes" />
-      <p class="hint">Reps get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
+      <p class="hint">Block accounts get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
     </div>
   @endif
 
