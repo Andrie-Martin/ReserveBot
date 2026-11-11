@@ -290,3 +290,27 @@ them, and a new department's Admin should be asked to add its data. Done in thre
   `app/Notifications/ResetPasswordLink.php`; tests in `tests/Feature/ResetLinkLifetimeTest.php` and `AuthWorkflowTest`.
 - **Check it:** on the login page click "Forgot your password?", send a link, and read the message: "It works for
   20 minutes." Open the link after more than 20 minutes: "This link has expired or was already used…".
+
+# After the merge: checks on `dev` (November 11)
+
+`dev` was checked again after the sandbox and three frontend pull requests (#34 to #36) were merged: the whole test
+suite, a walk through every page as each of the four roles (desktop and phone), and hand-edited addresses.
+
+## A booking number that doesn't exist showed "Server error" to lab staff and Admins
+
+- **Before:** opening `/bookings/99999` (a number with no booking) as lab staff or Admin showed a 500 "Server error"
+  page. A block account correctly got "Not found".
+- **Cause:** the side menu (added in pull request #35) reads the open booking's status to decide whether "Today" or
+  "Requests" is highlighted. On the "Not found" page there is no booking, only the number from the address.
+- **Now:** "Not found" (404) for everyone.
+- **Files:** `resources/views/layouts/app.blade.php`; test in `tests/Feature/OddAddressesTest.php`.
+
+## A field sent as a list ended in "Server error"
+
+- **Before:** an address edited by hand so a field arrives as a list, such as `/today?date[]=1`, `/rooms?date[]=x` or
+  `/manage/equipment?q[]=x`, showed a 500 "Server error" page. Nothing was damaged, but each one wrote an error to the log.
+- **Now:** a field sent as a list where one value is expected is treated as not sent. The page opens with its default,
+  and a form answers with its usual "required" message. The two fields that really are lists (equipment quantities
+  on the booking form, open days on the booking rules) are not affected.
+- **Files:** new `app/Http/Middleware/SingleValueInputs.php`, switched on for all pages in `bootstrap/app.php`;
+  tests in `tests/Feature/OddAddressesTest.php`.

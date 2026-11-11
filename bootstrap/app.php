@@ -3,6 +3,7 @@
 use App\Http\Middleware\AccountChecks;
 use App\Http\Middleware\RequireConnectedEmail;
 use App\Http\Middleware\RequireRole;
+use App\Http\Middleware\SingleValueInputs;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'account' => AccountChecks::class,
             'email.connected' => RequireConnectedEmail::class,
         ]);
+
+        // A field sent as a list where one value is expected (?date[]=1) is treated as not sent, not a server error
+        $middleware->web(prepend: [SingleValueInputs::class]);
 
         // A logged-in user who opens /login goes to their own home page
         $middleware->redirectUsersTo(fn (Request $request) => $request->user()->homeUrl());
