@@ -52,8 +52,10 @@
           // known origins are honoured from ?from=; otherwise a waiting request belongs to Requests and anything else to Today.
           $onBooking = request()->routeIs('bookings.show');
           $bookingFrom = request()->query('from');
+          // On an error page (booking not found) the route still holds the number from the address, not a booking.
+          $openBooking = request()->route('reservation');
           $bookingSection = $onBooking
-              ? (in_array($bookingFrom, ['requests', 'today'], true) ? $bookingFrom : (request()->route('reservation')?->status === 'Pending' ? 'requests' : 'today'))
+              ? (in_array($bookingFrom, ['requests', 'today'], true) ? $bookingFrom : ($openBooking instanceof Reservation && $openBooking->status === 'Pending' ? 'requests' : 'today'))
               : null;
           // One department-scoped query; the same links serve desktop and mobile.
           $waitingCount = Reservation::waitingCountFor($me);
