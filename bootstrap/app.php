@@ -44,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(fn (InvalidSignatureException $e, Request $request) => response()->view('auth.email_link', [
             'ok' => false,
             'message' => $request->is('class-check/*')
-                ? 'This link has expired (it works until the class ends) or isn’t complete. Reps can also answer on their home page.'
+                ? 'This link has expired (it works until the class ends) or isn’t complete. Block accounts can also answer on their home page.'
                 : 'This link has expired or isn’t complete. Log in and send a new one from My account.',
         ], 403));
     })->create();

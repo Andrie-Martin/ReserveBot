@@ -100,7 +100,7 @@
           <input id="notice" name="min_notice_minutes" type="number" min="0" max="2880" required {!! $rulesInvalid('min_notice_minutes') !!} value="{{ $value('min_notice_minutes', $config->min_notice_minutes) }}">
         </div>
         <div>
-          <label for="cancel" class="field-label">Reps can cancel until <span class="optional">(minutes before it starts)</span></label>
+          <label for="cancel" class="field-label">Block accounts can cancel until <span class="optional">(minutes before it starts)</span></label>
           <input id="cancel" name="cancel_cutoff_minutes" type="number" min="0" max="2880" required {!! $rulesInvalid('cancel_cutoff_minutes') !!} value="{{ $value('cancel_cutoff_minutes', $config->cancel_cutoff_minutes) }}">
         </div>
         <div>
