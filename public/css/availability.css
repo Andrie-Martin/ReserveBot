@@ -372,3 +372,4 @@ button.rb-availability__off:hover { background: var(--rb-neutral-bg); color: var
 .rb-availability__pick > .rb-availability__cell { height: 100%; box-sizing: border-box; border-radius: inherit; }
 .rb-availability__calendar td.rb-availability__pick:hover:not(.rb-availability__selected) { background: var(--rb-surface-active); }
 .rb-availability__pick > .rb-availability__cell:focus-visible { outline: 2px solid var(--rb-color-maroon); outline-offset: -2px; }
+.rb-availability__hidden-note { margin-top: var(--rb-space-2); }

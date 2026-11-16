@@ -42,13 +42,24 @@
         </div></div>
       </div>
     @endif
+    @php
+      // While searching, only the rooms free for that whole time are listed (QA FREE-05); Clear shows them all again.
+      $shownRooms = $search ? $roomList->filter(fn ($row) => $row['match'] === true) : $roomList;
+      $notFreeCount = $roomList->count() - $shownRooms->count();
+    @endphp
     <ul class="rb-availability__roomlist">
-      @forelse ($roomList as $row)
+      @forelse ($shownRooms as $row)
         @include('rooms._room')
       @empty
-        <li><p class="rb-availability__empty">No rooms listed for this department.</p></li>
+        <li><p class="rb-availability__empty">{{ $search ? 'No room is free for that whole time.' : 'No rooms listed for this department.' }}</p></li>
       @endforelse
     </ul>
     </div>
     </div>
+    @if ($search && $notFreeCount > 0)
+      <p class="rb-availability__muted rb-availability__small rb-availability__hidden-note">
+        {{ $notFreeCount }} other {{ $notFreeCount === 1 ? 'room isn’t' : 'rooms aren’t' }} free for that whole time.
+        <a href="{{ route('rooms', ['date' => $date->toDateString()]) }}#day">Clear the search</a> to see every room.
+      </p>
+    @endif
 </section>
