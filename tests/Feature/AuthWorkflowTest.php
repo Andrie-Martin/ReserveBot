@@ -754,7 +754,7 @@ final class AuthWorkflowTest extends TestCase
         $path = $user->fresh()->photo_path;
         Storage::disk('local')->assertExists($path);
         $url = $user->fresh()->photoUrl();
-        $this->get($url)->assertOk()->assertHeader('Cache-Control', 'max-age=604800, private');
+        $this->get($url)->assertOk()->assertHeader('Cache-Control', 'no-store, private');
         $this->post('/account/photo', ['photo' => UploadedFile::fake()->image('replacement.png', 200, 200)])->assertRedirect('/account');
         Storage::disk('local')->assertMissing($path);
         $this->assertNotSame($url, $user->fresh()->photoUrl());

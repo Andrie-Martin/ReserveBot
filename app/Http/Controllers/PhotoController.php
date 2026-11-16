@@ -23,10 +23,11 @@ class PhotoController extends Controller
             || ($viewer->isCollegeAdmin() && $user->role === 'admin');
         abort_unless($allowed && $user->photo_path && Storage::disk(Photos::DISK)->exists($user->photo_path), 404);
 
-        // Browsers may keep it a week (its address changes whenever the photo does), but shared caches may not
+        // Not kept by the browser at all: a kept copy would still show after logging out, or to the next account
+        // that logs in on the same browser, without asking the site who may see it (QA ACC-13).
         $response = response()->file(Storage::disk(Photos::DISK)->path($user->photo_path));
         $response->setPrivate();
-        $response->setMaxAge(604800);
+        $response->headers->addCacheControlDirective('no-store');
 
         return $response;
     }
