@@ -27,6 +27,17 @@ class AccountRulesTest extends TestCase
         $this->assertFalse(AccountRules::isRepEmail('@gmail.com'));
     }
 
+    public function test_test_addresses_are_recognised(): void
+    {
+        $this->assertTrue(AccountRules::isTestEmail('rep1@reservebot.test'));
+        $this->assertTrue(AccountRules::isTestEmail(' Rep1@ReserveBot.test '));
+
+        $this->assertFalse(AccountRules::isTestEmail('rep1@notreservebot.test'));
+        $this->assertFalse(AccountRules::isTestEmail('rep1@reservebot.test.evil.com'));
+        $this->assertFalse(AccountRules::isTestEmail('@reservebot.test'));
+        $this->assertFalse(AccountRules::isTestEmail('reservebot.test'));
+    }
+
     public function test_school_ids_are_tidied_up(): void
     {
         $this->assertSame('2021-00123-MN-0', AccountRules::schoolId('2021-00123-MN-0'));

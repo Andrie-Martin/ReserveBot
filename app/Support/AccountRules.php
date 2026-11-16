@@ -12,6 +12,18 @@ final class AccountRules
     /** A block account's email must be Gmail or PUP webmail */
     public const REP_EMAIL_DOMAINS = ['gmail.com', 'iskolarngbayan.pup.edu.ph'];
 
+    /** The made-up domain of the test accounts (rep1@reservebot.test, …): it can't receive emails */
+    public const TEST_EMAIL_DOMAIN = 'reservebot.test';
+
+    /** Is this a test account's address (…@reservebot.test)? */
+    public static function isTestEmail(string $email): bool
+    {
+        $email = self::email($email);
+        $at = strrpos($email, '@');
+
+        return $at !== false && $at > 0 && substr($email, $at + 1) === self::TEST_EMAIL_DOMAIN;
+    }
+
     /** A PUP ID number (student number), e.g. 2021-00123-MN-0. Asked for the borrower on equipment bookings. */
     public const SCHOOL_ID_PATTERN = '/^\d{4}-\d{5}-[A-Z]{2}-\d$/';
 

@@ -51,13 +51,16 @@ final class AccountFields
 
     /**
      * An account's email. A block account's must be Gmail or PUP webmail; $keep is its current
-     * email, which stays allowed (accounts made before this rule, like the test accounts).
+     * email, which stays allowed (accounts made before this rule, like the test accounts). Outside production a
+     * test address (…@reservebot.test) is allowed too, so a tester can put a test account's email back (QA ACC-09).
      */
     public static function email(string $role, ?int $ignoreId = null, ?string $keep = null): array
     {
         return ['bail', 'required', 'string', 'max:150', 'email:rfc', Rule::unique('users', 'email')->ignore($ignoreId),
             function (string $attribute, mixed $value, Closure $fail) use ($role, $keep) {
-                if ($role === 'rep' && $value !== $keep && ! AccountRules::isRepEmail((string) $value)) {
+                $allowed = AccountRules::isRepEmail((string) $value)
+                    || (! app()->isProduction() && AccountRules::isTestEmail((string) $value));
+                if ($role === 'rep' && $value !== $keep && ! $allowed) {
                     $fail('A block account’s email must be Gmail (…@gmail.com) or PUP webmail (…@iskolarngbayan.pup.edu.ph).');
                 }
             }];
