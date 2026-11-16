@@ -35,10 +35,18 @@ class BookingController extends Controller
 
     public function __construct(private Bookings $bookings) {}
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         [$user, $rules] = $this->context($request);
         $for = $this->forOf($request, $user);
+
+        // The address keeps only what counts for the choice. A class booking's day and times come from the class,
+        // so a date= or from= in its address looked editable but changed nothing (QA BOOK-05); "Something else"
+        // ignores a class. Those are dropped, so what's in the address is what's used.
+        $ignored = $for === 'class' ? ['date', 'from', 'to'] : ['session'];
+        if ($request->hasAny($ignored)) {
+            return redirect()->route('book', $request->except($ignored));
+        }
         [$when, $whenError] = $this->when($request, $for, $user, $rules);
         if ($request->boolean('change')) {
             $when = null;          // "Change" goes back to step 1 with the same choices

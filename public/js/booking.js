@@ -1,3 +1,17 @@
+/* Book (step 1): send only the fields of the choice picked ("One of my classes" or "Something else"), so the
+   address shows only what is used. Without this file the server drops the other fields itself. */
+(() => {
+  'use strict';
+  const form = document.querySelector('form.step1');
+  if (!form) return;
+  form.addEventListener('submit', () => {
+    const forClass = form.querySelector('input[name=for][value=class]')?.checked;
+    form.querySelectorAll(forClass ? '.when-other select' : '.when-class select').forEach(field => { field.disabled = true; });
+  });
+  // Coming back with the browser's Back button must not leave them switched off
+  window.addEventListener('pageshow', () => form.querySelectorAll('select:disabled').forEach(field => { field.disabled = false; }));
+})();
+
 /* Book (step 2) progressive enhancement: quantity steppers, equipment search and a live "selected equipment" summary.
    The form works without this file: each item is a plain number input named qty[id], limited by min/max. */
 (() => {
