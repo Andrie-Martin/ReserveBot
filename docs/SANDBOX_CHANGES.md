@@ -328,3 +328,46 @@ suite, a walk through every page as each of the four roles (desktop and phone), 
 
 - The booking rules label ("Block accounts can cancel until"), the hint under Today's class list, and the expired
   class-link message said "Reps". They now say "Block accounts", like the rest of the site.
+
+# QA round of November 14: the four failed tests
+
+## ACC-09: a block account couldn't put its test email back
+
+- **Before:** after changing Bea's email to a Gmail address, changing it back to `rep1@reservebot.test` was refused
+  ("must be Gmail or PUP webmail"), so the QA step couldn't be done.
+- **Now:** outside production (`APP_ENV` other than `production`), a test address `…@reservebot.test` is allowed too.
+  On the real site the rule is unchanged: Gmail or PUP webmail only. It still has to be connected again.
+- **Files:** `app/Support/AccountRules.php` (`isTestEmail`), `app/Support/AccountFields.php`.
+
+## ACC-13: a photo still showed after logging out, or to another account
+
+- **Before:** the photo was sent with "keep it for a week" (`max-age=604800`). The site refused other people
+  correctly, but the browser showed its kept copy without asking, after logging out or to the next account on the
+  same browser.
+- **Now:** photos are sent with `Cache-Control: no-store, private`, so every view asks the site, which answers
+  "Not found" or the login page to anyone who may not see it.
+- **Files:** `app/Http/Controllers/PhotoController.php`.
+
+## FREE-05: a time search still listed every room
+
+- **Now:** while searching "free from … to …", only the rooms free for that whole time are listed, with a line saying
+  how many others aren't free then and a link to clear the search. Clear lists every room again.
+- **Files:** `resources/views/rooms/_results.blade.php`, `public/css/availability.css`.
+
+## BOOK-05: changing the date in a class booking's address did nothing
+
+- **Cause:** the tester's address was for "One of my classes", whose day and times come from the class. The form
+  still sent the day and times of "Something else", so the address showed a `date=` that was never used.
+- **Now:** step 1 sends only the fields of the choice picked (`public/js/booking.js`), and the site drops the others
+  from the address (`BookingController::create`). The checks of "Something else" (Sunday, too far ahead, a time not
+  on the list) were already working and are unchanged.
+
+Tests for all four: `tests/Feature/QaRoundFiveFixesTest.php`, plus `tests/Unit/AccountRulesTest.php`.
+
+# Phone layout suggestions (November 16)
+
+- **Free rooms and Today:** on phones, "Previous day" and "Next day" show as small ‹ and › buttons. Screen readers
+  still hear "Previous day" and "Next day".
+- **Requests:** on phones, Approve, Reject and Details stay on one row; Details is an ⓘ button.
+- **Today's classes:** on phones, each class is a spaced card with the same layout (time and room, then class and
+  status, then the buttons), and the list scrolls inside its own box.
