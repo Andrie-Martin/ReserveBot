@@ -83,7 +83,7 @@
             <button type="submit" class="btn-approve">Approve<span class="sr-only"> booking #{{ $r->id }}</span></button>
           </form>
           <a class="btn-reject" href="#reject-{{ $r->id }}" data-rb-reveal="reject-{{ $r->id }}">Reject<span class="sr-only"> booking #{{ $r->id }}</span></a>
-          <a class="btn-ghost req-link" href="{{ route('bookings.show', [$r, 'from' => 'requests']) }}">Details<span class="sr-only"> for booking #{{ $r->id }}</span></a>
+          <a class="btn-ghost req-link" href="{{ route('bookings.show', [$r, 'from' => 'requests']) }}" title="Details"><svg class="req-link-icon" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><circle cx="10" cy="6.25" r="1.1" fill="currentColor"/></svg><span class="req-link-word">Details</span><span class="sr-only"> for booking #{{ $r->id }}</span></a>
         </div>
         {{-- Full width beneath the booking: opens in place (script) or by #fragment (no script); a refused reason keeps it open. --}}
         <form method="post" action="{{ route('bookings.reject', $r) }}" id="reject-{{ $r->id }}" @class(['req-reject', 'rb-reveal', 'is-open' => $bag->any()])>

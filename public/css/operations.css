@@ -159,3 +159,13 @@
   .rb-ops .req-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 6rem), 1fr)); }
   .rb-ops .req-actions :is(.btn-approve, .btn-reject, .btn-ghost) { width: 100%; }
 }
+
+/* Requests on phones: Approve, Reject and Details stay on one row; Details shrinks to an ⓘ button (its name stays "Details" for screen readers) */
+.rb-ops .req-link-icon { display: none; }
+@media (max-width: 40rem) {
+  .rb-ops .req-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .rb-ops .req-actions a.req-link { width: 44px; min-width: 44px; min-height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .rb-ops .req-link-icon { display: block; }
+  .rb-ops .req-link-word { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
+
