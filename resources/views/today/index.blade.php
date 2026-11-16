@@ -98,6 +98,8 @@
       @elseif (session('class_marked') && session('problem'))
         <p class="error" role="alert">{{ session('problem') }}</p>
       @endif
+      {{-- On phones the list scrolls inside its own box (the page links stay under it) --}}
+      <div class="class-scroll" role="region" aria-label="Classes on {{ $date->format('l, F j') }}" tabindex="0">
       <table class="mtable class-table">
         <thead>
           <tr><th>Time</th><th>Room</th><th>Class</th><th>Face-to-face?</th><th><span class="sr-only">Mark</span></th></tr>
@@ -120,6 +122,7 @@
           @endforeach
         </tbody>
       </table>
+      </div>
       <x-ui.pager :paginator="$classPager" noun="classes" />
       <p class="hint">Block accounts get asked by email a day before. <strong>Online</strong>, or no answer by the 5-hour email, frees the room: it shows as free on Free rooms and can be booked. Mark a class here if the instructor tells you.</p>
     </div>
