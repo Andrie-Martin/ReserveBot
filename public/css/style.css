@@ -868,3 +868,10 @@ button.btn-replace:disabled { background: #C4B5FD; cursor: not-allowed; }
 }
 .tt-add { margin: 0 0 12px; }
 .tt-text { margin: 0 0 10px; font-size: 14.5px; }
+
+/* Previous day / Next day: on phones only the arrows show (‹ ›), as small square buttons; the words stay for screen readers */
+.rb-daynav-step { display: inline-flex; align-items: center; gap: .35em; }
+@media (max-width: 40rem) {
+  .rb-daynav-word { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .rb-daynav-step, .daynav .btn-ghost.rb-daynav-step { flex: 0 0 auto; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding-inline: 0; font-size: 20px; line-height: 1; }
+}

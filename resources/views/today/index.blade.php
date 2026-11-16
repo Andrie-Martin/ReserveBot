@@ -19,13 +19,13 @@
     </div>
     <div class="daynav">
       @if ($prevUrl)
-        <a class="btn-ghost" href="{{ $prevUrl }}">‹ Previous day</a>
+        <a class="btn-ghost rb-daynav-step" href="{{ $prevUrl }}" aria-label="Previous day"><span aria-hidden="true">‹</span><span class="rb-daynav-word"> Previous day</span></a>
       @endif
       @unless ($date->isToday())
         <a class="btn-ghost" href="{{ route('today') }}">Today</a>
       @endunless
       @if ($nextUrl)
-        <a class="btn-ghost" href="{{ $nextUrl }}">Next day ›</a>
+        <a class="btn-ghost rb-daynav-step" href="{{ $nextUrl }}" aria-label="Next day"><span class="rb-daynav-word">Next day </span><span aria-hidden="true">›</span></a>
       @endif
     </div>
   </div>

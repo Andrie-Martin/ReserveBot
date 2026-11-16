@@ -8,14 +8,14 @@
     <div class="rb-availability__daynav">
       <x-ui.link-button href="#calendar-and-agenda">Calendar and agenda</x-ui.link-button>
       @if ($prevUrl)
-        <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$prevUrl">‹ Previous day</x-ui.link-button>
+        <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost rb-daynav-step" :href="$prevUrl" aria-label="Previous day"><span aria-hidden="true">‹</span><span class="rb-daynav-word"> Previous day</span></x-ui.link-button>
       @else
-        <span class="rb-availability__btn-ghost rb-availability__off" aria-disabled="true">‹ Previous day</span>
+        <span class="rb-availability__btn-ghost rb-availability__off rb-daynav-step" aria-disabled="true" aria-label="Previous day"><span aria-hidden="true">‹</span><span class="rb-daynav-word"> Previous day</span></span>
       @endif
       @if ($nextUrl)
-        <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost" :href="$nextUrl">Next day ›</x-ui.link-button>
+        <x-ui.link-button variant="secondary" class="rb-availability__btn-ghost rb-daynav-step" :href="$nextUrl" aria-label="Next day"><span class="rb-daynav-word">Next day </span><span aria-hidden="true">›</span></x-ui.link-button>
       @else
-        <span class="rb-availability__btn-ghost rb-availability__off" aria-disabled="true">Next day ›</span>
+        <span class="rb-availability__btn-ghost rb-availability__off rb-daynav-step" aria-disabled="true" aria-label="Next day"><span class="rb-daynav-word">Next day </span><span aria-hidden="true">›</span></span>
       @endif
     </div>
   </div>
